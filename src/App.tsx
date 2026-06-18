@@ -141,7 +141,7 @@ export default function App() {
     ];
 
     return (
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginTop: '30px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginTop: '30px' }}>
         {menuItems.map(item => (
           <button key={item.id} onClick={() => setActiveTab(item.id)} style={gridButtonStyle}>
             <div style={{ color: COLORS.celeste, marginBottom: '12px' }}>{item.icon}</div>
@@ -167,7 +167,7 @@ export default function App() {
 
         {!isLoading && activeTab === 'home' && (
           <>
-            <div style={{ display: 'flex', gap: '25px', width: '100%', justifyContent: 'space-between', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '25px', width: '100%', justifyContent: 'space-between', marginBottom: '20px' }}>
               <div style={summaryCardStyle}><h3 style={summaryTitleStyle}>Dotación Total</h3><p style={summaryValueStyle}>{globalSummary.total}</p></div>
               <div style={summaryCardStyle}><h3 style={summaryTitleStyle}>Part. Femenina</h3><p style={summaryValueStyle}>{globalSummary.mujeres}%</p></div>
               <div style={summaryCardStyle}><h3 style={summaryTitleStyle}>Ausentismo</h3><p style={summaryValueStyle}>{globalSummary.ausentismo}%</p></div>
@@ -221,7 +221,7 @@ export default function App() {
   );
 }
 
-const summaryCardStyle: React.CSSProperties = { flex: 1, backgroundColor: COLORS.blanco, padding: '25px', borderRadius: '10px', boxShadow: '0 4px 10px rgba(0,0,0,0.04)', textAlign: 'center', borderTop: `5px solid ${COLORS.gris}` };
+const summaryCardStyle: React.CSSProperties = { flex: '1 1 250px', backgroundColor: COLORS.blanco, padding: '25px', borderRadius: '10px', boxShadow: '0 4px 10px rgba(0,0,0,0.04)', textAlign: 'center', borderTop: `5px solid ${COLORS.gris}` };
 const summaryTitleStyle: React.CSSProperties = { margin: 0, color: '#666', fontSize: '1rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' };
 const summaryValueStyle: React.CSSProperties = { fontSize: '2.8rem', fontWeight: 600, color: COLORS.celeste, margin: '10px 0 0 0' };
 const gridButtonStyle: React.CSSProperties = { backgroundColor: COLORS.blanco, border: '1px solid #eee', borderRadius: '12px', padding: '45px 15px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.02)', transition: 'transform 0.2s ease, box-shadow 0.2s ease' };
