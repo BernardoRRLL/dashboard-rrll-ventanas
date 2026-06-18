@@ -49,7 +49,7 @@ export default function SindicatosTab({ rawData }: SindicatosProps) {
   const pctU1 = totalRolB > 0 ? ((countU1 / totalRolB) * 100).toFixed(1) : "0";
   const pctU2 = totalRolB > 0 ? ((countU2 / totalRolB) * 100).toFixed(1) : "0";
 
-  // 3. Funciones para Gráficos de Grupos (Corregido el mapeo de la columna G)
+  // 3. Funciones para Gráficos de Grupos
   const getGrupoData = (unionName: string, color: string) => {
     const counts: { [key: string]: number } = { 'Grupo 1': 0, 'Grupo 2': 0, 'Grupo 3': 0, 'Grupo 4': 0, 'Admin.': 0 };
     
@@ -57,7 +57,6 @@ export default function SindicatosTab({ rawData }: SindicatosProps) {
       if (row['Afiliación Sindical']?.trim() === unionName) {
         let g = row['Grupo']?.trim() || 'Admin.';
         
-        // Normalización inteligente: convertimos números sueltos o guiones al formato correcto
         if (g === '-' || g.toLowerCase().includes('admin')) {
           g = 'Admin.';
         } else if (g === '1' || g.toLowerCase() === 'grupo 1') {
@@ -70,7 +69,6 @@ export default function SindicatosTab({ rawData }: SindicatosProps) {
           g = 'Grupo 4';
         }
 
-        // Si existe en nuestro objeto base, lo sumamos; si es un grupo nuevo/raro, lo creamos
         if (counts[g] !== undefined) {
           counts[g]++;
         } else {
@@ -85,7 +83,7 @@ export default function SindicatosTab({ rawData }: SindicatosProps) {
     };
   };
 
-  // 4. Gráfico Butterfly Corregido (union1 a la izquierda en Celeste)
+  // 4. Gráfico Butterfly
   const getAreaButterflyData = () => {
     const counts: { [key: string]: { u1: number, u2: number } } = {};
     
@@ -95,7 +93,6 @@ export default function SindicatosTab({ rawData }: SindicatosProps) {
       
       if (area && u && (u === union1 || u === union2)) {
         if (!counts[area]) counts[area] = { u1: 0, u2: 0 };
-        // Ahora union1 resta (para ir a la izquierda) y union2 suma (para ir a la derecha)
         if (u === union1) counts[area].u1--; 
         if (u === union2) counts[area].u2++; 
       }
@@ -103,40 +100,38 @@ export default function SindicatosTab({ rawData }: SindicatosProps) {
     
     const filteredAreas = Object.keys(counts).filter(area => counts[area].u1 < 0 || counts[area].u2 > 0);
     
-    // Ordenar por volumen total
     filteredAreas.sort((a, b) => (counts[b].u2 + Math.abs(counts[b].u1)) - (counts[a].u2 + Math.abs(counts[a].u1)));
 
     return {
       labels: filteredAreas,
       datasets: [
-        // Orden de renderizado: Izquierda (u1) primero, Derecha (u2) después
         { label: union1, data: filteredAreas.map(a => counts[a].u1), backgroundColor: COLORS.celeste, borderRadius: 4 },
         { label: union2, data: filteredAreas.map(a => counts[a].u2), backgroundColor: COLORS.naranjo, borderRadius: 4 }
       ]
     };
   };
 
-  // --- Opciones de Gráficos ---
+  // --- Opciones de Gráficos (Ajustadas con fuentes fluidas) ---
   const verticalBarOptions: any = { 
     responsive: true, maintainAspectRatio: false, 
-    plugins: { legend: { display: false }, datalabels: { color: COLORS.blanco, anchor: 'end', align: 'start', font: { weight: 600 } } } 
+    plugins: { legend: { display: false }, datalabels: { color: COLORS.blanco, anchor: 'end', align: 'start', font: { weight: 600, size: 9, family: "'Poppins', sans-serif" } } } 
   };
   
   const butterflyOptions: any = {
     indexAxis: 'y', responsive: true, maintainAspectRatio: false,
     scales: { x: { stacked: true, ticks: { callback: (val: number) => Math.abs(val) } }, y: { stacked: true } },
     plugins: { 
-      legend: { position: 'bottom' }, 
+      legend: { position: 'bottom', labels: { font: { size: 10, family: "'Poppins', sans-serif" } } }, 
       tooltip: { callbacks: { label: (ctx: any) => `${ctx.dataset.label}: ${Math.abs(ctx.raw)}` } }, 
-      datalabels: { color: COLORS.blanco, font: { weight: 600, family: "'Poppins', sans-serif" }, formatter: (value: number) => value !== 0 ? Math.abs(value) : '' } 
+      datalabels: { color: COLORS.blanco, font: { weight: 600, size: 9, family: "'Poppins', sans-serif" }, formatter: (value: number) => value !== 0 ? Math.abs(value) : '' } 
     }
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '25px', fontFamily: "'Poppins', sans-serif" }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(15px, 3vw, 25px)', fontFamily: "'Poppins', sans-serif" }}>
       
-      {/* Resumen Superior de Afiliación */}
-      <div style={{ display: 'flex', gap: '25px', width: '100%', justifyContent: 'space-between' }}>
+      {/* 1. Resumen Superior (Inquebrantable en una línea) */}
+      <div style={{ display: 'flex', flexWrap: 'nowrap', gap: 'clamp(8px, 2vw, 25px)', width: '100%', justifyContent: 'space-between' }}>
         <div style={summaryCardStyle}>
             <h4 style={kpiTitleStyle}>Total Afiliados (Rol B)</h4>
             <p style={kpiValueStyle}>{totalAfiliadosRolB}</p>
@@ -147,47 +142,46 @@ export default function SindicatosTab({ rawData }: SindicatosProps) {
         </div>
       </div>
 
-      {/* Resumen por Sindicato */}
+      {/* 2. Resumen por Sindicato (1 fila por Sindicato) */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
         <div style={{ ...unionCardStyle, border: `2px solid ${COLORS.celeste}` }}>
           <div>
-            <h3 style={{ margin: 0, color: COLORS.gris, fontSize: '1.2rem' }}>{union1}</h3>
-            <p style={{ margin: 0, color: '#888', fontSize: '0.9rem' }}>{pctU1}% de Rol B</p>
+            <h3 style={{ margin: 0, color: COLORS.gris, fontSize: 'clamp(1rem, 3vw, 1.2rem)' }}>{union1}</h3>
+            <p style={{ margin: 0, color: '#888', fontSize: 'clamp(0.7rem, 2vw, 0.9rem)' }}>{pctU1}% de Rol B</p>
           </div>
-          <div style={{ fontSize: '2.5rem', fontWeight: 700, color: COLORS.celeste }}>{countU1}</div>
+          <div style={{ fontSize: 'clamp(1.5rem, 5vw, 2.5rem)', fontWeight: 700, color: COLORS.celeste }}>{countU1}</div>
         </div>
         
         <div style={{ ...unionCardStyle, border: `2px solid ${COLORS.naranjo}` }}>
           <div>
-            <h3 style={{ margin: 0, color: COLORS.gris, fontSize: '1.2rem' }}>{union2}</h3>
-            <p style={{ margin: 0, color: '#888', fontSize: '0.9rem' }}>{pctU2}% de Rol B</p>
+            <h3 style={{ margin: 0, color: COLORS.gris, fontSize: 'clamp(1rem, 3vw, 1.2rem)' }}>{union2}</h3>
+            <p style={{ margin: 0, color: '#888', fontSize: 'clamp(0.7rem, 2vw, 0.9rem)' }}>{pctU2}% de Rol B</p>
           </div>
-          <div style={{ fontSize: '2.5rem', fontWeight: 700, color: COLORS.naranjo }}>{countU2}</div>
+          <div style={{ fontSize: 'clamp(1.5rem, 5vw, 2.5rem)', fontWeight: 700, color: COLORS.naranjo }}>{countU2}</div>
         </div>
       </div>
 
-      {/* Distribución por Grupos de Trabajo */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
+      {/* 3. Composición por Grupos (Estricto: 2 por línea) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 'clamp(10px, 2vw, 20px)' }}>
         <div style={cardStyle}>
             <h4 style={chartTitleStyle}>Composición por Grupos — {union1}</h4>
-            <div style={{ height: '250px' }}><Bar data={getGrupoData(union1, COLORS.celeste)} options={verticalBarOptions} /></div>
+            <div style={{ width: '100%', height: '260px' }}><Bar data={getGrupoData(union1, COLORS.celeste)} options={verticalBarOptions} /></div>
         </div>
         <div style={cardStyle}>
             <h4 style={chartTitleStyle}>Composición por Grupos — {union2}</h4>
-            <div style={{ height: '250px' }}><Bar data={getGrupoData(union2, COLORS.naranjo)} options={verticalBarOptions} /></div>
+            <div style={{ width: '100%', height: '260px' }}><Bar data={getGrupoData(union2, COLORS.naranjo)} options={verticalBarOptions} /></div>
         </div>
       </div>
 
-      {/* Butterfly Chart Corregido */}
+      {/* 4. Butterfly Chart (Fila completa, 100% ancho) */}
       <div style={cardStyle}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #eee', paddingBottom: '8px', marginBottom: '15px' }}>
-            <h4 style={{ margin: 0, color: COLORS.gris, fontSize: '1.1rem', fontWeight: 600 }}>Distribución por Área de Trabajo</h4>
-            <div style={{ fontSize: '0.9rem', color: '#666' }}>
-              {/* Leyenda ordenada: union1 a la izquierda, union2 a la derecha */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #eee', paddingBottom: '8px', marginBottom: '15px' }}>
+            <h4 style={{ margin: 0, color: COLORS.gris, fontSize: 'clamp(0.85rem, 2vw, 1.1rem)', fontWeight: 600 }}>Distribución por Área de Trabajo</h4>
+            <div style={{ fontSize: 'clamp(0.65rem, 1.5vw, 0.9rem)', color: '#666', marginTop: '5px' }}>
               <span style={{color: COLORS.celeste, fontWeight: 600}}>■ {union1}</span> &nbsp;&nbsp;|&nbsp;&nbsp; <span style={{color: COLORS.naranjo, fontWeight: 600}}>■ {union2}</span>
             </div>
         </div>
-        <div style={{ height: '350px' }}>
+        <div style={{ width: '100%', height: '350px' }}>
             <Bar data={getAreaButterflyData()} options={butterflyOptions} />
         </div>
       </div>
@@ -196,10 +190,10 @@ export default function SindicatosTab({ rawData }: SindicatosProps) {
   );
 }
 
-// Estilos
-const cardStyle: React.CSSProperties = { backgroundColor: COLORS.blanco, padding: '20px', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)' };
-const summaryCardStyle: React.CSSProperties = { flex: 1, backgroundColor: COLORS.blanco, padding: '25px', borderRadius: '10px', boxShadow: '0 4px 10px rgba(0,0,0,0.04)', textAlign: 'center' };
-const unionCardStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: COLORS.blanco, padding: '15px 30px', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' };
-const kpiTitleStyle: React.CSSProperties = { margin: 0, color: COLORS.gris, fontSize: '1.1rem', fontWeight: 600 };
-const kpiValueStyle: React.CSSProperties = { fontSize: '2.8rem', fontWeight: 600, color: COLORS.gris, margin: '10px 0 0 0' };
-const chartTitleStyle: React.CSSProperties = { margin: '0 0 15px 0', color: COLORS.gris, fontSize: '1.1rem', fontWeight: 600, borderBottom: '1px solid #eee', paddingBottom: '10px' };
+// Estilos fluidos y elásticos con minWidth: 0
+const cardStyle: React.CSSProperties = { backgroundColor: COLORS.blanco, padding: 'clamp(10px, 2vw, 20px)', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)', minWidth: 0 };
+const summaryCardStyle: React.CSSProperties = { flex: 1, minWidth: 0, backgroundColor: COLORS.blanco, padding: 'clamp(10px, 2vw, 25px) clamp(5px, 1vw, 15px)', borderRadius: '10px', boxShadow: '0 4px 10px rgba(0,0,0,0.04)', textAlign: 'center' };
+const unionCardStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: COLORS.blanco, padding: 'clamp(10px, 3vw, 15px) clamp(15px, 4vw, 30px)', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.03)', minWidth: 0 };
+const kpiTitleStyle: React.CSSProperties = { margin: 0, color: COLORS.gris, fontSize: 'clamp(0.6rem, 2vw, 1.1rem)', fontWeight: 600, lineHeight: 1.2 };
+const kpiValueStyle: React.CSSProperties = { fontSize: 'clamp(1.5rem, 5vw, 2.8rem)', fontWeight: 600, color: COLORS.gris, margin: '8px 0 0 0' };
+const chartTitleStyle: React.CSSProperties = { margin: '0 0 15px 0', color: COLORS.gris, fontSize: 'clamp(0.75rem, 2vw, 1.1rem)', fontWeight: 600, borderBottom: '1px solid #eee', paddingBottom: '8px', whiteSpace: 'normal', lineHeight: 1.2 };
