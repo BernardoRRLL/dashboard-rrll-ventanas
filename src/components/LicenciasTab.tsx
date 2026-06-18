@@ -11,7 +11,6 @@ import {
 } from 'chart.js';
 import ChartJSPluginDataLabels from 'chartjs-plugin-datalabels';
 
-// Registro de los componentes de Chart.js y el plugin de etiquetas
 ChartJS.register(
   CategoryScale, 
   LinearScale, 
@@ -130,7 +129,7 @@ export default function LicenciasTab({ rawData }: LicenciasProps) {
         <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>Promedio Días / Licencia</h4><p style={kpiValueStyle}>{promedioDias}</p></div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '20px' }}>
         <div style={cardStyle}><h4 style={chartTitleStyle}>Cantidad de Licencias por Gerencia</h4><div style={{ width: '100%', height: '300px' }}><Bar data={getLicenciasPorGerencia()} options={horizontalBarOptions} /></div></div>
         <div style={cardStyle}><h4 style={chartTitleStyle}>Distribución por Especialidad Médica</h4><div style={{ width: '100%', height: '300px' }}><Doughnut data={getEspecialidadData()} options={doughnutOptions} /></div></div>
         <div style={cardStyle}><h4 style={chartTitleStyle}>Distribución por Grupo de Trabajo</h4><div style={{ width: '100%', height: '300px' }}><Bar data={getGrupoData()} options={verticalBarOptions} /></div></div>
