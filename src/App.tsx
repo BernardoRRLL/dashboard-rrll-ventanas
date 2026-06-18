@@ -130,20 +130,26 @@ export default function App() {
 
   const renderHomeMenu = () => {
     const menuItems = [
-      { id: 'dotacion', label: 'Dotación', icon: <Users size={38} /> },
-      { id: 'participacion', label: 'Participación Femenina', icon: <Venus size={38} /> },
-      { id: 'sindicatos', label: 'Sindicatos', icon: <Handshake size={38} /> },
-      { id: 'licencias', label: 'Licencias Médicas', icon: <Stethoscope size={38} /> },
-      { id: 'ausentismo', label: 'Ausentismo y Sobretiempo', icon: <Scale size={38} /> },
-      { id: 'discapacidad', label: 'Discapacidad', icon: <Accessibility size={38} /> },
+      { id: 'dotacion', label: 'Dotación', icon: <Users size={32} /> },
+      { id: 'participacion', label: 'Participación Femenina', icon: <Venus size={32} /> },
+      { id: 'sindicatos', label: 'Sindicatos', icon: <Handshake size={32} /> },
+      { id: 'licencias', label: 'Licencias Médicas', icon: <Stethoscope size={32} /> },
+      { id: 'ausentismo', label: 'Ausentismo y Sobretiempo', icon: <Scale size={32} /> },
+      { id: 'discapacidad', label: 'Discapacidad', icon: <Accessibility size={32} /> },
     ];
 
     return (
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px', marginTop: '30px' }}>
+      <div style={{ 
+        display: 'grid', 
+        // La magia está aquí: 130px fuerza 2 columnas en celulares chicos, pero llega a 320px en PC
+        gridTemplateColumns: 'repeat(auto-fit, minmax(clamp(130px, 30vw, 320px), 1fr))', 
+        gap: 'clamp(10px, 2vw, 20px)', 
+        marginTop: '25px' 
+      }}>
         {menuItems.map(item => (
           <button key={item.id} onClick={() => setActiveTab(item.id)} style={gridButtonStyle}>
-            <div style={{ color: COLORS.celeste, marginBottom: '12px' }}>{item.icon}</div>
-            <span style={{ fontSize: '1.15rem', fontWeight: 600, color: COLORS.gris }}>{item.label}</span>
+            <div style={{ color: COLORS.celeste, marginBottom: '8px' }}>{item.icon}</div>
+            <span style={{ fontSize: 'clamp(0.85rem, 2vw, 1.15rem)', fontWeight: 600, color: COLORS.gris, textAlign: 'center', lineHeight: 1.2 }}>{item.label}</span>
           </button>
         ))}
       </div>
@@ -154,7 +160,7 @@ export default function App() {
     <div style={{ fontFamily: "'Poppins', sans-serif", backgroundColor: COLORS.fondo, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <Header />
       
-      <div style={{ maxWidth: '1300px', width: '100%', margin: '0 auto', padding: '30px 20px', flex: 1 }}>
+      <div style={{ maxWidth: '1300px', width: '100%', margin: '0 auto', padding: 'clamp(15px, 3vw, 30px) clamp(10px, 2vw, 20px)', flex: 1 }}>
         
         {isLoading && (
           <div style={{ textAlign: 'center', padding: '100px 0', color: COLORS.gris }}>
@@ -165,19 +171,19 @@ export default function App() {
 
         {!isLoading && activeTab === 'home' && (
           <>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '25px', width: '100%', justifyContent: 'space-between', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'clamp(10px, 2vw, 25px)', width: '100%', justifyContent: 'space-between', marginBottom: '20px' }}>
               <div style={summaryCardStyle}><h3 style={summaryTitleStyle}>Dotación Total</h3><p style={summaryValueStyle}>{globalSummary.total}</p></div>
               <div style={summaryCardStyle}><h3 style={summaryTitleStyle}>Part. Femenina</h3><p style={summaryValueStyle}>{globalSummary.mujeres}%</p></div>
               <div style={summaryCardStyle}><h3 style={summaryTitleStyle}>Ausentismo</h3><p style={summaryValueStyle}>{globalSummary.ausentismo}%</p></div>
             </div>
 
-            <div style={{ borderBottom: `2px solid #ddd`, margin: '40px 0 20px 0', display: 'flex', alignItems: 'center' }}>
-              <h2 style={{ color: COLORS.gris, fontSize: '1.3rem', fontWeight: 600, margin: 0, paddingBottom: '10px', borderBottom: `4px solid ${COLORS.naranjo}`, marginBottom: '-3px' }}>Módulos de Análisis</h2>
+            <div style={{ borderBottom: `2px solid #ddd`, margin: '30px 0 15px 0', display: 'flex', alignItems: 'center' }}>
+              <h2 style={{ color: COLORS.gris, fontSize: 'clamp(1.1rem, 3vw, 1.3rem)', fontWeight: 600, margin: 0, paddingBottom: '10px', borderBottom: `4px solid ${COLORS.naranjo}`, marginBottom: '-3px' }}>Módulos de Análisis</h2>
             </div>
 
             {renderHomeMenu()}
             
-            <div style={{ marginTop: '50px', textAlign: 'center' }}>
+            <div style={{ marginTop: '40px', textAlign: 'center' }}>
               <p style={{ color: 'green', fontSize: '0.85rem', fontWeight: 600 }}>✓ Datos sincronizados correctamente desde archivo central</p>
             </div>
           </>
@@ -186,11 +192,11 @@ export default function App() {
         {!isLoading && activeTab !== 'home' && (
           <div>
             <button onClick={() => setActiveTab('home')} style={backButtonStyle}>← Volver al Menú Principal</button>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '25px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
               <div style={{ color: COLORS.naranjo }}>
                 {activeTab === 'participacion' ? <Venus size={32} /> : activeTab === 'sindicatos' ? <Handshake size={32} /> : activeTab === 'licencias' ? <Stethoscope size={32} /> : activeTab === 'ausentismo' ? <Scale size={32} /> : activeTab === 'discapacidad' ? <Accessibility size={32} /> : <Users size={32} />}
               </div>
-              <h2 style={{ color: COLORS.gris, margin: 0, fontSize: '1.8rem', fontWeight: 600 }}>
+              <h2 style={{ color: COLORS.gris, margin: 0, fontSize: 'clamp(1.3rem, 4vw, 1.8rem)', fontWeight: 600 }}>
                 {activeTab === 'dotacion' ? 'Análisis Dotacional' : activeTab === 'participacion' ? 'Participación Femenina' : activeTab === 'sindicatos' ? 'Organizaciones Sindicales' : activeTab === 'licencias' ? 'Licencias Médicas' : activeTab === 'ausentismo' ? 'Ausentismo y Sobretiempo' : activeTab.toUpperCase()}
               </h2>
             </div>
@@ -219,8 +225,9 @@ export default function App() {
   );
 }
 
-const summaryCardStyle: React.CSSProperties = { flex: '1 1 250px', backgroundColor: COLORS.blanco, padding: '25px', borderRadius: '10px', boxShadow: '0 4px 10px rgba(0,0,0,0.04)', textAlign: 'center', borderTop: `5px solid ${COLORS.gris}` };
-const summaryTitleStyle: React.CSSProperties = { margin: 0, color: '#666', fontSize: '1rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' };
-const summaryValueStyle: React.CSSProperties = { fontSize: '2.8rem', fontWeight: 600, color: COLORS.celeste, margin: '10px 0 0 0' };
-const gridButtonStyle: React.CSSProperties = { backgroundColor: COLORS.blanco, border: '1px solid #eee', borderRadius: '12px', padding: '45px 15px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.02)', transition: 'transform 0.2s ease, box-shadow 0.2s ease' };
-const backButtonStyle: React.CSSProperties = { backgroundColor: 'transparent', border: 'none', color: COLORS.naranjo, fontWeight: 600, fontSize: '1rem', cursor: 'pointer', margin: '0 0 20px 0', padding: 0, display: 'flex', alignItems: 'center', gap: '5px' };
+// Estilos fluidos optimizados
+const summaryCardStyle: React.CSSProperties = { flex: '1 1 30%', minWidth: '90px', backgroundColor: COLORS.blanco, padding: 'clamp(10px, 2vw, 25px)', borderRadius: '10px', boxShadow: '0 4px 10px rgba(0,0,0,0.04)', textAlign: 'center', borderTop: `5px solid ${COLORS.gris}` };
+const summaryTitleStyle: React.CSSProperties = { margin: 0, color: '#666', fontSize: 'clamp(0.6rem, 2vw, 1rem)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', lineHeight: 1.2 };
+const summaryValueStyle: React.CSSProperties = { fontSize: 'clamp(1.4rem, 5vw, 2.8rem)', fontWeight: 600, color: COLORS.celeste, margin: '8px 0 0 0' };
+const gridButtonStyle: React.CSSProperties = { backgroundColor: COLORS.blanco, border: '1px solid #eee', borderRadius: '12px', padding: 'clamp(15px, 4vw, 45px) 10px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.02)', transition: 'transform 0.2s ease' };
+const backButtonStyle: React.CSSProperties = { backgroundColor: 'transparent', border: 'none', color: COLORS.naranjo, fontWeight: 600, fontSize: 'clamp(0.9rem, 2vw, 1rem)', cursor: 'pointer', margin: '0 0 15px 0', padding: 0, display: 'flex', alignItems: 'center', gap: '5px' };
