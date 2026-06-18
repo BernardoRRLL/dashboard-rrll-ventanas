@@ -167,7 +167,7 @@ export default function SindicatosTab({ rawData }: SindicatosProps) {
       </div>
 
       {/* Distribución por Grupos de Trabajo */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
         <div style={cardStyle}>
             <h4 style={chartTitleStyle}>Composición por Grupos — {union1}</h4>
             <div style={{ height: '250px' }}><Bar data={getGrupoData(union1, COLORS.celeste)} options={verticalBarOptions} /></div>
