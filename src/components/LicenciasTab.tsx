@@ -115,10 +115,10 @@ export default function LicenciasTab({ rawData }: LicenciasProps) {
     };
   };
 
-  // --- Opciones de Gráficos (Ajustadas con fuentes fluidas) ---
-  const datalabelConfig = { color: COLORS.blanco, font: { weight: 600, size: 10, family: "'Poppins', sans-serif" } };
+  // --- Opciones de Gráficos ---
+  const datalabelConfig = { color: COLORS.blanco, font: { weight: 600, size: 9, family: "'Poppins', sans-serif" } };
   
-  const commonOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' as const, labels: { font: { size: 10, family: "'Poppins', sans-serif" } } }, datalabels: datalabelConfig } };
+  const commonOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' as const, labels: { font: { size: 9, family: "'Poppins', sans-serif" } } }, datalabels: datalabelConfig } };
   const horizontalBarOptions: any = { ...commonOptions, indexAxis: 'y', plugins: { ...commonOptions.plugins, legend: { display: false } } };
   const verticalBarOptions: any = { ...commonOptions, plugins: { ...commonOptions.plugins, legend: { display: false }, datalabels: { ...datalabelConfig, anchor: 'end', align: 'start' } } };
   const doughnutOptions: any = { ...commonOptions, cutout: '65%', plugins: { ...commonOptions.plugins, legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 9, family: "'Poppins', sans-serif" } } } } };
@@ -126,31 +126,29 @@ export default function LicenciasTab({ rawData }: LicenciasProps) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(15px, 3vw, 25px)', fontFamily: "'Poppins', sans-serif" }}>
       
-      {/* 1. Resumen Superior (Inquebrantable en una línea. 4 tarjetas requieren más reducción en celular) */}
-      <div style={{ display: 'flex', flexWrap: 'nowrap', gap: 'clamp(5px, 1.5vw, 20px)', width: '100%', justifyContent: 'space-between' }}>
+      {/* 1. Resumen Superior (Una sola línea, textos devueltos a la normalidad y ultra ajustables) */}
+      <div style={{ display: 'flex', flexWrap: 'nowrap', gap: 'clamp(4px, 1.5vw, 20px)', width: '100%', justifyContent: 'space-between' }}>
         <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>Licencias</h4><p style={kpiValueStyle}>{totalLicencias}</p></div>
-        <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>Días Acum.<br/>(Últimos 12)</h4><p style={{...kpiValueStyle, color: COLORS.naranjo}}>{totalDias12Meses}</p></div>
-        <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>Días Acum.<br/>(Últimos 24)</h4><p style={{...kpiValueStyle, color: COLORS.gris}}>{totalDias24Meses}</p></div>
-        <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>Promedio<br/>Días / Lic.</h4><p style={kpiValueStyle}>{promedioDias}</p></div>
+        <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>Días Acum.<br/>(Últimos 12 Meses)</h4><p style={{...kpiValueStyle, color: COLORS.naranjo}}>{totalDias12Meses}</p></div>
+        <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>Días Acum.<br/>(Últimos 24 Meses)</h4><p style={{...kpiValueStyle, color: COLORS.gris}}>{totalDias24Meses}</p></div>
+        <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>Promedio<br/>Días / Licencia</h4><p style={kpiValueStyle}>{promedioDias}</p></div>
       </div>
 
-      {/* 2. Cuadrícula Principal (2 gráficos por línea en PC, baja a 1 en Celular para que no se aplasten) */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 350px), 1fr))', gap: 'clamp(15px, 3vw, 20px)' }}>
-        <div style={cardStyle}><h4 style={chartTitleStyle}>Cantidad de Licencias por Gerencia</h4><div style={{ width: '100%', height: '300px' }}><Bar data={getLicenciasPorGerencia()} options={horizontalBarOptions} /></div></div>
-        <div style={cardStyle}><h4 style={chartTitleStyle}>Distribución por Especialidad Médica</h4><div style={{ width: '100%', height: '300px' }}><Doughnut data={getEspecialidadData()} options={doughnutOptions} /></div></div>
-        <div style={cardStyle}><h4 style={chartTitleStyle}>Distribución por Grupo de Trabajo</h4><div style={{ width: '100%', height: '300px' }}><Bar data={getGrupoData()} options={verticalBarOptions} /></div></div>
-        <div style={cardStyle}><h4 style={chartTitleStyle}>Análisis de Extensión (Nuevas vs Continuación)</h4><div style={{ width: '100%', height: '300px' }}><Bar data={getContinuacionData()} options={verticalBarOptions} /></div></div>
+      {/* 2. Cuadrícula Principal (Estrictamente 2 por línea en PC y Celular) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 'clamp(10px, 2vw, 20px)' }}>
+        <div style={cardStyle}><h4 style={chartTitleStyle}>Cantidad de Licencias por Gerencia</h4><div style={{ width: '100%', height: '260px' }}><Bar data={getLicenciasPorGerencia()} options={horizontalBarOptions} /></div></div>
+        <div style={cardStyle}><h4 style={chartTitleStyle}>Distribución por Especialidad Médica</h4><div style={{ width: '100%', height: '260px' }}><Doughnut data={getEspecialidadData()} options={doughnutOptions} /></div></div>
+        <div style={cardStyle}><h4 style={chartTitleStyle}>Distribución por Grupo de Trabajo</h4><div style={{ width: '100%', height: '260px' }}><Bar data={getGrupoData()} options={verticalBarOptions} /></div></div>
+        <div style={cardStyle}><h4 style={chartTitleStyle}>Análisis de Extensión (Nuevas vs Continuación)</h4><div style={{ width: '100%', height: '260px' }}><Bar data={getContinuacionData()} options={verticalBarOptions} /></div></div>
       </div>
       
     </div>
   );
 }
 
-// Estilos fluidos y elásticos con minWidth: 0
+// Estilos fluidos y elásticos
 const cardStyle: React.CSSProperties = { backgroundColor: COLORS.blanco, padding: 'clamp(10px, 2vw, 20px)', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)', minWidth: 0 };
-// Se reduce drásticamente el padding horizontal en móviles para que quepan las 4 tarjetas
 const summaryCardStyle: React.CSSProperties = { flex: 1, minWidth: 0, backgroundColor: COLORS.blanco, padding: 'clamp(8px, 1.5vw, 20px) clamp(2px, 0.5vw, 10px)', borderRadius: '10px', boxShadow: '0 4px 10px rgba(0,0,0,0.04)', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '100px' };
-// Fuente muy elástica para títulos largos en 4 columnas
-const kpiTitleStyle: React.CSSProperties = { margin: 0, color: COLORS.gris, fontSize: 'clamp(0.55rem, 1.5vw, 0.9rem)', fontWeight: 600, lineHeight: 1.2 };
-const kpiValueStyle: React.CSSProperties = { fontSize: 'clamp(1.1rem, 4vw, 2.2rem)', fontWeight: 600, color: COLORS.celeste, margin: '5px 0 0 0' };
-const chartTitleStyle: React.CSSProperties = { margin: '0 0 15px 0', color: COLORS.gris, fontSize: 'clamp(0.75rem, 2vw, 1.1rem)', fontWeight: 600, borderBottom: '1px solid #eee', paddingBottom: '8px', whiteSpace: 'normal', lineHeight: 1.2 };
+const kpiTitleStyle: React.CSSProperties = { margin: 0, color: COLORS.gris, fontSize: 'clamp(0.50rem, 1.3vw, 0.9rem)', fontWeight: 600, lineHeight: 1.2 };
+const kpiValueStyle: React.CSSProperties = { fontSize: 'clamp(1rem, 3.5vw, 2.2rem)', fontWeight: 600, color: COLORS.celeste, margin: '5px 0 0 0' };
+const chartTitleStyle: React.CSSProperties = { margin: '0 0 15px 0', color: COLORS.gris, fontSize: 'clamp(0.70rem, 1.8vw, 1.1rem)', fontWeight: 600, borderBottom: '1px solid #eee', paddingBottom: '8px', whiteSpace: 'normal', lineHeight: 1.2 };
