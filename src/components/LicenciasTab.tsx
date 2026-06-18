@@ -157,7 +157,7 @@ export default function LicenciasTab({ rawData }: LicenciasProps) {
       </div>
 
       {/* Cuadrícula de Gráficos */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
         <div style={cardStyle}><h4 style={chartTitleStyle}>Cantidad de Licencias por Gerencia</h4><div style={{ height: '300px' }}><Bar data={getLicenciasPorGerencia()} options={horizontalBarOptions} /></div></div>
         
         {/* Gráfico de Especialidad actualizado */}
