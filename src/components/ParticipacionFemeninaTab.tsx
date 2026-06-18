@@ -184,7 +184,7 @@ export default function ParticipacionFemeninaTab({ rawData }: ParticipacionFemen
       </div>
 
       {/* Fila 1: Distribución Etaria y Turno */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
         <div style={cardStyle}><h4 style={chartTitleStyle}>Distribución Etaria</h4><div style={{ height: '280px' }}><Bar data={getDistribucionEtaria()} options={verticalBarOptions} /></div></div>
         <div style={cardStyle}><h4 style={chartTitleStyle}>Distribución por Turno</h4><div style={{ height: '280px' }}><Doughnut data={getDistribucionTurno()} options={doughnutOptions} /></div></div>
       </div>
