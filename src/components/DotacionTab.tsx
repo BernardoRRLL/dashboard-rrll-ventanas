@@ -109,7 +109,7 @@ export default function DotacionTab({ rawData, stats }: DotacionTabProps) {
       <div style={cardStyle}><h4 style={chartTitleStyle}>Dotación por Gerencia / Superintendencia</h4><div style={{ height: '350px' }}><Bar data={getGerenciaData()} options={commonBarOptions} /></div></div>
       <div style={cardStyle}><h4 style={chartTitleStyle}>Edad Promedio por Gerencia / Superintendencia</h4><div style={{ height: '350px' }}><Bar data={getEdadPromedioPorGerencia()} options={commonBarOptions} /></div></div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
         <div style={cardStyle}><h4 style={chartTitleStyle}>Distribución por Rango Etario</h4><div style={{ height: '300px' }}><Bar data={getRangoEtarioData()} options={commonBarOptions} /></div></div>
         <div style={cardStyle}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #eee', paddingBottom: '8px', marginBottom: '15px' }}>
