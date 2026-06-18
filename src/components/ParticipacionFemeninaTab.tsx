@@ -34,7 +34,7 @@ export default function ParticipacionFemeninaTab({ rawData }: ParticipacionFemen
   let conEdad = 0;
   womenData.forEach(row => {
     const edad = Number(row['Edad']);
-    if (edad > 0) { Shield: sumaEdades += edad; conEdad++; }
+    if (edad > 0) { sumaEdades += edad; conEdad++; }
   });
   const edadPromedio = conEdad > 0 ? (sumaEdades / conEdad).toFixed(1) : "0";
 
@@ -94,19 +94,17 @@ export default function ParticipacionFemeninaTab({ rawData }: ParticipacionFemen
     };
   };
 
-  // 5. Evolución Histórica de Ingresos Femeninos (MÓDULO REPARADO E INTELIGENTE)
+  // 5. Evolución Histórica de Ingresos Femeninos
   const getEvolucionHistorica = () => {
     const years: { [key: string]: number } = {};
     
     womenData.forEach(row => {
-      // Mapeo flexible de columnas de fecha habituales
       const fechaRaw = row['Fecha Ingreso'] || row['Fecha de Ingreso'] || row['Fecha Ingreso DVEN'] || row['Fecha de Ingeso a la Empresa'] || '';
       const fecha = String(fechaRaw).trim();
       if (!fecha) return;
 
       let year: string | null = null;
 
-      // Caso A: Si Excel lo envía como Número de serie de 5 dígitos (Formato General sin fecha aplicada)
       if (/^\d{5}$/.test(fecha)) {
         const serial = parseInt(fecha, 10);
         try {
@@ -116,18 +114,15 @@ export default function ParticipacionFemeninaTab({ rawData }: ParticipacionFemen
         } catch (e) {}
       }
 
-      // Caso B: Si viene como texto estructurado (el escenario más común con raw: false)
       if (!year) {
-        // 1. Buscar año explícito de 4 dígitos (19XX o 20XX)
         const match4 = fecha.match(/(19|20)\d{2}/);
         if (match4) {
           year = match4[0];
         } else {
-          // 2. Buscar año abreviado de 2 dígitos al final (ej: DD/MM/YY o DD-MM-YY)
           const match2 = fecha.match(/[-/](\d{2})$/);
           if (match2) {
             const yy = parseInt(match2[1], 10);
-            year = yy < 50 ? `20${match2[1]}` : `19${match2[1]}`; // Menor a 50 asume los 2000s, mayor asume los 1900s
+            year = yy < 50 ? `20${match2[1]}` : `19${match2[1]}`; 
           }
         }
       }
@@ -167,52 +162,55 @@ export default function ParticipacionFemeninaTab({ rawData }: ParticipacionFemen
     };
   };
 
-  // --- Opciones de Gráficos ---
-  const verticalBarOptions: any = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { color: COLORS.blanco, anchor: 'end', align: 'start', font: { weight: 600 } } } };
-  const horizontalBarOptions: any = { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { color: COLORS.blanco, anchor: 'end', align: 'start', font: { weight: 600 } } } };
-  const lineOptions: any = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { align: 'top', color: COLORS.magenta, font: { weight: 600 } } }, scales: { y: { beginAtZero: true } } };
-  const doughnutOptions: any = { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'bottom' }, datalabels: { color: COLORS.blanco, font: { weight: 600 } } } };
+  // --- Opciones de Gráficos (Optimizadas con fuentes fluidas) ---
+  const datalabelConfig = { color: COLORS.blanco, font: { weight: 600, size: 10, family: "'Poppins', sans-serif" } };
+  
+  const verticalBarOptions: any = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { ...datalabelConfig, anchor: 'end', align: 'start' } } };
+  const horizontalBarOptions: any = { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { ...datalabelConfig, anchor: 'end', align: 'start' } } };
+  const lineOptions: any = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { align: 'top', color: COLORS.magenta, font: { weight: 600, size: 10, family: "'Poppins', sans-serif" } } }, scales: { y: { beginAtZero: true } } };
+  const doughnutOptions: any = { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 9, family: "'Poppins', sans-serif" } } }, datalabels: datalabelConfig } };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '25px', fontFamily: "'Poppins', sans-serif" }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(15px, 3vw, 25px)', fontFamily: "'Poppins', sans-serif" }}>
       
-      {/* Resumen Superior */}
-      <div style={{ display: 'flex', gap: '25px', width: '100%', justifyContent: 'space-between' }}>
+      {/* 1. Resumen Superior (Una línea inquebrantable) */}
+      <div style={{ display: 'flex', flexWrap: 'nowrap', gap: 'clamp(8px, 2vw, 25px)', width: '100%', justifyContent: 'space-between' }}>
         <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>Mujeres en la Dotación</h4><p style={kpiValueStyle}>{totalMujeres}</p></div>
         <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>% de Representación</h4><p style={kpiValueStyle}>{porcentajeRep}%</p></div>
         <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>Edad Promedio</h4><p style={kpiValueStyle}>{edadPromedio}</p></div>
       </div>
 
-      {/* Fila 1: Distribución Etaria y Turno */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
-        <div style={cardStyle}><h4 style={chartTitleStyle}>Distribución Etaria</h4><div style={{ height: '280px' }}><Bar data={getDistribucionEtaria()} options={verticalBarOptions} /></div></div>
-        <div style={cardStyle}><h4 style={chartTitleStyle}>Distribución por Turno</h4><div style={{ height: '280px' }}><Doughnut data={getDistribucionTurno()} options={doughnutOptions} /></div></div>
+      {/* 2. Fila 1: Distribución Etaria y Turno (Compartido: 2 por línea) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 'clamp(10px, 2vw, 20px)' }}>
+        <div style={cardStyle}><h4 style={chartTitleStyle}>Distribución Etaria</h4><div style={{ width: '100%', height: '260px' }}><Bar data={getDistribucionEtaria()} options={verticalBarOptions} /></div></div>
+        <div style={cardStyle}><h4 style={chartTitleStyle}>Distribución por Turno</h4><div style={{ width: '100%', height: '260px' }}><Doughnut data={getDistribucionTurno()} options={doughnutOptions} /></div></div>
       </div>
 
-      {/* Fila 2: Distribución por Rol */}
+      {/* 3. Fila 2: Distribución por Rol (100% del ancho) */}
       <div style={cardStyle}>
         <h4 style={chartTitleStyle}>Distribución por Rol</h4>
-        <div style={{ height: '280px' }}><Bar data={getDistribucionRol()} options={horizontalBarOptions} /></div>
+        <div style={{ width: '100%', height: '280px' }}><Bar data={getDistribucionRol()} options={horizontalBarOptions} /></div>
       </div>
 
-      {/* Fila 3: Evolución Histórica */}
+      {/* 4. Fila 3: Evolución Histórica (100% del ancho) */}
       <div style={cardStyle}>
         <h4 style={chartTitleStyle}>Evolución Histórica de Ingresos Femeninos</h4>
-        <div style={{ height: '300px' }}><Line data={getEvolucionHistorica()} options={lineOptions} /></div>
+        <div style={{ width: '100%', height: '300px' }}><Line data={getEvolucionHistorica()} options={lineOptions} /></div>
       </div>
 
-      {/* Fila 4: Distribución por Área */}
+      {/* 5. Fila 4: Distribución por Área (100% del ancho) */}
       <div style={cardStyle}>
         <h4 style={chartTitleStyle}>Distribución por Área</h4>
-        <div style={{ height: '320px' }}><Bar data={getDistribucionArea()} options={horizontalBarOptions} /></div>
+        <div style={{ width: '100%', height: '320px' }}><Bar data={getDistribucionArea()} options={horizontalBarOptions} /></div>
       </div>
 
     </div>
   );
 }
 
-const cardStyle: React.CSSProperties = { backgroundColor: COLORS.blanco, padding: '20px', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)' };
-const summaryCardStyle: React.CSSProperties = { flex: 1, backgroundColor: COLORS.blanco, padding: '25px', borderRadius: '10px', boxShadow: '0 4px 10px rgba(0,0,0,0.04)', textAlign: 'center' };
-const kpiTitleStyle: React.CSSProperties = { margin: 0, color: COLORS.gris, fontSize: '1rem', fontWeight: 600 };
-const kpiValueStyle: React.CSSProperties = { fontSize: '2.5rem', fontWeight: 600, color: COLORS.naranjo, margin: '10px 0 0 0' };
-const chartTitleStyle: React.CSSProperties = { margin: '0 0 15px 0', color: COLORS.gris, fontSize: '1.1rem', fontWeight: 600, borderBottom: '1px solid #eee', paddingBottom: '10px' };
+// Estilos fluidos y elásticos con minWidth: 0
+const cardStyle: React.CSSProperties = { backgroundColor: COLORS.blanco, padding: 'clamp(10px, 2vw, 18px)', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)', minWidth: 0 };
+const summaryCardStyle: React.CSSProperties = { flex: 1, minWidth: 0, backgroundColor: COLORS.blanco, padding: 'clamp(10px, 2vw, 25px) clamp(5px, 1vw, 15px)', borderRadius: '10px', boxShadow: '0 4px 10px rgba(0,0,0,0.04)', textAlign: 'center' };
+const kpiTitleStyle: React.CSSProperties = { margin: 0, color: COLORS.gris, fontSize: 'clamp(0.6rem, 2vw, 1rem)', fontWeight: 600, lineHeight: 1.2 };
+const kpiValueStyle: React.CSSProperties = { fontSize: 'clamp(1.2rem, 5vw, 2.5rem)', fontWeight: 600, color: COLORS.naranjo, margin: '8px 0 0 0' };
+const chartTitleStyle: React.CSSProperties = { margin: '0 0 15px 0', color: COLORS.gris, fontSize: 'clamp(0.75rem, 2vw, 1rem)', fontWeight: 600, borderBottom: '1px solid #eee', paddingBottom: '8px', whiteSpace: 'normal', lineHeight: 1.2 };
