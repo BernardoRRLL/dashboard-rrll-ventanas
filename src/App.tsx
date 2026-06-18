@@ -141,7 +141,6 @@ export default function App() {
     return (
       <div style={{ 
         display: 'grid', 
-        // La magia está aquí: 130px fuerza 2 columnas en celulares chicos, pero llega a 320px en PC
         gridTemplateColumns: 'repeat(auto-fit, minmax(clamp(130px, 30vw, 320px), 1fr))', 
         gap: 'clamp(10px, 2vw, 20px)', 
         marginTop: '25px' 
@@ -171,7 +170,8 @@ export default function App() {
 
         {!isLoading && activeTab === 'home' && (
           <>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'clamp(10px, 2vw, 25px)', width: '100%', justifyContent: 'space-between', marginBottom: '20px' }}>
+            {/* AQUÍ ESTÁ EL AJUSTE: flexWrap: 'nowrap' fuerza la línea única en PC y Celular */}
+            <div style={{ display: 'flex', flexWrap: 'nowrap', gap: 'clamp(8px, 2vw, 25px)', width: '100%', justifyContent: 'space-between', marginBottom: '20px' }}>
               <div style={summaryCardStyle}><h3 style={summaryTitleStyle}>Dotación Total</h3><p style={summaryValueStyle}>{globalSummary.total}</p></div>
               <div style={summaryCardStyle}><h3 style={summaryTitleStyle}>Part. Femenina</h3><p style={summaryValueStyle}>{globalSummary.mujeres}%</p></div>
               <div style={summaryCardStyle}><h3 style={summaryTitleStyle}>Ausentismo</h3><p style={summaryValueStyle}>{globalSummary.ausentismo}%</p></div>
@@ -225,9 +225,9 @@ export default function App() {
   );
 }
 
-// Estilos fluidos optimizados
-const summaryCardStyle: React.CSSProperties = { flex: '1 1 30%', minWidth: '90px', backgroundColor: COLORS.blanco, padding: 'clamp(10px, 2vw, 25px)', borderRadius: '10px', boxShadow: '0 4px 10px rgba(0,0,0,0.04)', textAlign: 'center', borderTop: `5px solid ${COLORS.gris}` };
+// Estilos elásticos con flex: 1 y minWidth: 0 para evitar quiebres
+const summaryCardStyle: React.CSSProperties = { flex: 1, minWidth: 0, backgroundColor: COLORS.blanco, padding: 'clamp(10px, 2vw, 25px) clamp(5px, 1vw, 15px)', borderRadius: '10px', boxShadow: '0 4px 10px rgba(0,0,0,0.04)', textAlign: 'center', borderTop: `5px solid ${COLORS.gris}` };
 const summaryTitleStyle: React.CSSProperties = { margin: 0, color: '#666', fontSize: 'clamp(0.6rem, 2vw, 1rem)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', lineHeight: 1.2 };
-const summaryValueStyle: React.CSSProperties = { fontSize: 'clamp(1.4rem, 5vw, 2.8rem)', fontWeight: 600, color: COLORS.celeste, margin: '8px 0 0 0' };
+const summaryValueStyle: React.CSSProperties = { fontSize: 'clamp(1.2rem, 5vw, 2.8rem)', fontWeight: 600, color: COLORS.celeste, margin: '8px 0 0 0' };
 const gridButtonStyle: React.CSSProperties = { backgroundColor: COLORS.blanco, border: '1px solid #eee', borderRadius: '12px', padding: 'clamp(15px, 4vw, 45px) 10px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.02)', transition: 'transform 0.2s ease' };
 const backButtonStyle: React.CSSProperties = { backgroundColor: 'transparent', border: 'none', color: COLORS.naranjo, fontWeight: 600, fontSize: 'clamp(0.9rem, 2vw, 1rem)', cursor: 'pointer', margin: '0 0 15px 0', padding: 0, display: 'flex', alignItems: 'center', gap: '5px' };
