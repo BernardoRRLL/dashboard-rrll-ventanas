@@ -100,7 +100,7 @@ export default function AusentismoTab({ rawData }: { rawData: any[][] }) {
         <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>Sobretiempo</h4><p style={{...kpiValueStyle, color: COLORS.rosado}}>{totalSobretiempoArea.toFixed(2)}%</p></div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '20px' }}>
         <div style={cardStyle}>
           <h4 style={chartTitleStyle}>Evolución 2026: Ausentismo Proyectado vs Real</h4>
           <div style={{ width: '100%', height: '320px' }}><Line data={getEvolucionData()} options={lineOptions} /></div>
