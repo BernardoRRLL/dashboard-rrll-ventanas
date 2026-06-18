@@ -32,7 +32,7 @@ export default function Footer() {
           minWidth: '320px' // Ensanchado para evitar que el corte ampute el logo
         }}>
           {/* Logo de Codelco aumentado significativamente */}
-          <img src="/Codelco_Ventanas.png" alt="Codelco Ventanas" style={{ height: '55px', filter: 'brightness(0) invert(1)' }} />
+          <img src="./Codelco_Ventanas.png" alt="Codelco Ventanas" style={{ height: '55px', filter: 'brightness(0) invert(1)' }} />
         </div>
 
         {/* Bloque Central Textos */}
@@ -47,7 +47,7 @@ export default function Footer() {
 
         {/* Bloque Derecho Logo 5 Valores aumentado significativamente */}
         <div style={{ padding: '10px 30px' }}>
-          <img src="/5_valores.png" alt="5 Valores que nos unen" style={{ height: '70px', objectFit: 'contain' }} />
+          <img src="./5_valores.png" alt="5 Valores que nos unen" style={{ height: '70px', objectFit: 'contain' }} />
         </div>
 
       </div>
