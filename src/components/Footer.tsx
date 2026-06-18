@@ -3,25 +3,26 @@ export default function Footer() {
     <footer style={{ marginTop: 'auto', width: '100%', backgroundColor: '#f5f7f8' }}>
       <div style={{
         display: 'flex',
-        flexWrap: 'wrap',           // <--- CLAVE PARA CELULAR
+        flexWrap: 'nowrap', // Evita que los logos salten a otra línea
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: '10px 20px',       // <--- PADDING REDUCIDO
+        padding: 'clamp(8px, 2vw, 10px) 15px',
         backgroundColor: '#0098aa',
         borderTopLeftRadius: '30px',
-        gap: '15px'
+        gap: '10px'
       }}>
          <img 
-           src="./Codelco_Ventanas.png" 
+           src="./Codelco Ventanas.png" 
            alt="Codelco" 
-           style={{ height: 'auto', maxHeight: '35px', maxWidth: '100%', objectFit: 'contain' }} 
+           style={{ height: 'clamp(20px, 6vw, 35px)', width: 'auto', objectFit: 'contain' }} 
          />
          
          <div style={{ 
-           flex: '1 1 200px', 
+           flex: 1, 
            textAlign: 'center', 
            color: '#ffffff', 
-           fontSize: 'clamp(0.7rem, 2vw, 0.85rem)' // <--- LETRA MÁS PEQUEÑA
+           fontSize: 'clamp(0.6rem, 2vw, 0.85rem)', // Letras compactas
+           lineHeight: 1.2
          }}>
             <p style={{ margin: 0, fontWeight: 600 }}>Codelco División Ventanas</p>
             <p style={{ margin: 0 }}>Gerencia de Gestión de Personas</p>
@@ -30,7 +31,7 @@ export default function Footer() {
          <img 
            src="./5_valores.png" 
            alt="5 Valores" 
-           style={{ height: 'auto', maxHeight: '35px', maxWidth: '100%', objectFit: 'contain' }} 
+           style={{ height: 'clamp(20px, 6vw, 35px)', width: 'auto', objectFit: 'contain' }} 
          />
       </div>
       
