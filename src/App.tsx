@@ -50,7 +50,6 @@ export default function App() {
 
         const dotacionJson = XLSX.utils.sheet_to_json(workbook.Sheets[dotacionName], { raw: false, defval: "" });
         const licenciasJson = licenciasName ? XLSX.utils.sheet_to_json(workbook.Sheets[licenciasName], { raw: false, defval: "" }) : dotacionJson;
-        // Le decimos a TypeScript que esto es tipo 'any' forzosamente para evitar el error
         const ausentismoJson = ausentismoName ? XLSX.utils.sheet_to_json(workbook.Sheets[ausentismoName], { header: 1, raw: false, defval: "" }) as any : [];
 
         setRawData(dotacionJson);
@@ -69,7 +68,6 @@ export default function App() {
     loadFixedData();
   }, []);
 
-  // Aquí cambiamos "ausData: any[][]" por "ausData: any" para silenciar el error
   const calculateSummaries = (dotData: any[], ausData: any) => {
     const total = dotData.length; 
     if (total === 0) return;
@@ -141,7 +139,7 @@ export default function App() {
     ];
 
     return (
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginTop: '30px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px', marginTop: '30px' }}>
         {menuItems.map(item => (
           <button key={item.id} onClick={() => setActiveTab(item.id)} style={gridButtonStyle}>
             <div style={{ color: COLORS.celeste, marginBottom: '12px' }}>{item.icon}</div>
