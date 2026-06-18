@@ -32,14 +32,11 @@ export default function App() {
   const [globalSummary, setGlobalSummary] = useState({ total: 0, mujeres: "0", ausentismo: "0" });
   const [dotacionStats, setDotacionStats] = useState({ total: 0, indefinido: "0", edadPromedio: "0", edadPromedioF: "0", edadPromedioM: "0" });
   
-  // Nuevo estado para la pantalla de carga
   const [isLoading, setIsLoading] = useState(true);
 
-  // EFECTO DE CARGA AUTOMÁTICA AL INICIAR LA PÁGINA
   useEffect(() => {
     const loadFixedData = async () => {
       try {
-        // Busca el archivo fijo en la carpeta "public"
         const response = await fetch('./data.xlsx');
         if (!response.ok) throw new Error("No se encontró el archivo data.xlsx");
         
@@ -53,14 +50,15 @@ export default function App() {
 
         const dotacionJson = XLSX.utils.sheet_to_json(workbook.Sheets[dotacionName], { raw: false, defval: "" });
         const licenciasJson = licenciasName ? XLSX.utils.sheet_to_json(workbook.Sheets[licenciasName], { raw: false, defval: "" }) : dotacionJson;
-        const ausentismoJson = ausentismoName ? XLSX.utils.sheet_to_json(workbook.Sheets[ausentismoName], { header: 1, raw: false, defval: "" }) : [];
+        // Le decimos a TypeScript que esto es tipo 'any' forzosamente para evitar el error
+        const ausentismoJson = ausentismoName ? XLSX.utils.sheet_to_json(workbook.Sheets[ausentismoName], { header: 1, raw: false, defval: "" }) as any : [];
 
         setRawData(dotacionJson);
         setLicenciasData(licenciasJson);
         setAusentismoData(ausentismoJson);
         
         calculateSummaries(dotacionJson, ausentismoJson);
-        setIsLoading(false); // Terminó de cargar
+        setIsLoading(false); 
 
       } catch (error) {
         console.error("Error al cargar la base de datos:", error);
@@ -71,8 +69,8 @@ export default function App() {
     loadFixedData();
   }, []);
 
-  // Función de resúmenes (ahora recibe también la data de ausentismo)
-  const calculateSummaries = (dotData: any[], ausData: any[][]) => {
+  // Aquí cambiamos "ausData: any[][]" por "ausData: any" para silenciar el error
+  const calculateSummaries = (dotData: any[], ausData: any) => {
     const total = dotData.length; 
     if (total === 0) return;
 
@@ -90,7 +88,6 @@ export default function App() {
       }
     });
 
-    // CÁLCULO DE AUSENTISMO (LM + Permisos) PARA LA TARJETA PRINCIPAL
     let ausentismoTotal = 0;
     if (ausData && ausData.length > 0) {
       const parsePercent = (val: any) => {
@@ -100,10 +97,10 @@ export default function App() {
       };
 
       const getRowData = (keyword: string, occurrence = 1) => {
-        const rows = ausData.filter(r => r.some(cell => String(cell).trim() === keyword));
+        const rows = ausData.filter((r: any) => r.some((cell: any) => String(cell).trim() === keyword));
         const targetRow = rows[occurrence - 1];
         if (!targetRow) return [];
-        const idx = targetRow.findIndex(cell => String(cell).trim() === keyword);
+        const idx = targetRow.findIndex((cell: any) => String(cell).trim() === keyword);
         const values = [];
         for (let i = idx + 1; i <= idx + 12; i++) {
           if (targetRow[i] !== undefined && targetRow[i] !== "") {
@@ -127,7 +124,7 @@ export default function App() {
     setGlobalSummary({ 
       total, 
       mujeres: ((mujeres / total) * 100).toFixed(1), 
-      ausentismo: ausentismoTotal.toFixed(2) // Asignamos el ausentismo sumado
+      ausentismo: ausentismoTotal.toFixed(2) 
     });
 
     setDotacionStats({ total, indefinido: ((indefinidos / total) * 100).toFixed(1), edadPromedio: (sumaEdades / total).toFixed(1), edadPromedioF: totalF > 0 ? (sumaF / totalF).toFixed(1) : "0", edadPromedioM: totalM > 0 ? (sumaM / totalM).toFixed(1) : "0" });
@@ -161,7 +158,6 @@ export default function App() {
       
       <div style={{ maxWidth: '1300px', width: '100%', margin: '0 auto', padding: '30px 20px', flex: 1 }}>
         
-        {/* PANTALLA DE CARGA INICIAL */}
         {isLoading && (
           <div style={{ textAlign: 'center', padding: '100px 0', color: COLORS.gris }}>
             <h2 style={{ fontSize: '1.5rem', fontWeight: 600 }}>Cargando base de datos corporativa...</h2>
@@ -169,7 +165,6 @@ export default function App() {
           </div>
         )}
 
-        {/* CONTENIDO CARGADO */}
         {!isLoading && activeTab === 'home' && (
           <>
             <div style={{ display: 'flex', gap: '25px', width: '100%', justifyContent: 'space-between', marginBottom: '20px' }}>
@@ -184,7 +179,6 @@ export default function App() {
 
             {renderHomeMenu()}
             
-            {/* Pequeño texto en el pie para confirmar que leyó exitosamente */}
             <div style={{ marginTop: '50px', textAlign: 'center' }}>
               <p style={{ color: 'green', fontSize: '0.85rem', fontWeight: 600 }}>✓ Datos sincronizados correctamente desde archivo central</p>
             </div>
@@ -231,4 +225,4 @@ const summaryCardStyle: React.CSSProperties = { flex: 1, backgroundColor: COLORS
 const summaryTitleStyle: React.CSSProperties = { margin: 0, color: '#666', fontSize: '1rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' };
 const summaryValueStyle: React.CSSProperties = { fontSize: '2.8rem', fontWeight: 600, color: COLORS.celeste, margin: '10px 0 0 0' };
 const gridButtonStyle: React.CSSProperties = { backgroundColor: COLORS.blanco, border: '1px solid #eee', borderRadius: '12px', padding: '45px 15px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.02)', transition: 'transform 0.2s ease, box-shadow 0.2s ease' };
-const backButtonStyle: React.CSSProperties = { backgroundColor: 'transparent', border: 'none', color: COLORS.naranjo, fontWeight: 600, fontSize: '1rem', cursor: 'pointer', marginBottom: '20px', padding: 0, display: 'flex', alignItems: 'center', gap: '5px' };
+const backButtonStyle: React.CSSProperties = { backgroundColor: 'transparent', border: 'none', color: COLORS.naranjo, fontWeight: 600, fontSize: '1rem', cursor: 'pointer', margin: '0 0 20px 0', padding: 0, display: 'flex', alignItems: 'center', gap: '5px' };
