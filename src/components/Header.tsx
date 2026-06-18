@@ -16,7 +16,7 @@ export default function Header() {
       fontFamily: "'Poppins', sans-serif"
     }}>
       {/* Logo de Codelco agrandado a 75px */}
-      <img src="/Codelco_Ventanas.png" alt="Codelco Ventanas" style={{ height: '75px', objectFit: 'contain' }} />
+      <img src="./Codelco_Ventanas.png" alt="Codelco Ventanas" style={{ height: '75px', objectFit: 'contain' }} />
       
       <div style={{ textAlign: 'center' }}>
         <h1 style={{ color: COLORS.blanco, margin: 0, fontSize: '1.4rem', fontWeight: 600, letterSpacing: '0.5px' }}>
@@ -27,7 +27,7 @@ export default function Header() {
         </p>
       </div>
       
-      <img src="/somos_protagonistas.png" alt="Somos Protagonistas" style={{ height: '50px', objectFit: 'contain' }} />
+      <img src="./somos_protagonistas.png" alt="Somos Protagonistas" style={{ height: '50px', objectFit: 'contain' }} />
     </header>
   );
 }
