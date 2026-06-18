@@ -12,7 +12,7 @@ export default function Header() {
         gap: '15px'
       }}>
         <img 
-          src="./Codelco Ventanas.png" 
+          src="./Codelco_Ventanas.png" 
           alt="Codelco" 
           style={{ height: 'auto', maxHeight: '60px', maxWidth: '100%', objectFit: 'contain' }} 
         />
@@ -30,7 +30,7 @@ export default function Header() {
         </h1>
         
         <img 
-          src="./somos protagonistas.png" 
+          src="./somos_protagonistas.png" 
           alt="Somos Protagonistas" 
           style={{ height: 'auto', maxHeight: '60px', maxWidth: '100%', objectFit: 'contain' }} 
         />
