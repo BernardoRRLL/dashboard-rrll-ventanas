@@ -1,64 +1,45 @@
-const COLORS = {
-  gris: '#36424a',
-  naranjo: '#e45302',
-  celeste: '#0098aa',
-  amarillo: '#f4ab03',
-  rosado: '#C2185B',
-  blanco: '#ffffff',
-  fondoGris: '#f0f2f5'
-};
-
 export default function Footer() {
   return (
-    <footer style={{ 
-      width: '100%', 
-      marginTop: 'auto', 
-      backgroundColor: COLORS.fondoGris, 
-      fontFamily: "'Poppins', sans-serif",
-      display: 'flex',
-      flexDirection: 'column'
-    }}>
-      
-      {/* Contenedor Principal del Footer */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        
-        {/* Bloque Izquierdo Celeste con corte diagonal */}
-        <div style={{ 
-          backgroundColor: COLORS.celeste, 
-          padding: '15px 60px 15px 25px', // Ampliado para darle aire al logo más grande
-          clipPath: 'polygon(0 0, 100% 0, 85% 100%, 0% 100%)', 
-          display: 'flex', 
-          alignItems: 'center',
-          minWidth: '320px' // Ensanchado para evitar que el corte ampute el logo
-        }}>
-          {/* Logo de Codelco aumentado significativamente */}
-          <img src="./Codelco_Ventanas.png" alt="Codelco Ventanas" style={{ height: '55px', filter: 'brightness(0) invert(1)' }} />
-        </div>
-
-        {/* Bloque Central Textos */}
-        <div style={{ flex: 1, padding: '0 20px' }}>
-          <h4 style={{ margin: 0, color: COLORS.gris, fontSize: '1rem', fontWeight: 600 }}>
-            Gerencia de Personas y Seguridad
-          </h4>
-          <p style={{ margin: 0, color: '#666', fontSize: '0.85rem' }}>
-            Codelco División Ventanas
-          </p>
-        </div>
-
-        {/* Bloque Derecho Logo 5 Valores aumentado significativamente */}
-        <div style={{ padding: '10px 30px' }}>
-          <img src="./5_valores.png" alt="5 Valores que nos unen" style={{ height: '70px', objectFit: 'contain' }} />
-        </div>
-
-      </div>
-
-      {/* Línea inferior corregida a 3 colores corporativos base */}
-      <div style={{ display: 'flex', height: '6px', width: '100%' }}>
-        <div style={{ flex: 1, backgroundColor: COLORS.celeste }}></div>
-        <div style={{ flex: 1, backgroundColor: COLORS.amarillo }}></div>
-        <div style={{ flex: 1, backgroundColor: COLORS.naranjo }}></div>
+    <footer style={{ marginTop: 'auto', width: '100%', backgroundColor: '#f5f7f8' }}>
+      <div style={{
+        display: 'flex',
+        flexWrap: 'wrap',           // <--- CLAVE PARA CELULAR
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '10px 20px',       // <--- PADDING REDUCIDO
+        backgroundColor: '#0098aa',
+        borderTopLeftRadius: '30px',
+        gap: '15px'
+      }}>
+         <img 
+           src="./Codelco Ventanas.png" 
+           alt="Codelco" 
+           style={{ height: 'auto', maxHeight: '35px', maxWidth: '100%', objectFit: 'contain' }} 
+         />
+         
+         <div style={{ 
+           flex: '1 1 200px', 
+           textAlign: 'center', 
+           color: '#ffffff', 
+           fontSize: 'clamp(0.7rem, 2vw, 0.85rem)' // <--- LETRA MÁS PEQUEÑA
+         }}>
+            <p style={{ margin: 0, fontWeight: 600 }}>Codelco División Ventanas</p>
+            <p style={{ margin: 0 }}>Gerencia de Gestión de Personas</p>
+         </div>
+         
+         <img 
+           src="./5_valores.png" 
+           alt="5 Valores" 
+           style={{ height: 'auto', maxHeight: '35px', maxWidth: '100%', objectFit: 'contain' }} 
+         />
       </div>
       
+      {/* Línea Inferior */}
+      <div style={{ display: 'flex', height: '4px', width: '100%' }}>
+        <div style={{ flex: 1, backgroundColor: '#0098aa' }}></div>
+        <div style={{ flex: 1, backgroundColor: '#f4ab03' }}></div>
+        <div style={{ flex: 1, backgroundColor: '#e45302' }}></div>
+      </div>
     </footer>
   );
 }
