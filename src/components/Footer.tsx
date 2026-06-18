@@ -12,7 +12,7 @@ export default function Footer() {
         gap: '15px'
       }}>
          <img 
-           src="./Codelco Ventanas.png" 
+           src="./Codelco_Ventanas.png" 
            alt="Codelco" 
            style={{ height: 'auto', maxHeight: '35px', maxWidth: '100%', objectFit: 'contain' }} 
          />
