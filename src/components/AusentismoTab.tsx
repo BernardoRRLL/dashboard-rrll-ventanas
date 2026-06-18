@@ -94,30 +94,37 @@ export default function AusentismoTab({ rawData }: { rawData: any[][] }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '25px', fontFamily: "'Poppins', sans-serif" }}>
+      
+      {/* 1. KPIs */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', width: '100%', justifyContent: 'space-between' }}>
         <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>Licencias</h4><p style={{...kpiValueStyle, color: COLORS.celeste}}>{totalLicencias.toFixed(2)}%</p></div>
         <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>Permisos</h4><p style={{...kpiValueStyle, color: COLORS.amarillo}}>{totalPermisos.toFixed(2)}%</p></div>
         <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>Sobretiempo</h4><p style={{...kpiValueStyle, color: COLORS.rosado}}>{totalSobretiempoArea.toFixed(2)}%</p></div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '20px' }}>
-        <div style={cardStyle}>
-          <h4 style={chartTitleStyle}>Evolución 2026: Ausentismo Proyectado vs Real</h4>
-          <div style={{ width: '100%', height: '320px' }}><Line data={getEvolucionData()} options={lineOptions} /></div>
-        </div>
+      {/* 2. Evolución (Fila completa al 100% de ancho) */}
+      <div style={cardStyle}>
+        <h4 style={chartTitleStyle}>Evolución 2026: Ausentismo Proyectado vs Real</h4>
+        <div style={{ width: '100%', height: '320px' }}><Line data={getEvolucionData()} options={lineOptions} /></div>
+      </div>
+
+      {/* 3. Fila Inferior (3 gráficos lado a lado en PC, apilados en celular) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
         <div style={cardStyle}>
           <h4 style={chartTitleStyle}>Ausentismo Actual por Área</h4>
-          <div style={{ width: '100%', height: '320px' }}><Bar data={getAusentismoArea()} options={stackedBarOptions} /></div>
+          {/* Unifiqué las alturas a 300px para que se vean simétricos */}
+          <div style={{ width: '100%', height: '300px' }}><Bar data={getAusentismoArea()} options={stackedBarOptions} /></div>
         </div>
         <div style={cardStyle}>
           <h4 style={chartTitleStyle}>Sobretiempo por Área</h4>
-          <div style={{ width: '100%', height: '280px' }}><Bar data={getSobretiempoArea()} options={barOptions} /></div>
+          <div style={{ width: '100%', height: '300px' }}><Bar data={getSobretiempoArea()} options={barOptions} /></div>
         </div>
         <div style={cardStyle}>
           <h4 style={chartTitleStyle}>Tipo de Sobretiempo</h4>
-          <div style={{ width: '100%', height: '280px' }}><Doughnut data={getTipoSobretiempo()} options={doughnutOptions} /></div>
+          <div style={{ width: '100%', height: '300px' }}><Doughnut data={getTipoSobretiempo()} options={doughnutOptions} /></div>
         </div>
       </div>
+
     </div>
   );
 }
