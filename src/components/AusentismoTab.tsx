@@ -88,15 +88,34 @@ export default function AusentismoTab({ rawData }: { rawData: any[][] }) {
   const formatLabel = (val: number) => val !== 0 ? val.toFixed(2) + '%' : '';
   const optionsBase = { responsive: true, maintainAspectRatio: false };
   
-  // Ajuste de fuentes para que soporten estar 3 en una línea en el celular
+  // Fuentes ajustadas para que sean legibles en ambas pantallas
   const lineOptions: any = { ...optionsBase, plugins: { legend: { position: 'bottom', labels: { font: { size: 10, family: "'Poppins', sans-serif" } } }, datalabels: { align: 'top', color: COLORS.gris, font: { weight: 600, size: 9, family: "'Poppins', sans-serif" }, formatter: formatLabel } } };
-  const stackedBarOptions: any = { ...optionsBase, scales: { x: { stacked: true, ticks: { font: { size: 8 } } }, y: { stacked: true } }, plugins: { legend: { position: 'bottom', labels: { boxWidth: 8, font: { size: 8, family: "'Poppins', sans-serif" } } }, datalabels: { color: COLORS.blanco, font: { weight: 600, size: 8, family: "'Poppins', sans-serif" }, formatter: formatLabel } } };
-  const barOptions: any = { ...optionsBase, scales: { x: { ticks: { font: { size: 8 } } } }, plugins: { legend: { display: false }, datalabels: { color: COLORS.blanco, anchor: 'end', align: 'start', font: { weight: 600, size: 8, family: "'Poppins', sans-serif" }, formatter: formatLabel } } };
-  const doughnutOptions: any = { ...optionsBase, cutout: '65%', plugins: { legend: { position: 'bottom', labels: { boxWidth: 8, font: { size: 7, family: "'Poppins', sans-serif" } } }, datalabels: { color: COLORS.blanco, font: { weight: 600, size: 8, family: "'Poppins', sans-serif" }, formatter: formatLabel } } };
+  const stackedBarOptions: any = { ...optionsBase, scales: { x: { stacked: true, ticks: { font: { size: 9 } } }, y: { stacked: true } }, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 9, family: "'Poppins', sans-serif" } } }, datalabels: { color: COLORS.blanco, font: { weight: 600, size: 9, family: "'Poppins', sans-serif" }, formatter: formatLabel } } };
+  const barOptions: any = { ...optionsBase, scales: { x: { ticks: { font: { size: 9 } } } }, plugins: { legend: { display: false }, datalabels: { color: COLORS.blanco, anchor: 'end', align: 'start', font: { weight: 600, size: 9, family: "'Poppins', sans-serif" }, formatter: formatLabel } } };
+  const doughnutOptions: any = { ...optionsBase, cutout: '65%', plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 9, family: "'Poppins', sans-serif" } } }, datalabels: { color: COLORS.blanco, font: { weight: 600, size: 9, family: "'Poppins', sans-serif" }, formatter: formatLabel } } };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(15px, 3vw, 25px)', fontFamily: "'Poppins', sans-serif" }}>
       
+      {/* MAGIA CSS: Media query inyectado para controlar la cuadrícula inferior sin afectar escritorio */}
+      <style>
+        {`
+          .ausentismo-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: clamp(10px, 1.5vw, 20px);
+          }
+          @media (max-width: 850px) {
+            .ausentismo-grid {
+              grid-template-columns: repeat(2, 1fr);
+            }
+            .ausentismo-grafico-principal {
+              grid-column: 1 / -1; /* En celular, este gráfico ocupa toda la fila (ambas columnas) */
+            }
+          }
+        `}
+      </style>
+
       {/* 1. KPIs (Resumen inquebrantable en la primera línea) */}
       <div style={{ display: 'flex', flexWrap: 'nowrap', gap: 'clamp(8px, 1.5vw, 20px)', width: '100%', justifyContent: 'space-between' }}>
         <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>Licencias</h4><p style={{...kpiValueStyle, color: COLORS.celeste}}>{totalLicencias.toFixed(2)}%</p></div>
@@ -110,9 +129,9 @@ export default function AusentismoTab({ rawData }: { rawData: any[][] }) {
         <div style={{ width: '100%', height: '320px' }}><Line data={getEvolucionData()} options={lineOptions} /></div>
       </div>
 
-      {/* 3. Fila Inferior (3 gráficos forzados a compartir línea en PC y Celular) */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'clamp(5px, 1vw, 20px)' }}>
-        <div style={cardStyle}>
+      {/* 3. Fila Inferior (Controlada por el @media query inyectado arriba) */}
+      <div className="ausentismo-grid">
+        <div style={cardStyle} className="ausentismo-grafico-principal">
           <h4 style={chartTitleStyle}>Ausentismo Actual por Área</h4>
           <div style={{ width: '100%', height: '260px' }}><Bar data={getAusentismoArea()} options={stackedBarOptions} /></div>
         </div>
@@ -130,9 +149,9 @@ export default function AusentismoTab({ rawData }: { rawData: any[][] }) {
   );
 }
 
-// Estilos fluidos optimizados para encajar 3 en una línea en móviles
-const cardStyle: React.CSSProperties = { backgroundColor: COLORS.blanco, padding: 'clamp(5px, 1vw, 20px)', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)', minWidth: 0 };
+// Estilos fluidos
+const cardStyle: React.CSSProperties = { backgroundColor: COLORS.blanco, padding: 'clamp(10px, 1vw, 20px)', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)', minWidth: 0 };
 const summaryCardStyle: React.CSSProperties = { flex: 1, minWidth: 0, backgroundColor: COLORS.blanco, padding: 'clamp(8px, 1.5vw, 25px) clamp(4px, 1vw, 15px)', borderRadius: '10px', boxShadow: '0 4px 10px rgba(0,0,0,0.04)', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '90px' };
 const kpiTitleStyle: React.CSSProperties = { margin: 0, color: COLORS.gris, fontSize: 'clamp(0.6rem, 1.5vw, 1.1rem)', fontWeight: 600, lineHeight: 1.2 };
 const kpiValueStyle: React.CSSProperties = { fontSize: 'clamp(1.2rem, 4vw, 2.5rem)', fontWeight: 600, margin: '5px 0 0 0' };
-const chartTitleStyle: React.CSSProperties = { margin: '0 0 10px 0', color: COLORS.gris, fontSize: 'clamp(0.55rem, 1.2vw, 1.1rem)', fontWeight: 600, borderBottom: '1px solid #eee', paddingBottom: '6px', whiteSpace: 'normal', lineHeight: 1.2, textAlign: 'center' };
+const chartTitleStyle: React.CSSProperties = { margin: '0 0 10px 0', color: COLORS.gris, fontSize: 'clamp(0.65rem, 1.5vw, 1.1rem)', fontWeight: 600, borderBottom: '1px solid #eee', paddingBottom: '6px', whiteSpace: 'normal', lineHeight: 1.2, textAlign: 'center' };
