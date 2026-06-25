@@ -25,15 +25,35 @@ const COLORS = {
 };
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('home');
+  // 1. Modificamos el estado para que "escuche" la URL y sepa en qué pestaña estamos
+  const [activeTab, setActiveTab] = useState(() => {
+    const hash = window.location.hash.replace('#', '');
+    return hash || 'home';
+  });
+  
   const [rawData, setRawData] = useState<any[]>([]); 
   const [licenciasData, setLicenciasData] = useState<any[]>([]); 
   const [ausentismoData, setAusentismoData] = useState<any[]>([]); 
-  // 1. Agregamos sobretiempo al estado global
   const [globalSummary, setGlobalSummary] = useState({ total: 0, mujeres: "0", ausentismo: "0", sobretiempo: "0" });
   const [dotacionStats, setDotacionStats] = useState({ total: 0, indefinido: "0", edadPromedio: "0", edadPromedioF: "0", edadPromedioM: "0" });
   
   const [isLoading, setIsLoading] = useState(true);
+
+  // 2. Este efecto captura cuando el usuario aprieta el botón "Atrás" del celular/PC
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#', '');
+      setActiveTab(hash || 'home');
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  // 3. Función que cambia de módulo y lo anota en el historial de navegación
+  const handleTabChange = (tabId: string) => {
+    window.location.hash = tabId === 'home' ? '' : tabId;
+    setActiveTab(tabId);
+  };
 
   useEffect(() => {
     const loadFixedData = async () => {
@@ -51,7 +71,6 @@ export default function App() {
 
         const dotacionJson = XLSX.utils.sheet_to_json(workbook.Sheets[dotacionName], { raw: false, defval: "" });
         const licenciasJson = licenciasName ? XLSX.utils.sheet_to_json(workbook.Sheets[licenciasName], { raw: false, defval: "" }) : dotacionJson;
-        // Mantenemos la lectura como matriz para Ausentismo
         const ausentismoJson = ausentismoName ? XLSX.utils.sheet_to_json(workbook.Sheets[ausentismoName], { header: 1, raw: false, defval: "" }) as any : [];
 
         setRawData(dotacionJson);
@@ -89,7 +108,7 @@ export default function App() {
     });
 
     let ausentismoTotal = 0;
-    let sobretiempoTotal = 0; // 2. Variable para el nuevo cálculo
+    let sobretiempoTotal = 0; 
     
     if (ausData && ausData.length > 0) {
       const parsePercent = (val: any) => {
@@ -117,12 +136,10 @@ export default function App() {
       let sumLM = 0, sumPermisos = 0, sumST = 0;
       
       areas.forEach(area => {
-        // Ocurrencia 1 = LM y Permisos
         const vals = getRowData(area, 1);
         sumLM += vals[0] || 0;
         sumPermisos += vals[1] || 0;
         
-        // Ocurrencia 2 = Sobretiempo
         const valsST = getRowData(area, 2);
         sumST += valsST[0] || 0;
       });
@@ -135,7 +152,7 @@ export default function App() {
       total, 
       mujeres: ((mujeres / total) * 100).toFixed(1), 
       ausentismo: ausentismoTotal.toFixed(2),
-      sobretiempo: sobretiempoTotal.toFixed(2) // 3. Guardamos el dato
+      sobretiempo: sobretiempoTotal.toFixed(2) 
     });
 
     setDotacionStats({ total, indefinido: ((indefinidos / total) * 100).toFixed(1), edadPromedio: (sumaEdades / total).toFixed(1), edadPromedioF: totalF > 0 ? (sumaF / totalF).toFixed(1) : "0", edadPromedioM: totalM > 0 ? (sumaM / totalM).toFixed(1) : "0" });
@@ -152,10 +169,10 @@ export default function App() {
     ];
 
     return (
-      // Uso de clamp() para que en móvil quepan 2 tarjetas sutiles y en PC 3 perfectas
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(clamp(140px, 30vw, 320px), 1fr))', gap: '20px', marginTop: '30px' }}>
         {menuItems.map(item => (
-          <button key={item.id} onClick={() => setActiveTab(item.id)} style={gridButtonStyle}>
+          {/* Se reemplaza onClick por la nueva función handleTabChange */}
+          <button key={item.id} onClick={() => handleTabChange(item.id)} style={gridButtonStyle}>
             <div style={{ color: COLORS.celeste, marginBottom: '12px' }}>{item.icon}</div>
             <span style={{ fontSize: 'clamp(0.9rem, 2vw, 1.15rem)', fontWeight: 600, color: COLORS.gris, textAlign: 'center' }}>{item.label}</span>
           </button>
@@ -179,7 +196,6 @@ export default function App() {
 
         {!isLoading && activeTab === 'home' && (
           <>
-            {/* 4. Contenedor de 4 Resúmenes. flexWrap permite que en celular pasen a 2x2. */}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', width: '100%', justifyContent: 'space-between', marginBottom: '25px' }}>
               <div style={summaryCardStyle}>
                 <h3 style={summaryTitleStyle}>Dotación Total</h3>
@@ -193,9 +209,10 @@ export default function App() {
                 <h3 style={summaryTitleStyle}>Ausentismo</h3>
                 <p style={summaryValueStyle}>{globalSummary.ausentismo}%</p>
               </div>
-              <div style={{...summaryCardStyle, borderTop: `5px solid ${COLORS.celeste}`}}>
+              {/* Tarjeta de Sobretiempo uniformada */}
+              <div style={summaryCardStyle}>
                 <h3 style={summaryTitleStyle}>Sobretiempo</h3>
-                <p style={{...summaryValueStyle, color: COLORS.celeste}}>{globalSummary.sobretiempo}%</p>
+                <p style={summaryValueStyle}>{globalSummary.sobretiempo}%</p>
               </div>
             </div>
 
@@ -215,7 +232,8 @@ export default function App() {
 
         {!isLoading && activeTab !== 'home' && (
           <div>
-            <button onClick={() => setActiveTab('home')} style={backButtonStyle}>← Volver al Menú Principal</button>
+            {/* Se reemplaza onClick por la nueva función handleTabChange */}
+            <button onClick={() => handleTabChange('home')} style={backButtonStyle}>← Volver al Menú Principal</button>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '25px', flexWrap: 'wrap' }}>
               <div style={{ color: COLORS.naranjo }}>
                 {activeTab === 'participacion' ? <Venus size={32} /> : activeTab === 'sindicatos' ? <Handshake size={32} /> : activeTab === 'licencias' ? <Stethoscope size={32} /> : activeTab === 'ausentismo' ? <Scale size={32} /> : activeTab === 'discapacidad' ? <Accessibility size={32} /> : <Users size={32} />}
@@ -249,7 +267,6 @@ export default function App() {
   );
 }
 
-// Estilos dinámicos y elásticos
 const summaryCardStyle: React.CSSProperties = { flex: '1 1 200px', minWidth: 0, backgroundColor: COLORS.blanco, padding: '20px 10px', borderRadius: '10px', boxShadow: '0 4px 10px rgba(0,0,0,0.04)', textAlign: 'center', borderTop: `5px solid ${COLORS.celeste}` };
 const summaryTitleStyle: React.CSSProperties = { margin: 0, color: '#666', fontSize: 'clamp(0.8rem, 1.5vw, 1rem)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' };
 const summaryValueStyle: React.CSSProperties = { fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', fontWeight: 600, color: COLORS.celeste, margin: '10px 0 0 0' };
