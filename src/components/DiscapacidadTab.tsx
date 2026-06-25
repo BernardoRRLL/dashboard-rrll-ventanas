@@ -16,7 +16,6 @@ interface DiscapacidadTabProps {
 export default function DiscapacidadTab({ rawData }: DiscapacidadTabProps) {
   const [isMobile, setIsMobile] = useState(false);
 
-  // Detector elástico de pantalla para reestructurar las líneas de tiempo
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     handleResize();
@@ -24,7 +23,6 @@ export default function DiscapacidadTab({ rawData }: DiscapacidadTabProps) {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Variables defensivas de procesamiento de datos
   let metaVal = "1% (Ley 21.015)";
   let actualVal = "0.0%";
   let tramiteRNDCount = 0;
@@ -33,14 +31,12 @@ export default function DiscapacidadTab({ rawData }: DiscapacidadTabProps) {
   const etapasPension: { etapa: string; cant: number }[] = [];
   const etapasRND: { etapa: string; cant: number }[] = [];
 
-  // Procesamiento tolerante de la hoja Excel
   rawData.forEach((row: any) => {
     const normalizedRow: any = {};
     Object.keys(row).forEach(k => {
       normalizedRow[k.toLowerCase().trim()] = String(row[k]).trim();
     });
 
-    // Lectura directa de Meta o Actual si vienen como columnas específicas
     if (normalizedRow['meta']) metaVal = normalizedRow['meta'];
     if (normalizedRow['actual']) actualVal = normalizedRow['actual'];
     if (normalizedRow['% actual']) actualVal = normalizedRow['% actual'];
@@ -49,7 +45,6 @@ export default function DiscapacidadTab({ rawData }: DiscapacidadTabProps) {
     const etapa = normalizedRow['etapa'] || '';
     const cantidad = parseInt(normalizedRow['cantidad'] || normalizedRow['trabajadores'] || normalizedRow['cant'] || '0') || 0;
 
-    // Captura si vienen estructurados como filas de KPI
     if (etapa.toLowerCase().includes('meta') || proceso.toLowerCase().includes('meta')) {
       metaVal = normalizedRow['cantidad'] || normalizedRow['valor'] || metaVal;
       return;
@@ -59,21 +54,20 @@ export default function DiscapacidadTab({ rawData }: DiscapacidadTabProps) {
       return;
     }
 
-    // Clasificación en Líneas de Tiempo y acumulación de trámites
     if (proceso.toLowerCase().includes('pension') || proceso.toLowerCase().includes('pensión')) {
       etapasPension.push({ etapa, cant: cantidad });
       if (etapa.toLowerCase().includes('tramite') || etapa.toLowerCase().includes('trámite')) {
         tramitePensionCount += cantidad;
       }
     } else if (proceso.toLowerCase().includes('registro') || proceso.toLowerCase().includes('rnd') || proceso.toLowerCase().includes('nacional')) {
-      etapasRND.push({ etapa, cant: cantidad });
+      etapasRND.push({ etapa, cant: quantity => cantidad });
+      etapasRND[etapasRND.length - 1].cant = cantidad; // Corrección directa de asignación limpia
       if (etapa.toLowerCase().includes('tramite') || etapa.toLowerCase().includes('trámite')) {
         tramiteRNDCount += cantidad;
       }
     }
   });
 
-  // Renderizador elástico de hitos para la línea de tiempo
   const renderTimeline = (title: string, steps: { etapa: string; cant: number }[]) => (
     <div style={cardStyle}>
       <h4 style={chartTitleStyle}>{title}</h4>
@@ -99,7 +93,6 @@ export default function DiscapacidadTab({ rawData }: DiscapacidadTabProps) {
               width: '100%',
               position: 'relative'
             }}>
-              {/* Nodo indicador de dotación por etapa */}
               <div style={{
                 width: '50px',
                 height: '50px',
@@ -117,7 +110,6 @@ export default function DiscapacidadTab({ rawData }: DiscapacidadTabProps) {
                 {step.cant}
               </div>
               
-              {/* Etiqueta informativa de la etapa */}
               <div style={{ textAlign: isMobile ? 'left' : 'center', flex: 1 }}>
                 <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 600, color: COLORS.gris }}>{step.etapa}</p>
                 <p style={{ margin: '2px 0 0 0', fontSize: '0.8rem', color: '#777' }}>
@@ -125,7 +117,6 @@ export default function DiscapacidadTab({ rawData }: DiscapacidadTabProps) {
                 </p>
               </div>
 
-              {/* Conector visual elástico (línea entre puntos) */}
               {!isMobile && idx < steps.length - 1 && (
                 <div style={{
                   position: 'absolute',
@@ -147,7 +138,6 @@ export default function DiscapacidadTab({ rawData }: DiscapacidadTabProps) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '25px', fontFamily: "'Poppins', sans-serif" }}>
       
-      {/* 4 Tarjetas de Resumen Uniformes */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', width: '100%', justifyContent: 'space-between' }}>
         <div style={summaryCardStyle}>
           <h4 style={kpiTitleStyle}>Meta</h4>
@@ -167,13 +157,11 @@ export default function DiscapacidadTab({ rawData }: DiscapacidadTabProps) {
         </div>
       </div>
 
-      {/* Bloque de las Dos Líneas de Tiempo */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '25px' }}>
         {renderTimeline('Línea de Proceso: Pensión de Invalidez', etapasPension)}
         {renderTimeline('Línea de Proceso: Registro Nacional de Discapacidad (RND)', etapasRND)}
       </div>
 
-      {/* Nota de cierre institucional obligatoria */}
       <div style={{ 
         backgroundColor: '#e8f4f5', 
         borderLeft: `5px solid ${COLORS.celeste}`, 
@@ -181,7 +169,7 @@ export default function DiscapacidadTab({ rawData }: DiscapacidadTabProps) {
         borderRadius: '4px',
         marginTop: '10px'
       }}>
-        <p style={{ margin: 0, color: COLORS.gris, fontSize: '0.9rem', fontWeight: 500, italic: 'true' }}>
+        <p style={{ margin: 0, color: COLORS.gris, fontSize: '0.9rem', fontWeight: 500, fontStyle: 'italic' }}>
           💡 <strong>Nota:</strong> Los trabajadores pueden participar en ambos procesos de forma simultánea.
         </p>
       </div>
