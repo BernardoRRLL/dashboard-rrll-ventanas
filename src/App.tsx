@@ -8,6 +8,7 @@ import ParticipacionFemeninaTab from './components/ParticipacionFemeninaTab';
 import SindicatosTab from './components/SindicatosTab';
 import LicenciasTab from './components/LicenciasTab';
 import AusentismoTab from './components/AusentismoTab';
+import DiscapacidadTab from './components/DiscapacidadTab';
 
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement, LineElement, Filler } from 'chart.js';
 import ChartJSPluginDataLabels from 'chartjs-plugin-datalabels';
@@ -33,6 +34,7 @@ export default function App() {
   const [rawData, setRawData] = useState<any[]>([]); 
   const [licenciasData, setLicenciasData] = useState<any[]>([]); 
   const [ausentismoData, setAusentismoData] = useState<any[]>([]); 
+  const [discapacidadData, setDiscapacidadData] = useState<any[]>([]); 
   const [globalSummary, setGlobalSummary] = useState({ total: 0, mujeres: "0", ausentismo: "0", sobretiempo: "0" });
   const [dotacionStats, setDotacionStats] = useState({ total: 0, indefinido: "0", edadPromedio: "0", edadPromedioF: "0", edadPromedioM: "0" });
   
@@ -65,14 +67,17 @@ export default function App() {
         let dotacionName = sheetNames.find(n => n === "Dotación" || n.toLowerCase().includes('dotaci')) || sheetNames[0];
         let licenciasName = sheetNames.find(n => n === "Licencias" || n.toLowerCase().includes('licencia')) || (sheetNames.length > 1 ? sheetNames[1] : null);
         let ausentismoName = sheetNames.find(n => n.toLowerCase().includes('ausdeo') || n.toLowerCase().includes('ausentismo'));
+        let discapacidadName = sheetNames.find(n => n.toLowerCase().includes('discapacidad') || n.toLowerCase().includes('disc'));
 
         const dotacionJson = XLSX.utils.sheet_to_json(workbook.Sheets[dotacionName], { raw: false, defval: "" });
         const licenciasJson = licenciasName ? XLSX.utils.sheet_to_json(workbook.Sheets[licenciasName], { raw: false, defval: "" }) : dotacionJson;
         const ausentismoJson = ausentismoName ? XLSX.utils.sheet_to_json(workbook.Sheets[ausentismoName], { header: 1, raw: false, defval: "" }) as any : [];
+        const discapacidadJson = discapacidadName ? XLSX.utils.sheet_to_json(workbook.Sheets[discapacidadName], { raw: false, defval: "" }) : [];
 
         setRawData(dotacionJson);
         setLicenciasData(licenciasJson);
         setAusentismoData(ausentismoJson);
+        setDiscapacidadData(discapacidadJson);
         
         calculateSummaries(dotacionJson, ausentismoJson);
         setIsLoading(false); 
@@ -233,7 +238,7 @@ export default function App() {
                 {activeTab === 'participacion' ? <Venus size={32} /> : activeTab === 'sindicatos' ? <Handshake size={32} /> : activeTab === 'licencias' ? <Stethoscope size={32} /> : activeTab === 'ausentismo' ? <Scale size={32} /> : activeTab === 'discapacidad' ? <Accessibility size={32} /> : <Users size={32} />}
               </div>
               <h2 style={{ color: COLORS.gris, margin: 0, fontSize: 'clamp(1.4rem, 3vw, 1.8rem)', fontWeight: 600 }}>
-                {activeTab === 'dotacion' ? 'Análisis Dotacional' : activeTab === 'participacion' ? 'Participación Femenina' : activeTab === 'sindicatos' ? 'Organizaciones Sindicales' : activeTab === 'licencias' ? 'Licencias Médicas' : activeTab === 'ausentismo' ? 'Ausentismo y Sobretiempo' : activeTab.toUpperCase()}
+                {activeTab === 'dotacion' ? 'Análisis Dotacional' : activeTab === 'participacion' ? 'Participación Femenina' : activeTab === 'sindicatos' ? 'Organizaciones Sindicales' : activeTab === 'licencias' ? 'Licencias Médicas' : activeTab === 'ausentismo' ? 'Ausentismo y Sobretiempo' : activeTab === 'discapacidad' ? 'Inclusión y Discapacidad' : activeTab.toUpperCase()}
               </h2>
             </div>
             
@@ -247,6 +252,8 @@ export default function App() {
               <LicenciasTab rawData={licenciasData} />
             ) : activeTab === 'ausentismo' ? (
               <AusentismoTab rawData={ausentismoData} /> 
+            ) : activeTab === 'discapacidad' ? (
+              <DiscapacidadTab rawData={discapacidadData} /> 
             ) : (
               <div style={{ padding: '40px', textAlign: 'center', backgroundColor: COLORS.blanco, borderRadius: '8px' }}>
                 <p>Módulo de {activeTab} en desarrollo...</p>
