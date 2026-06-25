@@ -29,7 +29,8 @@ export default function App() {
   const [rawData, setRawData] = useState<any[]>([]); 
   const [licenciasData, setLicenciasData] = useState<any[]>([]); 
   const [ausentismoData, setAusentismoData] = useState<any[]>([]); 
-  const [globalSummary, setGlobalSummary] = useState({ total: 0, mujeres: "0", ausentismo: "0" });
+  // 1. Agregamos sobretiempo al estado global
+  const [globalSummary, setGlobalSummary] = useState({ total: 0, mujeres: "0", ausentismo: "0", sobretiempo: "0" });
   const [dotacionStats, setDotacionStats] = useState({ total: 0, indefinido: "0", edadPromedio: "0", edadPromedioF: "0", edadPromedioM: "0" });
   
   const [isLoading, setIsLoading] = useState(true);
@@ -50,6 +51,7 @@ export default function App() {
 
         const dotacionJson = XLSX.utils.sheet_to_json(workbook.Sheets[dotacionName], { raw: false, defval: "" });
         const licenciasJson = licenciasName ? XLSX.utils.sheet_to_json(workbook.Sheets[licenciasName], { raw: false, defval: "" }) : dotacionJson;
+        // Mantenemos la lectura como matriz para Ausentismo
         const ausentismoJson = ausentismoName ? XLSX.utils.sheet_to_json(workbook.Sheets[ausentismoName], { header: 1, raw: false, defval: "" }) as any : [];
 
         setRawData(dotacionJson);
@@ -87,6 +89,8 @@ export default function App() {
     });
 
     let ausentismoTotal = 0;
+    let sobretiempoTotal = 0; // 2. Variable para el nuevo cálculo
+    
     if (ausData && ausData.length > 0) {
       const parsePercent = (val: any) => {
         const str = String(val).trim().replace(',', '.');
@@ -110,19 +114,28 @@ export default function App() {
       };
 
       const areas = ['Mantenimiento', 'Refino a Fuego', 'Refineria', 'Staff'];
-      let sumLM = 0, sumPermisos = 0;
+      let sumLM = 0, sumPermisos = 0, sumST = 0;
+      
       areas.forEach(area => {
+        // Ocurrencia 1 = LM y Permisos
         const vals = getRowData(area, 1);
         sumLM += vals[0] || 0;
         sumPermisos += vals[1] || 0;
+        
+        // Ocurrencia 2 = Sobretiempo
+        const valsST = getRowData(area, 2);
+        sumST += valsST[0] || 0;
       });
+      
       ausentismoTotal = sumLM + sumPermisos;
+      sobretiempoTotal = sumST;
     }
 
     setGlobalSummary({ 
       total, 
       mujeres: ((mujeres / total) * 100).toFixed(1), 
-      ausentismo: ausentismoTotal.toFixed(2) 
+      ausentismo: ausentismoTotal.toFixed(2),
+      sobretiempo: sobretiempoTotal.toFixed(2) // 3. Guardamos el dato
     });
 
     setDotacionStats({ total, indefinido: ((indefinidos / total) * 100).toFixed(1), edadPromedio: (sumaEdades / total).toFixed(1), edadPromedioF: totalF > 0 ? (sumaF / totalF).toFixed(1) : "0", edadPromedioM: totalM > 0 ? (sumaM / totalM).toFixed(1) : "0" });
@@ -130,25 +143,21 @@ export default function App() {
 
   const renderHomeMenu = () => {
     const menuItems = [
-      { id: 'dotacion', label: 'Dotación', icon: <Users size={32} /> },
-      { id: 'participacion', label: 'Participación Femenina', icon: <Venus size={32} /> },
-      { id: 'sindicatos', label: 'Sindicatos', icon: <Handshake size={32} /> },
-      { id: 'licencias', label: 'Licencias Médicas', icon: <Stethoscope size={32} /> },
-      { id: 'ausentismo', label: 'Ausentismo y Sobretiempo', icon: <Scale size={32} /> },
-      { id: 'discapacidad', label: 'Discapacidad', icon: <Accessibility size={32} /> },
+      { id: 'dotacion', label: 'Dotación', icon: <Users size={38} /> },
+      { id: 'participacion', label: 'Participación Femenina', icon: <Venus size={38} /> },
+      { id: 'sindicatos', label: 'Sindicatos', icon: <Handshake size={38} /> },
+      { id: 'licencias', label: 'Licencias Médicas', icon: <Stethoscope size={38} /> },
+      { id: 'ausentismo', label: 'Ausentismo y Sobretiempo', icon: <Scale size={38} /> },
+      { id: 'discapacidad', label: 'Discapacidad', icon: <Accessibility size={38} /> },
     ];
 
     return (
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fit, minmax(clamp(130px, 30vw, 320px), 1fr))', 
-        gap: 'clamp(10px, 2vw, 20px)', 
-        marginTop: '25px' 
-      }}>
+      // Uso de clamp() para que en móvil quepan 2 tarjetas sutiles y en PC 3 perfectas
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(clamp(140px, 30vw, 320px), 1fr))', gap: '20px', marginTop: '30px' }}>
         {menuItems.map(item => (
           <button key={item.id} onClick={() => setActiveTab(item.id)} style={gridButtonStyle}>
-            <div style={{ color: COLORS.celeste, marginBottom: '8px' }}>{item.icon}</div>
-            <span style={{ fontSize: 'clamp(0.85rem, 2vw, 1.15rem)', fontWeight: 600, color: COLORS.gris, textAlign: 'center', lineHeight: 1.2 }}>{item.label}</span>
+            <div style={{ color: COLORS.celeste, marginBottom: '12px' }}>{item.icon}</div>
+            <span style={{ fontSize: 'clamp(0.9rem, 2vw, 1.15rem)', fontWeight: 600, color: COLORS.gris, textAlign: 'center' }}>{item.label}</span>
           </button>
         ))}
       </div>
@@ -159,7 +168,7 @@ export default function App() {
     <div style={{ fontFamily: "'Poppins', sans-serif", backgroundColor: COLORS.fondo, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <Header />
       
-      <div style={{ maxWidth: '1300px', width: '100%', margin: '0 auto', padding: 'clamp(15px, 3vw, 30px) clamp(10px, 2vw, 20px)', flex: 1 }}>
+      <div style={{ maxWidth: '1300px', width: '100%', margin: '0 auto', padding: '30px 20px', flex: 1 }}>
         
         {isLoading && (
           <div style={{ textAlign: 'center', padding: '100px 0', color: COLORS.gris }}>
@@ -170,20 +179,35 @@ export default function App() {
 
         {!isLoading && activeTab === 'home' && (
           <>
-            {/* AQUÍ ESTÁ EL AJUSTE: flexWrap: 'nowrap' fuerza la línea única en PC y Celular */}
-            <div style={{ display: 'flex', flexWrap: 'nowrap', gap: 'clamp(8px, 2vw, 25px)', width: '100%', justifyContent: 'space-between', marginBottom: '20px' }}>
-              <div style={summaryCardStyle}><h3 style={summaryTitleStyle}>Dotación Total</h3><p style={summaryValueStyle}>{globalSummary.total}</p></div>
-              <div style={summaryCardStyle}><h3 style={summaryTitleStyle}>Part. Femenina</h3><p style={summaryValueStyle}>{globalSummary.mujeres}%</p></div>
-              <div style={summaryCardStyle}><h3 style={summaryTitleStyle}>Ausentismo</h3><p style={summaryValueStyle}>{globalSummary.ausentismo}%</p></div>
+            {/* 4. Contenedor de 4 Resúmenes. flexWrap permite que en celular pasen a 2x2. */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', width: '100%', justifyContent: 'space-between', marginBottom: '25px' }}>
+              <div style={summaryCardStyle}>
+                <h3 style={summaryTitleStyle}>Dotación Total</h3>
+                <p style={summaryValueStyle}>{globalSummary.total}</p>
+              </div>
+              <div style={summaryCardStyle}>
+                <h3 style={summaryTitleStyle}>Part. Femenina</h3>
+                <p style={summaryValueStyle}>{globalSummary.mujeres}%</p>
+              </div>
+              <div style={summaryCardStyle}>
+                <h3 style={summaryTitleStyle}>Ausentismo</h3>
+                <p style={summaryValueStyle}>{globalSummary.ausentismo}%</p>
+              </div>
+              <div style={{...summaryCardStyle, borderTop: `5px solid ${COLORS.rosado}`}}>
+                <h3 style={summaryTitleStyle}>Sobretiempo</h3>
+                <p style={{...summaryValueStyle, color: COLORS.rosado}}>{globalSummary.sobretiempo}%</p>
+              </div>
             </div>
 
-            <div style={{ borderBottom: `2px solid #ddd`, margin: '30px 0 15px 0', display: 'flex', alignItems: 'center' }}>
-              <h2 style={{ color: COLORS.gris, fontSize: 'clamp(1.1rem, 3vw, 1.3rem)', fontWeight: 600, margin: 0, paddingBottom: '10px', borderBottom: `4px solid ${COLORS.naranjo}`, marginBottom: '-3px' }}>Módulos de Análisis</h2>
+            <div style={{ borderBottom: `2px solid #ddd`, margin: '40px 0 20px 0', display: 'flex', alignItems: 'center' }}>
+              <h2 style={{ color: COLORS.gris, fontSize: 'clamp(1.1rem, 2.5vw, 1.3rem)', fontWeight: 600, margin: 0, paddingBottom: '10px', borderBottom: `4px solid ${COLORS.naranjo}`, marginBottom: '-3px' }}>
+                Módulos de Análisis
+              </h2>
             </div>
 
             {renderHomeMenu()}
             
-            <div style={{ marginTop: '40px', textAlign: 'center' }}>
+            <div style={{ marginTop: '50px', textAlign: 'center' }}>
               <p style={{ color: 'green', fontSize: '0.85rem', fontWeight: 600 }}>✓ Datos sincronizados correctamente desde archivo central</p>
             </div>
           </>
@@ -192,11 +216,11 @@ export default function App() {
         {!isLoading && activeTab !== 'home' && (
           <div>
             <button onClick={() => setActiveTab('home')} style={backButtonStyle}>← Volver al Menú Principal</button>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '25px', flexWrap: 'wrap' }}>
               <div style={{ color: COLORS.naranjo }}>
                 {activeTab === 'participacion' ? <Venus size={32} /> : activeTab === 'sindicatos' ? <Handshake size={32} /> : activeTab === 'licencias' ? <Stethoscope size={32} /> : activeTab === 'ausentismo' ? <Scale size={32} /> : activeTab === 'discapacidad' ? <Accessibility size={32} /> : <Users size={32} />}
               </div>
-              <h2 style={{ color: COLORS.gris, margin: 0, fontSize: 'clamp(1.3rem, 4vw, 1.8rem)', fontWeight: 600 }}>
+              <h2 style={{ color: COLORS.gris, margin: 0, fontSize: 'clamp(1.4rem, 3vw, 1.8rem)', fontWeight: 600 }}>
                 {activeTab === 'dotacion' ? 'Análisis Dotacional' : activeTab === 'participacion' ? 'Participación Femenina' : activeTab === 'sindicatos' ? 'Organizaciones Sindicales' : activeTab === 'licencias' ? 'Licencias Médicas' : activeTab === 'ausentismo' ? 'Ausentismo y Sobretiempo' : activeTab.toUpperCase()}
               </h2>
             </div>
@@ -225,9 +249,9 @@ export default function App() {
   );
 }
 
-// Estilos elásticos con flex: 1 y minWidth: 0 para evitar quiebres
-const summaryCardStyle: React.CSSProperties = { flex: 1, minWidth: 0, backgroundColor: COLORS.blanco, padding: 'clamp(10px, 2vw, 25px) clamp(5px, 1vw, 15px)', borderRadius: '10px', boxShadow: '0 4px 10px rgba(0,0,0,0.04)', textAlign: 'center', borderTop: `5px solid ${COLORS.gris}` };
-const summaryTitleStyle: React.CSSProperties = { margin: 0, color: '#666', fontSize: 'clamp(0.6rem, 2vw, 1rem)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', lineHeight: 1.2 };
-const summaryValueStyle: React.CSSProperties = { fontSize: 'clamp(1.2rem, 5vw, 2.8rem)', fontWeight: 600, color: COLORS.celeste, margin: '8px 0 0 0' };
-const gridButtonStyle: React.CSSProperties = { backgroundColor: COLORS.blanco, border: '1px solid #eee', borderRadius: '12px', padding: 'clamp(15px, 4vw, 45px) 10px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.02)', transition: 'transform 0.2s ease' };
-const backButtonStyle: React.CSSProperties = { backgroundColor: 'transparent', border: 'none', color: COLORS.naranjo, fontWeight: 600, fontSize: 'clamp(0.9rem, 2vw, 1rem)', cursor: 'pointer', margin: '0 0 15px 0', padding: 0, display: 'flex', alignItems: 'center', gap: '5px' };
+// Estilos dinámicos y elásticos
+const summaryCardStyle: React.CSSProperties = { flex: '1 1 200px', minWidth: 0, backgroundColor: COLORS.blanco, padding: '20px 10px', borderRadius: '10px', boxShadow: '0 4px 10px rgba(0,0,0,0.04)', textAlign: 'center', borderTop: `5px solid ${COLORS.celeste}` };
+const summaryTitleStyle: React.CSSProperties = { margin: 0, color: '#666', fontSize: 'clamp(0.8rem, 1.5vw, 1rem)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' };
+const summaryValueStyle: React.CSSProperties = { fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', fontWeight: 600, color: COLORS.celeste, margin: '10px 0 0 0' };
+const gridButtonStyle: React.CSSProperties = { backgroundColor: COLORS.blanco, border: '1px solid #eee', borderRadius: '12px', padding: 'clamp(20px, 4vw, 45px) 10px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.02)', transition: 'transform 0.2s ease, box-shadow 0.2s ease' };
+const backButtonStyle: React.CSSProperties = { backgroundColor: 'transparent', border: 'none', color: COLORS.naranjo, fontWeight: 600, fontSize: '1rem', cursor: 'pointer', margin: '0 0 20px 0', padding: 0, display: 'flex', alignItems: 'center', gap: '5px' };
