@@ -45,14 +45,21 @@ export default function LicenciasTab({ rawData }: LicenciasProps) {
   const totalLicencias = licenciasData.length;
   let totalDiasLicenciaActual = 0;
   let totalDias12Meses = 0; 
-  let totalDias24Meses = 0; 
+  let licenciasMayoresA100 = 0; // Nueva variable para nuestro contador
 
   licenciasData.forEach(row => {
+    // Suma de días para promedios generales
     totalDiasLicenciaActual += Number(row['Días'] || row['Dias']) || 0;
+    
+    // Suma de últimos 12 meses
     const dias12 = row['Días acumulados últimos 12 meses '] || row['Días acumulados últimos 12 meses'] || 0;
-    const dias24 = row['Días acumulados últimos 24 meses '] || row['Días acumulados últimos 24 meses'] || 0;
     totalDias12Meses += Number(dias12) || 0;
-    totalDias24Meses += Number(dias24) || 0;
+
+    // LECTURA DE LA NUEVA COLUMNA "Acum."
+    const diasAcumulados = Number(row['Acum.'] || row['Acum'] || 0);
+    if (diasAcumulados >= 100) {
+      licenciasMayoresA100++;
+    }
   });
 
   const promedioDias = totalLicencias > 0 ? (totalDiasLicenciaActual / totalLicencias).toFixed(1) : "0";
@@ -130,7 +137,10 @@ export default function LicenciasTab({ rawData }: LicenciasProps) {
       <div style={{ display: 'flex', flexWrap: 'nowrap', gap: 'clamp(4px, 1.5vw, 20px)', width: '100%', justifyContent: 'space-between' }}>
         <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>Licencias</h4><p style={kpiValueStyle}>{totalLicencias}</p></div>
         <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>Días Acum.<br/>(Últimos 12 Meses)</h4><p style={{...kpiValueStyle, color: COLORS.naranjo}}>{totalDias12Meses}</p></div>
-        <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>Días Acum.<br/>(Últimos 24 Meses)</h4><p style={{...kpiValueStyle, color: COLORS.gris}}>{totalDias24Meses}</p></div>
+        
+        {/* NUEVA TARJETA: LM mayores a 100 días */}
+        <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>LM Mayores<br/>a 100 Días</h4><p style={{...kpiValueStyle, color: COLORS.rosado}}>{licenciasMayoresA100}</p></div>
+        
         <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>Promedio<br/>Días / Licencia</h4><p style={kpiValueStyle}>{promedioDias}</p></div>
       </div>
 
