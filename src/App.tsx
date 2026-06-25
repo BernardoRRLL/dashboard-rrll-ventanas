@@ -25,7 +25,6 @@ const COLORS = {
 };
 
 export default function App() {
-  // 1. Modificamos el estado para que "escuche" la URL y sepa en qué pestaña estamos
   const [activeTab, setActiveTab] = useState(() => {
     const hash = window.location.hash.replace('#', '');
     return hash || 'home';
@@ -39,7 +38,6 @@ export default function App() {
   
   const [isLoading, setIsLoading] = useState(true);
 
-  // 2. Este efecto captura cuando el usuario aprieta el botón "Atrás" del celular/PC
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '');
@@ -49,7 +47,6 @@ export default function App() {
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
-  // 3. Función que cambia de módulo y lo anota en el historial de navegación
   const handleTabChange = (tabId: string) => {
     window.location.hash = tabId === 'home' ? '' : tabId;
     setActiveTab(tabId);
@@ -171,7 +168,6 @@ export default function App() {
     return (
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(clamp(140px, 30vw, 320px), 1fr))', gap: '20px', marginTop: '30px' }}>
         {menuItems.map(item => (
-          {/* Se reemplaza onClick por la nueva función handleTabChange */}
           <button key={item.id} onClick={() => handleTabChange(item.id)} style={gridButtonStyle}>
             <div style={{ color: COLORS.celeste, marginBottom: '12px' }}>{item.icon}</div>
             <span style={{ fontSize: 'clamp(0.9rem, 2vw, 1.15rem)', fontWeight: 600, color: COLORS.gris, textAlign: 'center' }}>{item.label}</span>
@@ -209,7 +205,6 @@ export default function App() {
                 <h3 style={summaryTitleStyle}>Ausentismo</h3>
                 <p style={summaryValueStyle}>{globalSummary.ausentismo}%</p>
               </div>
-              {/* Tarjeta de Sobretiempo uniformada */}
               <div style={summaryCardStyle}>
                 <h3 style={summaryTitleStyle}>Sobretiempo</h3>
                 <p style={summaryValueStyle}>{globalSummary.sobretiempo}%</p>
@@ -232,7 +227,6 @@ export default function App() {
 
         {!isLoading && activeTab !== 'home' && (
           <div>
-            {/* Se reemplaza onClick por la nueva función handleTabChange */}
             <button onClick={() => handleTabChange('home')} style={backButtonStyle}>← Volver al Menú Principal</button>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '25px', flexWrap: 'wrap' }}>
               <div style={{ color: COLORS.naranjo }}>
