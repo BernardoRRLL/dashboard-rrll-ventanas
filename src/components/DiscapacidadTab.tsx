@@ -24,7 +24,7 @@ export default function DiscapacidadTab({ rawData }: DiscapacidadTabProps) {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Estructuras maestras definitivas para garantizar líneas de tiempo estables y completas
+  // Estructuras maestras estáticas para las líneas de tiempo completas
   const etapasPension = [
     { etapa: "Ingreso de solicitud", cant: 0 },
     { etapa: "Envío a Comisión Médica", cant: 0 },
@@ -45,7 +45,7 @@ export default function DiscapacidadTab({ rawData }: DiscapacidadTabProps) {
   let metaVal = "1.0%";
   let actualVal = "0.0%";
 
-  // Función de limpieza de cadenas para evitar fallas por espacios ocultos o tildes
+  // Función de normalización estricta de cadenas (evita colisiones "Apelación" vs "Resolución de apelación")
   const cleanStr = (str: string) => 
     String(str)
       .toLowerCase()
@@ -61,7 +61,7 @@ export default function DiscapacidadTab({ rawData }: DiscapacidadTabProps) {
   let metaKey = '';
   let actualKey = '';
 
-  // Identificación precisa y dinámica de las columnas del archivo maestro
+  // Identificación dinámica de columnas
   if (rawData.length > 0) {
     const keys = Object.keys(rawData[0]);
     keys.forEach((k, idx) => {
@@ -83,7 +83,6 @@ export default function DiscapacidadTab({ rawData }: DiscapacidadTabProps) {
     });
   }
 
-  // Conversión y formateo automático de porcentajes de ley
   const formatMetaOrActual = (val: string) => {
     let s = String(val).trim();
     if (!s || s.toLowerCase() === 'meta' || s.toLowerCase().includes('actual') || s === '0') return '';
@@ -96,7 +95,7 @@ export default function DiscapacidadTab({ rawData }: DiscapacidadTabProps) {
     return s;
   };
 
-  // Procesamiento y mapeo estricto por igualdad de fases
+  // Mapeo e inyección de datos desde el Excel
   rawData.forEach((row: any) => {
     if (metaKey && row[metaKey]) {
       const m = formatMetaOrActual(row[metaKey]);
@@ -130,7 +129,6 @@ export default function DiscapacidadTab({ rawData }: DiscapacidadTabProps) {
     }
   });
 
-  // Cálculo de los contadores finales agregados (Dando 4 y 1 exactamente)
   const tramitePensionCount = etapasPension.reduce((sum, item) => sum + item.cant, 0);
   const tramiteRNDCount = etapasRND.reduce((sum, item) => sum + item.cant, 0);
 
@@ -142,7 +140,6 @@ export default function DiscapacidadTab({ rawData }: DiscapacidadTabProps) {
         padding: isMobile ? '10px 0 10px 20px' : '40px 0 20px 0',
         marginTop: '10px'
       }}>
-        {/* Conector horizontal para computadores */}
         {!isMobile && (
           <div style={{
             position: 'absolute',
@@ -156,7 +153,6 @@ export default function DiscapacidadTab({ rawData }: DiscapacidadTabProps) {
           }} />
         )}
 
-        {/* Conector vertical para teléfonos móviles */}
         {isMobile && (
           <div style={{
             position: 'absolute',
@@ -191,7 +187,6 @@ export default function DiscapacidadTab({ rawData }: DiscapacidadTabProps) {
                 width: '100%',
                 textAlign: isMobile ? 'left' : 'center'
               }}>
-                {/* Nodo del indicador secuencial */}
                 <div style={{
                   width: '38px',
                   height: '38px',
@@ -210,7 +205,6 @@ export default function DiscapacidadTab({ rawData }: DiscapacidadTabProps) {
                   {idx + 1}
                 </div>
 
-                {/* Etiquetas informativas y burbujas indicadoras */}
                 <div style={{ flex: 1, width: '100%' }}>
                   <p style={{ 
                     margin: 0, 
@@ -252,8 +246,8 @@ export default function DiscapacidadTab({ rawData }: DiscapacidadTabProps) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '25px', fontFamily: "'Poppins', sans-serif" }}>
       
-      {/* 4 Tarjetas de Resumen Uniformes */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', width: '100%', justifyContent: 'space-between' }}>
+      {/* CORRECCIÓN RESPONSIVA: flexWrap: 'nowrap' y gap compacto para mantener la línea única perfecta en móvil */}
+      <div style={{ display: 'flex', flexWrap: 'nowrap', gap: 'clamp(6px, 1.5vw, 20px)', width: '100%', justifyContent: 'space-between' }}>
         <div style={summaryCardStyle}>
           <h4 style={kpiTitleStyle}>Meta</h4>
           <p style={kpiValueStyle}>{metaVal}</p>
@@ -272,13 +266,11 @@ export default function DiscapacidadTab({ rawData }: DiscapacidadTabProps) {
         </div>
       </div>
 
-      {/* Líneas de Tiempo completas independientes de su asignación de personal */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '25px' }}>
         {renderTimeline('Pensión de Invalidez', etapasPension)}
         {renderTimeline('Registro Nacional de Discapacidad (RND)', etapasRND)}
       </div>
 
-      {/* Nota de Simultaneidad */}
       <div style={{ 
         backgroundColor: '#e8f4f5', 
         borderLeft: `5px solid ${COLORS.celeste}`, 
@@ -295,7 +287,9 @@ export default function DiscapacidadTab({ rawData }: DiscapacidadTabProps) {
 }
 
 const cardStyle: React.CSSProperties = { backgroundColor: COLORS.blanco, padding: '25px', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)' };
-const summaryCardStyle: React.CSSProperties = { flex: '1 1 200px', minWidth: 0, backgroundColor: COLORS.blanco, padding: '20px 10px', borderRadius: '10px', boxShadow: '0 4px 10px rgba(0,0,0,0.04)', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '120px', borderTop: `5px solid ${COLORS.celeste}` };
-const kpiTitleStyle: React.CSSProperties = { margin: 0, color: COLORS.gris, fontSize: '0.9rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' };
-const kpiValueStyle: React.CSSProperties = { fontSize: 'clamp(1.6rem, 3vw, 2.2rem)', fontWeight: 600, color: COLORS.celeste, margin: '10px 0 0 0' };
+
+// Estilos de tarjetas ajustados a flex: '1 1 0px' y padding fluido clamp para bloqueo de desborde móvil
+const summaryCardStyle: React.CSSProperties = { flex: '1 1 0px', minWidth: 0, backgroundColor: COLORS.blanco, padding: 'clamp(8px, 1.8vw, 20px) 4px', borderRadius: '10px', boxShadow: '0 4px 10px rgba(0,0,0,0.04)', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '110px', borderTop: `5px solid ${COLORS.celeste}` };
+const kpiTitleStyle: React.CSSProperties = { margin: 0, color: '#666', fontSize: 'clamp(0.55rem, 1.3vw, 0.9rem)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' };
+const kpiValueStyle: React.CSSProperties = { fontSize: 'clamp(1.1rem, 3.2vw, 2.2rem)', fontWeight: 600, color: COLORS.celeste, margin: '6px 0 0 0' };
 const chartTitleStyle: React.CSSProperties = { margin: '0 0 10px 0', color: COLORS.gris, fontSize: '1.1rem', fontWeight: 600, borderBottom: '1px solid #eee', paddingBottom: '10px' };
