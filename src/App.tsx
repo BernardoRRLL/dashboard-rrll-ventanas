@@ -193,9 +193,9 @@ export default function App() {
                 <h3 style={summaryTitleStyle}>Ausentismo</h3>
                 <p style={summaryValueStyle}>{globalSummary.ausentismo}%</p>
               </div>
-              <div style={{...summaryCardStyle, borderTop: `5px solid ${COLORS.rosado}`}}>
+              <div style={{...summaryCardStyle, borderTop: `5px solid ${COLORS.celeste}`}}>
                 <h3 style={summaryTitleStyle}>Sobretiempo</h3>
-                <p style={{...summaryValueStyle, color: COLORS.rosado}}>{globalSummary.sobretiempo}%</p>
+                <p style={{...summaryValueStyle, color: COLORS.celeste}}>{globalSummary.sobretiempo}%</p>
               </div>
             </div>
 
