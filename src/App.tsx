@@ -197,7 +197,8 @@ export default function App() {
 
         {!isLoading && activeTab === 'home' && (
           <>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', width: '100%', justifyContent: 'space-between', marginBottom: '25px' }}>
+            {/* flexWrap cambiada a 'nowrap' y gap responsivo ultracompacto para celular */}
+            <div style={{ display: 'flex', flexWrap: 'nowrap', gap: 'clamp(6px, 1.5vw, 20px)', width: '100%', justifyContent: 'space-between', marginBottom: '25px' }}>
               <div style={summaryCardStyle}>
                 <h3 style={summaryTitleStyle}>Dotación Total</h3>
                 <p style={summaryValueStyle}>{globalSummary.total}</p>
@@ -268,8 +269,9 @@ export default function App() {
   );
 }
 
-const summaryCardStyle: React.CSSProperties = { flex: '1 1 200px', minWidth: 0, backgroundColor: COLORS.blanco, padding: '20px 10px', borderRadius: '10px', boxShadow: '0 4px 10px rgba(0,0,0,0.04)', textAlign: 'center', borderTop: `5px solid ${COLORS.celeste}` };
-const summaryTitleStyle: React.CSSProperties = { margin: 0, color: '#666', fontSize: 'clamp(0.8rem, 1.5vw, 1rem)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' };
-const summaryValueStyle: React.CSSProperties = { fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', fontWeight: 600, color: COLORS.celeste, margin: '10px 0 0 0' };
+// Estilos elásticos optimizados para línea única microscópica en celular
+const summaryCardStyle: React.CSSProperties = { flex: '1 1 0px', minWidth: 0, backgroundColor: COLORS.blanco, padding: 'clamp(8px, 1.8vw, 20px) 4px', borderRadius: '10px', boxShadow: '0 4px 10px rgba(0,0,0,0.04)', textAlign: 'center', borderTop: `5px solid ${COLORS.celeste}`, display: 'flex', flexDirection: 'column', justifyContent: 'center' };
+const summaryTitleStyle: React.CSSProperties = { margin: 0, color: '#666', fontSize: 'clamp(0.55rem, 1.3vw, 0.9rem)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' };
+const summaryValueStyle: React.CSSProperties = { fontSize: 'clamp(1.1rem, 3.2vw, 2.8rem)', fontWeight: 600, color: COLORS.celeste, margin: '6px 0 0 0' };
 const gridButtonStyle: React.CSSProperties = { backgroundColor: COLORS.blanco, border: '1px solid #eee', borderRadius: '12px', padding: 'clamp(20px, 4vw, 45px) 10px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.02)', transition: 'transform 0.2s ease, box-shadow 0.2s ease' };
 const backButtonStyle: React.CSSProperties = { backgroundColor: 'transparent', border: 'none', color: COLORS.naranjo, fontWeight: 600, fontSize: '1rem', cursor: 'pointer', margin: '0 0 20px 0', padding: 0, display: 'flex', alignItems: 'center', gap: '5px' };
