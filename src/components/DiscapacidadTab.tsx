@@ -24,7 +24,7 @@ export default function DiscapacidadTab({ rawData }: DiscapacidadTabProps) {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // 1. Estructura maestra estática para garantizar el despliegue completo de las etapas
+  // Estructuras maestras definitivas para garantizar líneas de tiempo estables y completas
   const etapasPension = [
     { etapa: "Ingreso de solicitud", cant: 0 },
     { etapa: "Envío a Comisión Médica", cant: 0 },
@@ -45,7 +45,15 @@ export default function DiscapacidadTab({ rawData }: DiscapacidadTabProps) {
   let metaVal = "1.0%";
   let actualVal = "0.0%";
 
-  // 2. Identificación de columnas mediante escaneo de marcadores estructurales
+  // Función de limpieza de cadenas para evitar fallas por espacios ocultos o tildes
+  const cleanStr = (str: string) => 
+    String(str)
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]/g, "")
+      .trim();
+
   let pensionStageKey = '';
   let pensionWorkersKey = '';
   let rndStageKey = '';
@@ -53,6 +61,7 @@ export default function DiscapacidadTab({ rawData }: DiscapacidadTabProps) {
   let metaKey = '';
   let actualKey = '';
 
+  // Identificación precisa y dinámica de las columnas del archivo maestro
   if (rawData.length > 0) {
     const keys = Object.keys(rawData[0]);
     keys.forEach((k, idx) => {
@@ -61,12 +70,12 @@ export default function DiscapacidadTab({ rawData }: DiscapacidadTabProps) {
       if (kLow.includes('actual') || kLow.includes('%')) actualKey = k;
 
       rawData.forEach(row => {
-        const val = String(row[k]).toLowerCase().trim();
-        if (val.includes('ingreso de solicitud')) {
+        const val = cleanStr(String(row[k]));
+        if (val === 'ingresodesolicitud') {
           pensionStageKey = k;
           if (idx + 1 < keys.length) pensionWorkersKey = keys[idx + 1];
         }
-        if (val.includes('recolección de informes')) {
+        if (val === 'recolecciondeinformes') {
           rndStageKey = k;
           if (idx + 1 < keys.length) rndWorkersKey = keys[idx + 1];
         }
@@ -74,49 +83,54 @@ export default function DiscapacidadTab({ rawData }: DiscapacidadTabProps) {
     });
   }
 
-  // 3. Extracción e inyección de datos desde el Excel hacia las estructuras maestras
+  // Conversión y formateo automático de porcentajes de ley
+  const formatMetaOrActual = (val: string) => {
+    let s = String(val).trim();
+    if (!s || s.toLowerCase() === 'meta' || s.toLowerCase().includes('actual') || s === '0') return '';
+    if (s.includes('%')) return s;
+    const num = parseFloat(s.replace(',', '.'));
+    if (!isNaN(num)) {
+      if (num > 0 && num < 1) return (num * 100).toFixed(1) + '%';
+      return num + '%';
+    }
+    return s;
+  };
+
+  // Procesamiento y mapeo estricto por igualdad de fases
   rawData.forEach((row: any) => {
     if (metaKey && row[metaKey]) {
-      const m = String(row[metaKey]).trim();
-      if (m && m.toLowerCase() !== 'meta' && m !== '0') {
-        metaVal = m === '0.01' || m === '0,01' ? '1.0%' : m;
-      }
+      const m = formatMetaOrActual(row[metaKey]);
+      if (m) metaVal = m;
     }
     if (actualKey && row[actualKey]) {
-      const a = String(row[actualKey]).trim();
-      if (a && !a.toLowerCase().includes('actual') && a !== '0') {
-        actualVal = a === '0.001' || a === '0,001' ? '0.1%' : a;
-      }
+      const a = formatMetaOrActual(row[actualKey]);
+      if (a) actualVal = a;
     }
 
-    // Mapeo e incremento para Pensión de Invalidez
     if (pensionStageKey && row[pensionStageKey]) {
-      const currentStage = String(row[pensionStageKey]).trim().toLowerCase().replace(/[^a-z0-9áéíóúñ]/g, '');
-      const workers = parseInt(row[pensionWorkersKey]) || 0;
+      const currentStage = cleanStr(row[pensionStageKey]);
+      const workers = parseInt(String(row[pensionWorkersKey]).trim()) || 0;
       
       etapasPension.forEach(item => {
-        const targetStage = item.etapa.toLowerCase().replace(/[^a-z0-9áéíóúñ]/g, '');
-        if (currentStage === targetStage || currentStage.includes(targetStage) || targetStage.includes(currentStage)) {
-          if (currentStage.length > 3) item.cant = workers;
+        if (currentStage === cleanStr(item.etapa)) {
+          item.cant = workers;
         }
       });
     }
 
-    // Mapeo e incremento para RND
     if (rndStageKey && row[rndStageKey]) {
-      const currentStage = String(row[rndStageKey]).trim().toLowerCase().replace(/[^a-z0-9áéíóúñ]/g, '');
-      const workers = parseInt(row[rndWorkersKey]) || 0;
+      const currentStage = cleanStr(row[rndStageKey]);
+      const workers = parseInt(String(row[rndWorkersKey]).trim()) || 0;
       
       etapasRND.forEach(item => {
-        const targetStage = item.etapa.toLowerCase().replace(/[^a-z0-9áéíóúñ]/g, '');
-        if (currentStage === targetStage || currentStage.includes(targetStage) || targetStage.includes(currentStage)) {
-          if (currentStage.length > 3) item.cant = workers;
+        if (currentStage === cleanStr(item.etapa)) {
+          item.cant = workers;
         }
       });
     }
   });
 
-  // Totales dinámicos agregados para las tarjetas superiores (Dando 4 y 1 respectivamente)
+  // Cálculo de los contadores finales agregados (Dando 4 y 1 exactamente)
   const tramitePensionCount = etapasPension.reduce((sum, item) => sum + item.cant, 0);
   const tramiteRNDCount = etapasRND.reduce((sum, item) => sum + item.cant, 0);
 
@@ -128,7 +142,7 @@ export default function DiscapacidadTab({ rawData }: DiscapacidadTabProps) {
         padding: isMobile ? '10px 0 10px 20px' : '40px 0 20px 0',
         marginTop: '10px'
       }}>
-        {/* Conector horizontal adaptativo (Desktop) */}
+        {/* Conector horizontal para computadores */}
         {!isMobile && (
           <div style={{
             position: 'absolute',
@@ -142,7 +156,7 @@ export default function DiscapacidadTab({ rawData }: DiscapacidadTabProps) {
           }} />
         )}
 
-        {/* Conector vertical adaptativo (Mobile) */}
+        {/* Conector vertical para teléfonos móviles */}
         {isMobile && (
           <div style={{
             position: 'absolute',
@@ -177,7 +191,7 @@ export default function DiscapacidadTab({ rawData }: DiscapacidadTabProps) {
                 width: '100%',
                 textAlign: isMobile ? 'left' : 'center'
               }}>
-                {/* Nodo de fase secuencial */}
+                {/* Nodo del indicador secuencial */}
                 <div style={{
                   width: '38px',
                   height: '38px',
@@ -196,7 +210,7 @@ export default function DiscapacidadTab({ rawData }: DiscapacidadTabProps) {
                   {idx + 1}
                 </div>
 
-                {/* Etiquetas de etapa y burbujas de volumen */}
+                {/* Etiquetas informativas y burbujas indicadoras */}
                 <div style={{ flex: 1, width: '100%' }}>
                   <p style={{ 
                     margin: 0, 
@@ -238,7 +252,7 @@ export default function DiscapacidadTab({ rawData }: DiscapacidadTabProps) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '25px', fontFamily: "'Poppins', sans-serif" }}>
       
-      {/* 4 Tarjetas Simétricas Superiores */}
+      {/* 4 Tarjetas de Resumen Uniformes */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', width: '100%', justifyContent: 'space-between' }}>
         <div style={summaryCardStyle}>
           <h4 style={kpiTitleStyle}>Meta</h4>
@@ -258,13 +272,13 @@ export default function DiscapacidadTab({ rawData }: DiscapacidadTabProps) {
         </div>
       </div>
 
-      {/* Líneas de Tiempo completas con títulos puros */}
+      {/* Líneas de Tiempo completas independientes de su asignación de personal */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '25px' }}>
         {renderTimeline('Pensión de Invalidez', etapasPension)}
         {renderTimeline('Registro Nacional de Discapacidad (RND)', etapasRND)}
       </div>
 
-      {/* Nota institucional de cierre */}
+      {/* Nota de Simultaneidad */}
       <div style={{ 
         backgroundColor: '#e8f4f5', 
         borderLeft: `5px solid ${COLORS.celeste}`, 
