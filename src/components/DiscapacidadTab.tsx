@@ -60,8 +60,7 @@ export default function DiscapacidadTab({ rawData }: DiscapacidadTabProps) {
         tramitePensionCount += cantidad;
       }
     } else if (proceso.toLowerCase().includes('registro') || proceso.toLowerCase().includes('rnd') || proceso.toLowerCase().includes('nacional')) {
-      etapasRND.push({ etapa, cant: quantity => cantidad });
-      etapasRND[etapasRND.length - 1].cant = cantidad; // Corrección directa de asignación limpia
+      etapasRND.push({ etapa, cant: cantidad });
       if (etapa.toLowerCase().includes('tramite') || etapa.toLowerCase().includes('trámite')) {
         tramiteRNDCount += cantidad;
       }
