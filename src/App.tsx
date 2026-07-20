@@ -9,7 +9,8 @@ import SindicatosTab from './components/SindicatosTab';
 import LicenciasTab from './components/LicenciasTab';
 import AusentismoTab from './components/AusentismoTab';
 import DiscapacidadTab from './components/DiscapacidadTab';
-import CumpleanosTab from './components/CumpleanosTab';
+// AQUI ESTÁ EL CAMBIO DEL NOMBRE:
+import CumplesTab from './components/CumplesTab';
 
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement, LineElement, Filler } from 'chart.js';
 import ChartJSPluginDataLabels from 'chartjs-plugin-datalabels';
@@ -257,7 +258,7 @@ export default function App() {
             ) : activeTab === 'discapacidad' ? (
               <DiscapacidadTab rawData={discapacidadData} /> 
             ) : activeTab === 'cumpleanos' ? (
-              <CumpleanosTab rawData={rawData} /> 
+              <CumplesTab rawData={rawData} /> 
             ) : (
               <div style={{ padding: '40px', textAlign: 'center', backgroundColor: COLORS.blanco, borderRadius: '8px' }}>
                 <p>Módulo de {activeTab} en desarrollo...</p>
