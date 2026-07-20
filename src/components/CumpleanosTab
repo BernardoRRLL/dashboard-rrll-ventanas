@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Gift, Calendar } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Gift, Calendar, User } from 'lucide-react';
 
 const COLORS = {
   gris: '#36424a',
@@ -25,26 +25,29 @@ export default function CumpleanosTab({ rawData }: CumpleanosProps) {
     const today = new Date();
     const currentMonth = today.getMonth() + 1;
     
+    // Generamos las fechas objetivo de los próximos 7 días (incluyendo hoy)
     const targetDates = Array.from({length: 8}).map((_, i) => {
       const d = new Date();
       d.setDate(today.getDate() + i);
       return {
          mm: String(d.getMonth() + 1).padStart(2, '0'),
-         dd: String(d.getDate()).padStart(2, '0')
+         dd: String(d.getDate()).padStart(2, '0'),
+         dateObj: d
       };
     });
 
-    const targetMMDDs = targetDates.map((t: any) => `${t.mm}-${t.dd}`);
+    const targetMMDDs = targetDates.map(t => `${t.mm}-${t.dd}`);
     const todayMMDD = targetMMDDs[0];
 
     const monthList: any[] = [];
     const next7List: any[] = [];
     const todayList: any[] = [];
 
-    rawData.forEach((row: any) => {
+    rawData.forEach(row => {
        const fn = String(row['Fecha Nacimiento'] || row['Fecha de Nacimiento'] || '').trim();
        if (!fn) return;
 
+       // Extraemos Mes y Día (Soporta YYYY-MM-DD y DD/MM/YYYY)
        let mm = '', dd = '';
        if (fn.includes('-')) {
           const parts = fn.split('-');
@@ -71,13 +74,15 @@ export default function CumpleanosTab({ rawData }: CumpleanosProps) {
            mes: mesInt
        };
 
+       // Filtramos
        if (mesInt === currentMonth) monthList.push(empleado);
        if (targetMMDDs.includes(mmdd)) next7List.push(empleado);
        if (mmdd === todayMMDD) todayList.push(empleado);
     });
 
-    monthList.sort((a: any, b: any) => a.dia - b.dia);
-    next7List.sort((a: any, b: any) => targetMMDDs.indexOf(a.mmdd) - targetMMDDs.indexOf(b.mmdd));
+    // Ordenamos cronológicamente
+    monthList.sort((a,b) => a.dia - b.dia);
+    next7List.sort((a, b) => targetMMDDs.indexOf(a.mmdd) - targetMMDDs.indexOf(b.mmdd));
 
     setMesActual(monthList);
     setProximos7Dias(next7List);
@@ -87,7 +92,7 @@ export default function CumpleanosTab({ rawData }: CumpleanosProps) {
 
   const currentMonthName = mesesStr[new Date().getMonth()];
 
-  const renderList = (titulo: string, lista: any[], icon: React.ReactNode) => (
+  const renderList = (titulo: string, lista: any[], icon: any) => (
     <div style={cardStyle}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '1px solid #eee', paddingBottom: '15px', marginBottom: '15px' }}>
         <div style={{ color: COLORS.naranjo }}>{icon}</div>
@@ -101,7 +106,7 @@ export default function CumpleanosTab({ rawData }: CumpleanosProps) {
         <p style={{ color: '#888', fontSize: '0.9rem', fontStyle: 'italic', textAlign: 'center', padding: '20px 0' }}>No hay registros para este periodo.</p>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '500px', overflowY: 'auto', paddingRight: '5px' }}>
-          {lista.map((emp: any, idx: number) => (
+          {lista.map((emp, idx) => (
             <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '15px', padding: '12px', backgroundColor: COLORS.fondo, borderRadius: '8px' }}>
               <div style={{ backgroundColor: COLORS.celeste, color: COLORS.blanco, width: '45px', height: '45px', borderRadius: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <span style={{ fontSize: '1.2rem', fontWeight: 700, lineHeight: '1' }}>{emp.dia}</span>
@@ -121,6 +126,7 @@ export default function CumpleanosTab({ rawData }: CumpleanosProps) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '25px', fontFamily: "'Poppins', sans-serif" }}>
+      
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', width: '100%', justifyContent: 'space-between' }}>
         <div style={{...summaryCardStyle, borderTop: `5px solid ${COLORS.rosado}`}}>
           <h4 style={kpiTitleStyle}>Hoy Cumplen</h4>
@@ -135,10 +141,12 @@ export default function CumpleanosTab({ rawData }: CumpleanosProps) {
           <p style={kpiValueStyle}>{mesActual.length}</p>
         </div>
       </div>
+
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '25px' }}>
         {renderList('Próximos 7 Días', proximos7Dias, <Gift size={24} />)}
         {renderList(`Cumpleaños de ${currentMonthName}`, mesActual, <Calendar size={24} />)}
       </div>
+
     </div>
   );
 }
