@@ -162,7 +162,6 @@ export default function App() {
   };
 
   const renderHomeMenu = () => {
-    // 1. Agregamos el ítem de Cumpleaños al final
     const menuItems = [
       { id: 'dotacion', label: 'Dotación', icon: <Users size={38} /> },
       { id: 'participacion', label: 'Participación Femenina', icon: <Venus size={38} /> },
@@ -238,7 +237,6 @@ export default function App() {
             <button onClick={() => handleTabChange('home')} style={backButtonStyle}>← Volver al Menú Principal</button>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '25px', flexWrap: 'wrap' }}>
               <div style={{ color: COLORS.naranjo }}>
-                {/* 2. Asignación de icono y título */}
                 {activeTab === 'participacion' ? <Venus size={32} /> : activeTab === 'sindicatos' ? <Handshake size={32} /> : activeTab === 'licencias' ? <Stethoscope size={32} /> : activeTab === 'ausentismo' ? <Scale size={32} /> : activeTab === 'discapacidad' ? <Accessibility size={32} /> : activeTab === 'cumpleanos' ? <Gift size={32} /> : <Users size={32} />}
               </div>
               <h2 style={{ color: COLORS.gris, margin: 0, fontSize: 'clamp(1.4rem, 3vw, 1.8rem)', fontWeight: 600 }}>
@@ -246,7 +244,6 @@ export default function App() {
               </h2>
             </div>
             
-            {/* 3. Renderizado del Componente */}
             {activeTab === 'dotacion' ? (
               <DotacionTab rawData={rawData} stats={dotacionStats} />
             ) : activeTab === 'participacion' ? (
