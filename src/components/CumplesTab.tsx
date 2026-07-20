@@ -6,7 +6,7 @@ const COLORS = {
   naranjo: '#e45302',
   celeste: '#0098aa',
   amarillo: '#f4ab03',
-  rosado: '#C2185B', // <-- ¡AQUÍ ESTABA EL ERROR! Faltaba este color.
+  rosado: '#C2185B',
   blanco: '#ffffff',
   fondo: '#f5f7f8'
 };
@@ -23,19 +23,22 @@ export default function CumplesTab({ rawData }: CumpleanosProps) {
   const mesesStr = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
   useEffect(() => {
-    const today = new Date();
-    const currentMonth = today.getMonth() + 1;
-    
-    const targetDates = Array.from({length: 8}).map((_, i) => {
+    const todayObj = new Date();
+    const currentMonthIdx = todayObj.getMonth(); // 0 para Enero, 6 para Julio, etc.
+    const currentMonthNameText = mesesStr[currentMonthIdx].toLowerCase(); // "julio"
+
+    // Generamos una lista de los próximos 7 días con su mes y día para la comparación
+    const targetDates = Array.from({ length: 8 }).map((_, i) => {
       const d = new Date();
-      d.setDate(today.getDate() + i);
+      d.setDate(todayObj.getDate() + i);
       return {
-         mm: String(d.getMonth() + 1).padStart(2, '0'),
-         dd: String(d.getDate()).padStart(2, '0')
+        mesText: mesesStr[d.getMonth()].toLowerCase(),
+        diaNum: d.getDate(),
+        mmddKey: `${d.getMonth() + 1}-${d.getDate()}`
       };
     });
 
-    const targetMMDDs = targetDates.map((t: any) => `${t.mm}-${t.dd}`);
+    const targetMMDDs = targetDates.map((t: any) => t.mmddKey);
     const todayMMDD = targetMMDDs[0];
 
     const monthList: any[] = [];
@@ -43,42 +46,69 @@ export default function CumplesTab({ rawData }: CumpleanosProps) {
     const todayList: any[] = [];
 
     rawData.forEach((row: any) => {
-       const fn = String(row['Fecha Nacimiento'] || row['Fecha de Nacimiento'] || '').trim();
-       if (!fn) return;
+      // 1. Leemos el mes directamente desde la columna dedicada en el Excel
+      const mesExcel = String(row['Mes Cumpleaños'] || row['Mes'] || '').toLowerCase().trim();
+      if (!mesExcel) return;
 
-       let mm = '', dd = '';
-       if (fn.includes('-')) {
-          const parts = fn.split('-');
-          if(parts.length >= 3) { mm = parts[1]; dd = parts[2].substring(0,2); }
-       } else if (fn.includes('/')) {
-          const parts = fn.split('/');
-          if(parts.length >= 3) { dd = parts[0]; mm = parts[1]; }
-       } else {
-           return;
-       }
+      // 2. Extraemos el día de forma segura desde la columna "Fecha Nacimiento"
+      const fn = String(row['Fecha Nacimiento'] || row['Fecha de Nacimiento'] || '').trim();
+      if (!fn) return;
 
-       if (mm.length === 1) mm = '0' + mm;
-       if (dd.length === 1) dd = '0' + dd;
-       const mmdd = `${mm}-${dd}`;
-       const mesInt = parseInt(mm, 10);
-       const diaInt = parseInt(dd, 10);
+      let diaInt = 0;
+      let mesCalculadoIdx = -1;
 
-       const empleado = {
-           nombre: row['Nombre'] || row['Nombre trabajador/a'] || 'Sin nombre',
-           cargo: row['Posición'] || row['Cargo'] || 'Sin cargo',
-           area: row['Unidad Organizativa'] || row['Superintendencia / Dirección / Gerencia'] || 'Sin área',
-           mmdd,
-           dia: diaInt,
-           mes: mesInt
-       };
+      // Evaluamos el formato del texto de la fecha para extraer el día correcto
+      if (fn.includes('-')) {
+        const parts = fn.split('-');
+        if (parts.length >= 3) {
+          // Si es YYYY-MM-DD el día suele ser el tercero
+          diaInt = parseInt(parts[2].substring(0, 2), 10) || 0;
+          mesCalculadoIdx = (parseInt(parts[1], 10) || 1) - 1;
+        }
+      } else if (fn.includes('/')) {
+        const parts = fn.split('/');
+        if (parts.length >= 3) {
+          // Si es DD/MM/YYYY el día es el primero
+          diaInt = parseInt(parts[0], 10) || 0;
+          mesCalculadoIdx = (parseInt(parts[1], 10) || 1) - 1;
+        }
+      }
 
-       if (mesInt === currentMonth) monthList.push(empleado);
-       if (targetMMDDs.includes(mmdd)) next7List.push(empleado);
-       if (mmdd === todayMMDD) todayList.push(empleado);
+      // Si por alguna razón el parseo falló pero tenemos el dato en bruto, intentamos rescatarlo
+      if (diaInt === 0) return;
+
+      // Si la columna "Mes Cumpleaños" no coincide, usamos el índice calculado de la fecha como respaldo
+      const mesNombreFinal = mesExcel || (mesCalculadoIdx !== -1 ? mesesStr[mesCalculadoIdx].toLowerCase() : '');
+      const mesIntReal = mesesStr.findIndex((m: string) => m.toLowerCase() === mesNombreFinal) + 1;
+
+      if (mesIntReal === 0) return; // Si no encontramos un mes válido, saltamos la fila
+
+      const empleado = {
+        nombre: row['Nombre'] || row['Nombre trabajador/a'] || 'Sin nombre',
+        cargo: row['Posición'] || row['Cargo'] || 'Sin cargo',
+        area: row['Unidad Organizativa'] || row['Superintendencia / Dirección / Gerencia'] || 'Sin área',
+        mmddKey: `${mesIntReal}-${diaInt}`,
+        dia: diaInt,
+        mes: mesIntReal
+      };
+
+      // 3. Clasificación usando la columna limpia del mes del Excel
+      if (mesNombreFinal === currentMonthNameText) {
+        monthList.push(empleado);
+      }
+      if (targetMMDDs.includes(empleado.mmddKey)) {
+        next7List.push(empleado);
+      }
+      if (empleado.mmddKey === todayMMDD) {
+        todayList.push(empleado);
+      }
     });
 
+    // Ordenamos las listas de manera cronológica por el día
     monthList.sort((a: any, b: any) => a.dia - b.dia);
-    next7List.sort((a: any, b: any) => targetMMDDs.indexOf(a.mmdd) - targetMMDDs.indexOf(b.mmdd));
+    next7List.sort((a: any, b: any) => {
+      return targetMMDDs.indexOf(a.mmddKey) - targetMMDDs.indexOf(b.mmddKey);
+    });
 
     setMesActual(monthList);
     setProximos7Dias(next7List);
