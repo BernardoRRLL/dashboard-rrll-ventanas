@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import { Users, Venus, Handshake, Stethoscope, Scale, Accessibility, Gift } from 'lucide-react';
 import Header from './components/Header';
@@ -100,7 +100,7 @@ export default function App() {
     const indefinidos = dotData.filter(row => String(row['Tipo Contrato']).trim() === 'Indefinido').length;
     
     let sumaEdades = 0, sumaF = 0, totalF = 0, sumaM = 0, totalM = 0;
-    dotData.forEach(row => {
+    dotData.forEach((row: any) => {
       const edad = Number(row['Edad']) || 0; 
       const sexo = String(row['Sexo'] || '').trim();
       if (edad > 0) {
@@ -138,7 +138,7 @@ export default function App() {
       const areas = ['Mantenimiento', 'Refino a Fuego', 'Refineria', 'Staff'];
       let sumLM = 0, sumPermisos = 0, sumST = 0;
       
-      areas.forEach(area => {
+      areas.forEach((area: string) => {
         const vals = getRowData(area, 1);
         sumLM += vals[0] || 0;
         sumPermisos += vals[1] || 0;
@@ -174,7 +174,7 @@ export default function App() {
 
     return (
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(clamp(140px, 30vw, 320px), 1fr))', gap: '20px', marginTop: '30px' }}>
-        {menuItems.map(item => (
+        {menuItems.map((item: any) => (
           <button key={item.id} onClick={() => handleTabChange(item.id)} style={gridButtonStyle}>
             <div style={{ color: COLORS.celeste, marginBottom: '12px' }}>{item.icon}</div>
             <span style={{ fontSize: 'clamp(0.9rem, 2vw, 1.15rem)', fontWeight: 600, color: COLORS.gris, textAlign: 'center' }}>{item.label}</span>
