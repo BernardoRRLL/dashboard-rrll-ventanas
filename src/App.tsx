@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
-import { Users, Venus, Handshake, Stethoscope, Scale, Accessibility } from 'lucide-react';
+import { Users, Venus, Handshake, Stethoscope, Scale, Accessibility, Gift } from 'lucide-react';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import DotacionTab from './components/DotacionTab';
@@ -9,6 +9,7 @@ import SindicatosTab from './components/SindicatosTab';
 import LicenciasTab from './components/LicenciasTab';
 import AusentismoTab from './components/AusentismoTab';
 import DiscapacidadTab from './components/DiscapacidadTab';
+import CumpleanosTab from './components/CumpleanosTab';
 
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement, LineElement, Filler } from 'chart.js';
 import ChartJSPluginDataLabels from 'chartjs-plugin-datalabels';
@@ -161,6 +162,7 @@ export default function App() {
   };
 
   const renderHomeMenu = () => {
+    // 1. Agregamos el ítem de Cumpleaños al final
     const menuItems = [
       { id: 'dotacion', label: 'Dotación', icon: <Users size={38} /> },
       { id: 'participacion', label: 'Participación Femenina', icon: <Venus size={38} /> },
@@ -168,6 +170,7 @@ export default function App() {
       { id: 'licencias', label: 'Licencias Médicas', icon: <Stethoscope size={38} /> },
       { id: 'ausentismo', label: 'Ausentismo y Sobretiempo', icon: <Scale size={38} /> },
       { id: 'discapacidad', label: 'Discapacidad', icon: <Accessibility size={38} /> },
+      { id: 'cumpleanos', label: 'Cumpleaños', icon: <Gift size={38} /> },
     ];
 
     return (
@@ -197,8 +200,7 @@ export default function App() {
 
         {!isLoading && activeTab === 'home' && (
           <>
-            {/* Contenedor actualizado a GRID: En móvil hace 2 columnas, en PC hace 4 columnas automáticamente */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '15px', width: '100%', marginBottom: '25px' }}>
+            <div style={{ display: 'flex', flexWrap: 'nowrap', gap: 'clamp(6px, 1.5vw, 20px)', width: '100%', justifyContent: 'space-between', marginBottom: '25px' }}>
               <div style={summaryCardStyle}>
                 <h3 style={summaryTitleStyle}>Dotación Total</h3>
                 <p style={summaryValueStyle}>{globalSummary.total}</p>
@@ -236,13 +238,15 @@ export default function App() {
             <button onClick={() => handleTabChange('home')} style={backButtonStyle}>← Volver al Menú Principal</button>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '25px', flexWrap: 'wrap' }}>
               <div style={{ color: COLORS.naranjo }}>
-                {activeTab === 'participacion' ? <Venus size={32} /> : activeTab === 'sindicatos' ? <Handshake size={32} /> : activeTab === 'licencias' ? <Stethoscope size={32} /> : activeTab === 'ausentismo' ? <Scale size={32} /> : activeTab === 'discapacidad' ? <Accessibility size={32} /> : <Users size={32} />}
+                {/* 2. Asignación de icono y título */}
+                {activeTab === 'participacion' ? <Venus size={32} /> : activeTab === 'sindicatos' ? <Handshake size={32} /> : activeTab === 'licencias' ? <Stethoscope size={32} /> : activeTab === 'ausentismo' ? <Scale size={32} /> : activeTab === 'discapacidad' ? <Accessibility size={32} /> : activeTab === 'cumpleanos' ? <Gift size={32} /> : <Users size={32} />}
               </div>
               <h2 style={{ color: COLORS.gris, margin: 0, fontSize: 'clamp(1.4rem, 3vw, 1.8rem)', fontWeight: 600 }}>
-                {activeTab === 'dotacion' ? 'Análisis Dotacional' : activeTab === 'participacion' ? 'Participación Femenina' : activeTab === 'sindicatos' ? 'Organizaciones Sindicales' : activeTab === 'licencias' ? 'Licencias Médicas' : activeTab === 'ausentismo' ? 'Ausentismo y Sobretiempo' : activeTab === 'discapacidad' ? 'Inclusión y Discapacidad' : activeTab.toUpperCase()}
+                {activeTab === 'dotacion' ? 'Análisis Dotacional' : activeTab === 'participacion' ? 'Participación Femenina' : activeTab === 'sindicatos' ? 'Organizaciones Sindicales' : activeTab === 'licencias' ? 'Licencias Médicas' : activeTab === 'ausentismo' ? 'Ausentismo y Sobretiempo' : activeTab === 'discapacidad' ? 'Inclusión y Discapacidad' : activeTab === 'cumpleanos' ? 'Gestión de Cumpleaños' : activeTab.toUpperCase()}
               </h2>
             </div>
             
+            {/* 3. Renderizado del Componente */}
             {activeTab === 'dotacion' ? (
               <DotacionTab rawData={rawData} stats={dotacionStats} />
             ) : activeTab === 'participacion' ? (
@@ -255,6 +259,8 @@ export default function App() {
               <AusentismoTab rawData={ausentismoData} /> 
             ) : activeTab === 'discapacidad' ? (
               <DiscapacidadTab rawData={discapacidadData} /> 
+            ) : activeTab === 'cumpleanos' ? (
+              <CumpleanosTab rawData={rawData} /> 
             ) : (
               <div style={{ padding: '40px', textAlign: 'center', backgroundColor: COLORS.blanco, borderRadius: '8px' }}>
                 <p>Módulo de {activeTab} en desarrollo...</p>
@@ -269,9 +275,8 @@ export default function App() {
   );
 }
 
-// Estilos limpios y readaptados a la nueva grilla
-const summaryCardStyle: React.CSSProperties = { backgroundColor: COLORS.blanco, padding: '20px 10px', borderRadius: '10px', boxShadow: '0 4px 10px rgba(0,0,0,0.04)', textAlign: 'center', borderTop: `5px solid ${COLORS.celeste}`, display: 'flex', flexDirection: 'column', justifyContent: 'center' };
-const summaryTitleStyle: React.CSSProperties = { margin: 0, color: '#666', fontSize: 'clamp(0.75rem, 2vw, 0.95rem)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' };
-const summaryValueStyle: React.CSSProperties = { fontSize: 'clamp(1.6rem, 4vw, 2.8rem)', fontWeight: 600, color: COLORS.celeste, margin: '6px 0 0 0' };
+const summaryCardStyle: React.CSSProperties = { flex: '1 1 0px', minWidth: 0, backgroundColor: COLORS.blanco, padding: 'clamp(8px, 1.8vw, 20px) 4px', borderRadius: '10px', boxShadow: '0 4px 10px rgba(0,0,0,0.04)', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '110px', borderTop: `5px solid ${COLORS.celeste}` };
+const summaryTitleStyle: React.CSSProperties = { margin: 0, color: '#666', fontSize: 'clamp(0.55rem, 1.3vw, 0.9rem)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' };
+const summaryValueStyle: React.CSSProperties = { fontSize: 'clamp(1.1rem, 3.2vw, 2.8rem)', fontWeight: 600, color: COLORS.celeste, margin: '6px 0 0 0' };
 const gridButtonStyle: React.CSSProperties = { backgroundColor: COLORS.blanco, border: '1px solid #eee', borderRadius: '12px', padding: 'clamp(20px, 4vw, 45px) 10px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.02)', transition: 'transform 0.2s ease, box-shadow 0.2s ease' };
 const backButtonStyle: React.CSSProperties = { backgroundColor: 'transparent', border: 'none', color: COLORS.naranjo, fontWeight: 600, fontSize: '1rem', cursor: 'pointer', margin: '0 0 20px 0', padding: 0, display: 'flex', alignItems: 'center', gap: '5px' };
