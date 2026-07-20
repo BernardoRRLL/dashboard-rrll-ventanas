@@ -6,6 +6,7 @@ const COLORS = {
   naranjo: '#e45302',
   celeste: '#0098aa',
   amarillo: '#f4ab03',
+  rosado: '#C2185B', // <-- ¡AQUÍ ESTABA EL ERROR! Faltaba este color.
   blanco: '#ffffff',
   fondo: '#f5f7f8'
 };
@@ -14,7 +15,7 @@ interface CumpleanosProps {
   rawData: any[];
 }
 
-export default function CumpleanosTab({ rawData }: CumpleanosProps) {
+export default function CumplesTab({ rawData }: CumpleanosProps) {
   const [mesActual, setMesActual] = useState<any[]>([]);
   const [proximos7Dias, setProximos7Dias] = useState<any[]>([]);
   const [hoy, setHoy] = useState<any[]>([]);
