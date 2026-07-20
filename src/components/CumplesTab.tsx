@@ -27,56 +27,46 @@ export default function CumplesTab({ rawData }: CumpleanosProps) {
     const currentMonthIdx = todayObj.getMonth(); 
     const currentMonthNameText = mesesStr[currentMonthIdx].toLowerCase(); 
 
+    // Generamos una lista de las llaves (mes-dia) de los próximos 7 días
     const targetDates = Array.from({ length: 8 }).map((_, i) => {
       const d = new Date();
       d.setDate(todayObj.getDate() + i);
-      return {
-        mesText: mesesStr[d.getMonth()].toLowerCase(),
-        diaNum: d.getDate(),
-        mmddKey: `${d.getMonth() + 1}-${d.getDate()}`
-      };
+      return `${d.getMonth() + 1}-${d.getDate()}`;
     });
 
-    const targetMMDDs = targetDates.map((t: any) => t.mmddKey);
-    const todayMMDD = targetMMDDs[0];
+    const todayMMDD = targetDates[0];
 
     const monthList: any[] = [];
     const next7List: any[] = [];
     const todayList: any[] = [];
 
     rawData.forEach((row: any) => {
+      // 1. Extraemos el mes 100% seguro de la columna N (Mes Cumpleaños)
       const mesExcel = String(row['Mes Cumpleaños'] || row['Mes'] || '').toLowerCase().trim();
-      if (!mesExcel) return;
+      const mesIntReal = mesesStr.findIndex((m: string) => m.toLowerCase() === mesExcel) + 1;
 
-      const fn = String(row['Fecha Nacimiento'] || row['Fecha de Nacimiento'] || '').trim();
-      if (!fn) return;
+      if (mesIntReal === 0) return; // Si no hay mes válido, se descarta
 
+      // 2. Extraemos la fecha con el nuevo formato seguro (dd-mmm-yyyy)
+      const fn = String(row['Fecha Nacimiento'] || row['Fecha de Nacimiento'] || '').trim().toLowerCase();
       let diaInt = 0;
-      let mesCalculadoIdx = -1;
 
-      // 1. Unificamos cualquier separador (slash o guion) a un guion estándar
-      const fnClean = fn.replace(/\//g, '-');
-      const parts = fnClean.split('-');
+      // Unificamos el texto cambiando slashes (/) por guiones (-)
+      const fnClean = fn.replace(/\//g, '-').trim();
 
-      // 2. Lógica robusta para formato Chileno/Español vs Formato Base de Datos
-      if (parts.length >= 3) {
-        if (parts[0].length === 4) {
-          // Si empieza con 4 dígitos, es formato YYYY-MM-DD
-          diaInt = parseInt(parts[2].substring(0, 2), 10) || 0;
-          mesCalculadoIdx = (parseInt(parts[1], 10) || 1) - 1;
-        } else {
-          // Si no empieza con 4 dígitos, asumimos 100% formato DD-MM-YYYY (Día - Mes - Año)
-          diaInt = parseInt(parts[0], 10) || 0;
-          mesCalculadoIdx = (parseInt(parts[1], 10) || 1) - 1;
-        }
+      // Buscamos si empieza con 4 dígitos (Ej: 1980-07-15)
+      const matchIso = fnClean.match(/^\d{4}-(\d{1,2})-(\d{1,2})/);
+      
+      // Buscamos si empieza con 1 o 2 dígitos, ideal para tu nuevo formato (Ej: 15-jul-1980)
+      const matchLatam = fnClean.match(/^(\d{1,2})-[a-z0-9]+/);
+
+      if (matchIso) {
+         diaInt = parseInt(matchIso[2], 10); // Toma el último par de números
+      } else if (matchLatam) {
+         diaInt = parseInt(matchLatam[1], 10); // Toma el primer par de números
       }
 
-      if (diaInt === 0) return;
-
-      const mesNombreFinal = mesExcel || (mesCalculadoIdx !== -1 ? mesesStr[mesCalculadoIdx].toLowerCase() : '');
-      const mesIntReal = mesesStr.findIndex((m: string) => m.toLowerCase() === mesNombreFinal) + 1;
-
-      if (mesIntReal === 0) return; 
+      if (diaInt === 0 || diaInt > 31) return; // Control de seguridad
 
       const empleado = {
         nombre: row['Nombre'] || row['Nombre trabajador/a'] || 'Sin nombre',
@@ -87,10 +77,11 @@ export default function CumplesTab({ rawData }: CumpleanosProps) {
         mes: mesIntReal
       };
 
-      if (mesNombreFinal === currentMonthNameText) {
+      // 3. Clasificamos en los arreglos correspondientes
+      if (mesExcel === currentMonthNameText) {
         monthList.push(empleado);
       }
-      if (targetMMDDs.includes(empleado.mmddKey)) {
+      if (targetDates.includes(empleado.mmddKey)) {
         next7List.push(empleado);
       }
       if (empleado.mmddKey === todayMMDD) {
@@ -98,9 +89,10 @@ export default function CumplesTab({ rawData }: CumpleanosProps) {
       }
     });
 
+    // Ordenamos todo cronológicamente
     monthList.sort((a: any, b: any) => a.dia - b.dia);
     next7List.sort((a: any, b: any) => {
-      return targetMMDDs.indexOf(a.mmddKey) - targetMMDDs.indexOf(b.mmddKey);
+      return targetDates.indexOf(a.mmddKey) - targetDates.indexOf(b.mmddKey);
     });
 
     setMesActual(monthList);
