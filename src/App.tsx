@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
-import { Users, Venus, Handshake, Stethoscope, Scale, Accessibility, Gift } from 'lucide-react';
+import { Users, Venus, Handshake, Stethoscope, Scale, Accessibility, Gift, MapPin } from 'lucide-react';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import DotacionTab from './components/DotacionTab';
@@ -9,8 +9,8 @@ import SindicatosTab from './components/SindicatosTab';
 import LicenciasTab from './components/LicenciasTab';
 import AusentismoTab from './components/AusentismoTab';
 import DiscapacidadTab from './components/DiscapacidadTab';
-// AQUÍ CORREGIMOS EL NOMBRE PARA QUE BUSQUE CUMPLESTAB:
 import CumplesTab from './components/CumplesTab';
+import ComunasTab from './components/ComunasTab'; // <-- Importamos el nuevo módulo
 
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement, LineElement, Filler } from 'chart.js';
 import ChartJSPluginDataLabels from 'chartjs-plugin-datalabels';
@@ -163,6 +163,7 @@ export default function App() {
   };
 
   const renderHomeMenu = () => {
+    // <-- Agregamos Comunas al menú principal
     const menuItems = [
       { id: 'dotacion', label: 'Dotación', icon: <Users size={38} /> },
       { id: 'participacion', label: 'Participación Femenina', icon: <Venus size={38} /> },
@@ -171,6 +172,7 @@ export default function App() {
       { id: 'ausentismo', label: 'Ausentismo y Sobretiempo', icon: <Scale size={38} /> },
       { id: 'discapacidad', label: 'Discapacidad', icon: <Accessibility size={38} /> },
       { id: 'cumpleanos', label: 'Cumpleaños', icon: <Gift size={38} /> },
+      { id: 'comunas', label: 'Comunas', icon: <MapPin size={38} /> }, 
     ];
 
     return (
@@ -238,13 +240,16 @@ export default function App() {
             <button onClick={() => handleTabChange('home')} style={backButtonStyle}>← Volver al Menú Principal</button>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '25px', flexWrap: 'wrap' }}>
               <div style={{ color: COLORS.naranjo }}>
-                {activeTab === 'participacion' ? <Venus size={32} /> : activeTab === 'sindicatos' ? <Handshake size={32} /> : activeTab === 'licencias' ? <Stethoscope size={32} /> : activeTab === 'ausentismo' ? <Scale size={32} /> : activeTab === 'discapacidad' ? <Accessibility size={32} /> : activeTab === 'cumpleanos' ? <Gift size={32} /> : <Users size={32} />}
+                {/* <-- Inyectamos el ícono del mapa */}
+                {activeTab === 'participacion' ? <Venus size={32} /> : activeTab === 'sindicatos' ? <Handshake size={32} /> : activeTab === 'licencias' ? <Stethoscope size={32} /> : activeTab === 'ausentismo' ? <Scale size={32} /> : activeTab === 'discapacidad' ? <Accessibility size={32} /> : activeTab === 'cumpleanos' ? <Gift size={32} /> : activeTab === 'comunas' ? <MapPin size={32} /> : <Users size={32} />}
               </div>
               <h2 style={{ color: COLORS.gris, margin: 0, fontSize: 'clamp(1.4rem, 3vw, 1.8rem)', fontWeight: 600 }}>
-                {activeTab === 'dotacion' ? 'Análisis Dotacional' : activeTab === 'participacion' ? 'Participación Femenina' : activeTab === 'sindicatos' ? 'Organizaciones Sindicales' : activeTab === 'licencias' ? 'Licencias Médicas' : activeTab === 'ausentismo' ? 'Ausentismo y Sobretiempo' : activeTab === 'discapacidad' ? 'Inclusión y Discapacidad' : activeTab === 'cumpleanos' ? 'Gestión de Cumpleaños' : activeTab.toUpperCase()}
+                {/* <-- Título del nuevo módulo */}
+                {activeTab === 'dotacion' ? 'Análisis Dotacional' : activeTab === 'participacion' ? 'Participación Femenina' : activeTab === 'sindicatos' ? 'Organizaciones Sindicales' : activeTab === 'licencias' ? 'Licencias Médicas' : activeTab === 'ausentismo' ? 'Ausentismo y Sobretiempo' : activeTab === 'discapacidad' ? 'Inclusión y Discapacidad' : activeTab === 'cumpleanos' ? 'Gestión de Cumpleaños' : activeTab === 'comunas' ? 'Distribución Geográfica' : activeTab.toUpperCase()}
               </h2>
             </div>
             
+            {/* <-- Le pasamos rawData al mapa para que pinte las comunas */}
             {activeTab === 'dotacion' ? (
               <DotacionTab rawData={rawData} stats={dotacionStats} />
             ) : activeTab === 'participacion' ? (
@@ -259,6 +264,8 @@ export default function App() {
               <DiscapacidadTab rawData={discapacidadData} /> 
             ) : activeTab === 'cumpleanos' ? (
               <CumplesTab rawData={rawData} /> 
+            ) : activeTab === 'comunas' ? (
+              <ComunasTab rawData={rawData} />
             ) : (
               <div style={{ padding: '40px', textAlign: 'center', backgroundColor: COLORS.blanco, borderRadius: '8px' }}>
                 <p>Módulo de {activeTab} en desarrollo...</p>
