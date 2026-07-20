@@ -9,7 +9,7 @@ import SindicatosTab from './components/SindicatosTab';
 import LicenciasTab from './components/LicenciasTab';
 import AusentismoTab from './components/AusentismoTab';
 import DiscapacidadTab from './components/DiscapacidadTab';
-// AQUI ESTÁ EL CAMBIO DEL NOMBRE:
+// AQUÍ CORREGIMOS EL NOMBRE PARA QUE BUSQUE CUMPLESTAB:
 import CumplesTab from './components/CumplesTab';
 
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement, LineElement, Filler } from 'chart.js';
