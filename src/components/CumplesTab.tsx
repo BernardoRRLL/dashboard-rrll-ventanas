@@ -24,10 +24,9 @@ export default function CumplesTab({ rawData }: CumpleanosProps) {
 
   useEffect(() => {
     const todayObj = new Date();
-    const currentMonthIdx = todayObj.getMonth(); // 0 para Enero, 6 para Julio, etc.
-    const currentMonthNameText = mesesStr[currentMonthIdx].toLowerCase(); // "julio"
+    const currentMonthIdx = todayObj.getMonth(); 
+    const currentMonthNameText = mesesStr[currentMonthIdx].toLowerCase(); 
 
-    // Generamos una lista de los próximos 7 días con su mes y día para la comparación
     const targetDates = Array.from({ length: 8 }).map((_, i) => {
       const d = new Date();
       d.setDate(todayObj.getDate() + i);
@@ -46,42 +45,38 @@ export default function CumplesTab({ rawData }: CumpleanosProps) {
     const todayList: any[] = [];
 
     rawData.forEach((row: any) => {
-      // 1. Leemos el mes directamente desde la columna dedicada en el Excel
       const mesExcel = String(row['Mes Cumpleaños'] || row['Mes'] || '').toLowerCase().trim();
       if (!mesExcel) return;
 
-      // 2. Extraemos el día de forma segura desde la columna "Fecha Nacimiento"
       const fn = String(row['Fecha Nacimiento'] || row['Fecha de Nacimiento'] || '').trim();
       if (!fn) return;
 
       let diaInt = 0;
       let mesCalculadoIdx = -1;
 
-      // Evaluamos el formato del texto de la fecha para extraer el día correcto
-      if (fn.includes('-')) {
-        const parts = fn.split('-');
-        if (parts.length >= 3) {
-          // Si es YYYY-MM-DD el día suele ser el tercero
+      // 1. Unificamos cualquier separador (slash o guion) a un guion estándar
+      const fnClean = fn.replace(/\//g, '-');
+      const parts = fnClean.split('-');
+
+      // 2. Lógica robusta para formato Chileno/Español vs Formato Base de Datos
+      if (parts.length >= 3) {
+        if (parts[0].length === 4) {
+          // Si empieza con 4 dígitos, es formato YYYY-MM-DD
           diaInt = parseInt(parts[2].substring(0, 2), 10) || 0;
           mesCalculadoIdx = (parseInt(parts[1], 10) || 1) - 1;
-        }
-      } else if (fn.includes('/')) {
-        const parts = fn.split('/');
-        if (parts.length >= 3) {
-          // Si es DD/MM/YYYY el día es el primero
+        } else {
+          // Si no empieza con 4 dígitos, asumimos 100% formato DD-MM-YYYY (Día - Mes - Año)
           diaInt = parseInt(parts[0], 10) || 0;
           mesCalculadoIdx = (parseInt(parts[1], 10) || 1) - 1;
         }
       }
 
-      // Si por alguna razón el parseo falló pero tenemos el dato en bruto, intentamos rescatarlo
       if (diaInt === 0) return;
 
-      // Si la columna "Mes Cumpleaños" no coincide, usamos el índice calculado de la fecha como respaldo
       const mesNombreFinal = mesExcel || (mesCalculadoIdx !== -1 ? mesesStr[mesCalculadoIdx].toLowerCase() : '');
       const mesIntReal = mesesStr.findIndex((m: string) => m.toLowerCase() === mesNombreFinal) + 1;
 
-      if (mesIntReal === 0) return; // Si no encontramos un mes válido, saltamos la fila
+      if (mesIntReal === 0) return; 
 
       const empleado = {
         nombre: row['Nombre'] || row['Nombre trabajador/a'] || 'Sin nombre',
@@ -92,7 +87,6 @@ export default function CumplesTab({ rawData }: CumpleanosProps) {
         mes: mesIntReal
       };
 
-      // 3. Clasificación usando la columna limpia del mes del Excel
       if (mesNombreFinal === currentMonthNameText) {
         monthList.push(empleado);
       }
@@ -104,7 +98,6 @@ export default function CumplesTab({ rawData }: CumpleanosProps) {
       }
     });
 
-    // Ordenamos las listas de manera cronológica por el día
     monthList.sort((a: any, b: any) => a.dia - b.dia);
     next7List.sort((a: any, b: any) => {
       return targetMMDDs.indexOf(a.mmddKey) - targetMMDDs.indexOf(b.mmddKey);
