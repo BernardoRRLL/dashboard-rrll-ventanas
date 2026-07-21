@@ -189,7 +189,7 @@ export default function ComunasTab({ rawData }: ComunasProps) {
                       {item.comuna}
                     </p>
                   </div>
-                  <span style={{ fontxWeight: 700, color: COLORS.celeste }}>{item.count}</span>
+                  <span style={{ fontWeight: 700, color: COLORS.celeste }}>{item.count}</span>
                 </div>
               ))
             )}
