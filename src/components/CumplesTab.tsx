@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Gift, Calendar } from 'lucide-react';
+import { Gift, Calendar, PartyPopper } from 'lucide-react';
 
 const COLORS = {
   gris: '#36424a',
@@ -27,7 +27,6 @@ export default function CumplesTab({ rawData }: CumpleanosProps) {
     const currentMonthIdx = todayObj.getMonth(); 
     const currentMonthNameText = mesesStr[currentMonthIdx].toLowerCase(); 
 
-    // Generamos una lista de las llaves (mes-dia) de los próximos 7 días
     const targetDates = Array.from({ length: 8 }).map((_, i) => {
       const d = new Date();
       d.setDate(todayObj.getDate() + i);
@@ -41,32 +40,25 @@ export default function CumplesTab({ rawData }: CumpleanosProps) {
     const todayList: any[] = [];
 
     rawData.forEach((row: any) => {
-      // 1. Extraemos el mes 100% seguro de la columna N (Mes Cumpleaños)
       const mesExcel = String(row['Mes Cumpleaños'] || row['Mes'] || '').toLowerCase().trim();
       const mesIntReal = mesesStr.findIndex((m: string) => m.toLowerCase() === mesExcel) + 1;
 
-      if (mesIntReal === 0) return; // Si no hay mes válido, se descarta
+      if (mesIntReal === 0) return; 
 
-      // 2. Extraemos la fecha con el nuevo formato seguro (dd-mmm-yyyy)
       const fn = String(row['Fecha Nacimiento'] || row['Fecha de Nacimiento'] || '').trim().toLowerCase();
       let diaInt = 0;
 
-      // Unificamos el texto cambiando slashes (/) por guiones (-)
       const fnClean = fn.replace(/\//g, '-').trim();
-
-      // Buscamos si empieza con 4 dígitos (Ej: 1980-07-15)
       const matchIso = fnClean.match(/^\d{4}-(\d{1,2})-(\d{1,2})/);
-      
-      // Buscamos si empieza con 1 o 2 dígitos, ideal para tu nuevo formato (Ej: 15-jul-1980)
       const matchLatam = fnClean.match(/^(\d{1,2})-[a-z0-9]+/);
 
       if (matchIso) {
-         diaInt = parseInt(matchIso[2], 10); // Toma el último par de números
+         diaInt = parseInt(matchIso[2], 10); 
       } else if (matchLatam) {
-         diaInt = parseInt(matchLatam[1], 10); // Toma el primer par de números
+         diaInt = parseInt(matchLatam[1], 10); 
       }
 
-      if (diaInt === 0 || diaInt > 31) return; // Control de seguridad
+      if (diaInt === 0 || diaInt > 31) return;
 
       const empleado = {
         nombre: row['Nombre'] || row['Nombre trabajador/a'] || 'Sin nombre',
@@ -77,7 +69,7 @@ export default function CumplesTab({ rawData }: CumpleanosProps) {
         mes: mesIntReal
       };
 
-      // 3. Clasificamos en los arreglos correspondientes
+      // Al no usar "else if", si alguien cumple hoy se guarda en los TRES arreglos a la vez
       if (mesExcel === currentMonthNameText) {
         monthList.push(empleado);
       }
@@ -89,7 +81,6 @@ export default function CumplesTab({ rawData }: CumpleanosProps) {
       }
     });
 
-    // Ordenamos todo cronológicamente
     monthList.sort((a: any, b: any) => a.dia - b.dia);
     next7List.sort((a: any, b: any) => {
       return targetDates.indexOf(a.mmddKey) - targetDates.indexOf(b.mmddKey);
@@ -103,30 +94,41 @@ export default function CumplesTab({ rawData }: CumpleanosProps) {
 
   const currentMonthName = mesesStr[new Date().getMonth()];
 
-  const renderList = (titulo: string, lista: any[], icon: React.ReactNode) => (
-    <div style={cardStyle}>
+  const renderList = (titulo: string, lista: any[], icon: React.ReactNode, isDestacado: boolean = false) => (
+    <div style={{ ...cardStyle, borderTop: isDestacado ? `4px solid ${COLORS.rosado}` : 'none' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '1px solid #eee', paddingBottom: '15px', marginBottom: '15px' }}>
-        <div style={{ color: COLORS.naranjo }}>{icon}</div>
+        <div style={{ color: isDestacado ? COLORS.rosado : COLORS.naranjo }}>{icon}</div>
         <h4 style={{ margin: 0, color: COLORS.gris, fontSize: '1.1rem', fontWeight: 600 }}>{titulo}</h4>
-        <span style={{ marginLeft: 'auto', backgroundColor: COLORS.fondo, padding: '2px 10px', borderRadius: '12px', fontSize: '0.85rem', fontWeight: 600, color: COLORS.celeste }}>
+        <span style={{ marginLeft: 'auto', backgroundColor: isDestacado ? '#fce4ec' : COLORS.fondo, padding: '2px 10px', borderRadius: '12px', fontSize: '0.85rem', fontWeight: 600, color: isDestacado ? COLORS.rosado : COLORS.celeste }}>
           {lista.length}
         </span>
       </div>
       
       {lista.length === 0 ? (
-        <p style={{ color: '#888', fontSize: '0.9rem', fontStyle: 'italic', textAlign: 'center', padding: '20px 0' }}>No hay registros para este periodo.</p>
+        <p style={{ color: '#888', fontSize: '0.9rem', fontStyle: 'italic', textAlign: 'center', padding: '20px 0' }}>
+          {isDestacado ? 'No hay cumpleaños registrados para el día de hoy.' : 'No hay registros para este periodo.'}
+        </p>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '500px', overflowY: 'auto', paddingRight: '5px' }}>
+        // Si es destacado (Hoy), usamos un Grid para que las tarjetas se acomoden horizontalmente
+        <div style={{ 
+          display: isDestacado ? 'grid' : 'flex', 
+          gridTemplateColumns: isDestacado ? 'repeat(auto-fill, minmax(280px, 1fr))' : 'none',
+          flexDirection: isDestacado ? 'row' : 'column', 
+          gap: '10px', 
+          maxHeight: '500px', 
+          overflowY: 'auto', 
+          paddingRight: '5px' 
+        }}>
           {lista.map((emp: any, idx: number) => (
-            <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '15px', padding: '12px', backgroundColor: COLORS.fondo, borderRadius: '8px' }}>
-              <div style={{ backgroundColor: COLORS.celeste, color: COLORS.blanco, width: '45px', height: '45px', borderRadius: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '15px', padding: '12px', backgroundColor: isDestacado ? '#fdf2f6' : COLORS.fondo, borderRadius: '8px', border: isDestacado ? `1px solid #f8bbd0` : '1px solid transparent' }}>
+              <div style={{ backgroundColor: isDestacado ? COLORS.rosado : COLORS.celeste, color: COLORS.blanco, width: '45px', height: '45px', borderRadius: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <span style={{ fontSize: '1.2rem', fontWeight: 700, lineHeight: '1' }}>{emp.dia}</span>
                 <span style={{ fontSize: '0.65rem', textTransform: 'uppercase' }}>{mesesStr[emp.mes - 1].substring(0,3)}</span>
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{ margin: 0, fontWeight: 600, color: COLORS.gris, fontSize: '0.95rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{emp.nombre}</p>
                 <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: '#666', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{emp.cargo}</p>
-                <p style={{ margin: 0, fontSize: '0.75rem', color: COLORS.naranjo, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{emp.area}</p>
+                <p style={{ margin: 0, fontSize: '0.75rem', color: isDestacado ? COLORS.rosado : COLORS.naranjo, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{emp.area}</p>
               </div>
             </div>
           ))}
@@ -137,6 +139,8 @@ export default function CumplesTab({ rawData }: CumpleanosProps) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '25px', fontFamily: "'Poppins', sans-serif" }}>
+      
+      {/* FILA 1: Resumen */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', width: '100%', justifyContent: 'space-between' }}>
         <div style={{...summaryCardStyle, borderTop: `5px solid ${COLORS.rosado}`}}>
           <h4 style={kpiTitleStyle}>Hoy Cumplen</h4>
@@ -151,10 +155,18 @@ export default function CumplesTab({ rawData }: CumpleanosProps) {
           <p style={kpiValueStyle}>{mesActual.length}</p>
         </div>
       </div>
+
+      {/* FILA 2: Cumpleaños de Hoy (Ocupa todo el ancho) */}
+      <div style={{ width: '100%' }}>
+        {renderList('Cumpleaños de Hoy', hoy, <PartyPopper size={24} />, true)}
+      </div>
+
+      {/* FILA 3: Dos columnas (Próximos 7 días y Mes) */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '25px' }}>
         {renderList('Próximos 7 Días', proximos7Dias, <Gift size={24} />)}
         {renderList(`Cumpleaños de ${currentMonthName}`, mesActual, <Calendar size={24} />)}
       </div>
+      
     </div>
   );
 }
