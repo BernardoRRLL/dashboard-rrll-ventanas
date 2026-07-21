@@ -15,7 +15,8 @@ const COLORS = {
   mapaVacio: '#e2e8f0'
 };
 
-const geoUrl = "https://raw.githubusercontent.com/BastianOlea/geojson-chile/master/topojson/comunas.json";
+// AQUÍ ESTÁ LA MAGIA: Leemos tu archivo local directo de la carpeta public
+const geoUrl = "./comunas.json";
 
 const COMUNAS_V_REGION = [
   "valparaiso", "vina del mar", "quilpue", "villa alemana", "concon",
@@ -47,10 +48,7 @@ export default function ComunasTab({ rawData }: ComunasProps) {
     if (!rawData || rawData.length === 0) return;
 
     rawData.forEach((row: any) => {
-      // Búsqueda ultra flexible de la columna Comuna en el objeto Row
       let comunaValor = '';
-      
-      // Buscamos cualquier propiedad de la fila que contenga la palabra 'comuna'
       const llaveEncontrada = Object.keys(row).find(k => k.toLowerCase().includes('comuna'));
       
       if (llaveEncontrada) {
@@ -126,8 +124,16 @@ export default function ComunasTab({ rawData }: ComunasProps) {
                 <Geographies geography={geoUrl}>
                   {({ geographies }: any) =>
                     geographies.map((geo: any) => {
-                      const nombreCartografia = cleanName(geo.properties.Comuna || geo.properties.nom_comuna || '');
+                      // Búsqueda ultra flexible del nombre en el archivo cartográfico
+                      const nombreCartografia = cleanName(
+                        geo.properties.Comuna || 
+                        geo.properties.comuna || 
+                        geo.properties.NOM_COM || 
+                        geo.properties.nom_comuna || 
+                        ''
+                      );
                       
+                      // Solo dibujamos si pertenece a la V Región Continental
                       if (!COMUNAS_V_REGION.includes(nombreCartografia)) return null;
 
                       const count = comunasData[nombreCartografia] || 0;
@@ -136,7 +142,7 @@ export default function ComunasTab({ rawData }: ComunasProps) {
                         <Geography
                           key={geo.rsmKey}
                           geography={geo}
-                          onMouseEnter={() => setTooltip(`${geo.properties.Comuna || geo.properties.nom_comuna}: ${count} trabajadores`)}
+                          onMouseEnter={() => setTooltip(`${nombreCartografia}: ${count} trabajadores`)}
                           onMouseLeave={() => setTooltip("")}
                           style={{
                             default: {
@@ -189,7 +195,7 @@ export default function ComunasTab({ rawData }: ComunasProps) {
                       {item.comuna}
                     </p>
                   </div>
-                  <span style={{ fontWeight: 700, color: COLORS.celeste }}>{item.count}</span>
+                  <span style={{ fontWeight: 600, color: COLORS.celeste }}>{item.count}</span>
                 </div>
               ))
             )}
