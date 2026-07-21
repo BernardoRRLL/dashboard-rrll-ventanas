@@ -40,8 +40,19 @@ export default function ComunasTab({ rawData }: ComunasProps) {
   const [geoData, setGeoData] = useState<any>(null);
   const [mapStatus, setMapStatus] = useState<string>("Cargando archivo del mapa...");
 
-  const cleanName = (name: string) => 
-    String(name).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+  const normalizarComuna = (name: string) => {
+    let n = String(name).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+    
+    if (n === "con con") return "concon";
+    if (n === "calera") return "la calera";
+    if (n === "cruz") return "la cruz";
+    if (n === "ligua") return "la ligua";
+    if (n === "llay llay" || n === "llaillay" || n === "llay-llay") return "llai llay";
+    if (n === "vina") return "vina del mar";
+    if (n === "valpo") return "valparaiso";
+    
+    return n;
+  };
 
   useEffect(() => {
     const counts: Record<string, number> = {};
@@ -58,10 +69,10 @@ export default function ComunasTab({ rawData }: ComunasProps) {
       }
 
       if (comunaValor) {
-        const cleaned = cleanName(comunaValor);
-        counts[cleaned] = (counts[cleaned] || 0) + 1;
-        if (counts[cleaned] > max) {
-          max = counts[cleaned];
+        const cleaned = normalizarComuna(comunaValor);
+        if (COMUNAS_V_REGION.includes(cleaned)) {
+          counts[cleaned] = (counts[cleaned] || 0) + 1;
+          if (counts[cleaned] > max) max = counts[cleaned];
         }
       }
     });
@@ -96,15 +107,30 @@ export default function ComunasTab({ rawData }: ComunasProps) {
     .domain([0, maxCount === 0 ? 1 : maxCount])
     .range(["#e8f4f5", COLORS.naranjo]);
 
-  // 🔑 LLAVE MAESTRA: Busca el nombre correcto escaneando todo el archivo
+  // 🔑 ESCÁNER ANTI-CORRUPCIÓN
   const getComunaName = (properties: any) => {
-    for (const key in properties) {
-      if (typeof properties[key] === 'string') {
-        const cleaned = cleanName(properties[key]);
-        if (COMUNAS_V_REGION.includes(cleaned)) return cleaned;
-      }
+    // 1. Evitamos leer la "Región" para no etiquetar todo como Valparaíso
+    const possibleKeys = Object.keys(properties).filter(k => 
+      k.toLowerCase().includes('com') || 
+      k.toLowerCase().includes('nom')
+    );
+    
+    const keysToSearch = possibleKeys.length > 0 ? possibleKeys : Object.keys(properties);
+
+    for (const key of keysToSearch) {
+      const rawVal = String(properties[key]).toLowerCase();
+      const cleaned = normalizarComuna(rawVal);
+      
+      if (COMUNAS_V_REGION.includes(cleaned)) return cleaned;
+      
+      // 2. Filtros de emergencia por si el texto tiene caracteres rotos (Ej: ViÃ±a del Mar)
+      if (rawVal.includes("del mar")) return "vina del mar";
+      if (rawVal.includes("valpara")) return "valparaiso";
+      if (rawVal.includes("quilpu")) return "quilpue";
+      if (rawVal.includes("concon") || rawVal.includes("con cón")) return "concon";
+      if (rawVal.includes("llay") || rawVal.includes("llai")) return "llai llay";
     }
-    return ''; // No pertenece a la V Región
+    return ''; 
   };
 
   return (
@@ -112,7 +138,7 @@ export default function ComunasTab({ rawData }: ComunasProps) {
       
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', width: '100%', justifyContent: 'space-between' }}>
         <div style={summaryCardStyle}>
-          <h4 style={kpiTitleStyle}>Total Comunas</h4>
+          <h4 style={kpiTitleStyle}>Total Comunas V Región</h4>
           <p style={kpiValueStyle}>{ranking.length}</p>
         </div>
         <div style={summaryCardStyle}>
@@ -153,22 +179,16 @@ export default function ComunasTab({ rawData }: ComunasProps) {
             {geoData && (
               <ComposableMap 
                 projection="geoMercator" 
-                projectionConfig={{ scale: 18000, center: [-71.2, -32.8] }}
+                // Zoom y centro perfectamente calibrados para la costa de la V Región
+                projectionConfig={{ scale: 22000, center: [-71.4, -32.9] }}
                 style={{ width: "100%", height: "100%" }}
               >
-                <ZoomableGroup zoom={1}>
+                {/* Puedes hacer clic y arrastrar el mapa para moverte */}
+                <ZoomableGroup zoom={1} minZoom={1} maxZoom={5}>
                   <Geographies geography={geoData}>
                     {({ geographies }: any) => {
                       
                       const featuresVRegion = geographies.filter((geo: any) => getComunaName(geo.properties) !== '');
-
-                      if (geographies.length > 0 && featuresVRegion.length === 0) {
-                        return (
-                          <text x="50" y="50" fill="red" fontSize="14" fontWeight="bold">
-                            ⚠️ Error: No se detectaron comunas de la V Región en el archivo.
-                          </text>
-                        );
-                      }
 
                       return featuresVRegion.map((geo: any) => {
                         const nombreCartografia = getComunaName(geo.properties);
@@ -205,7 +225,7 @@ export default function ComunasTab({ rawData }: ComunasProps) {
         <div style={cardStyle}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '1px solid #eee', paddingBottom: '15px', marginBottom: '15px' }}>
             <div style={{ color: COLORS.celeste }}><Users size={24} /></div>
-            <h4 style={{ margin: 0, color: COLORS.gris, fontSize: '1.1rem', fontWeight: 600 }}>Top Comunas</h4>
+            <h4 style={{ margin: 0, color: COLORS.gris, fontSize: '1.1rem', fontWeight: 600 }}>Ranking V Región</h4>
           </div>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '500px', overflowY: 'auto', paddingRight: '5px' }}>
