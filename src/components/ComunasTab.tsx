@@ -12,7 +12,9 @@ const COLORS = {
   amarillo: '#f4ab03',
   blanco: '#ffffff',
   fondo: '#f5f7f8',
-  mapaVacio: '#e2e8f0'
+  mapaVacio: '#f1f5f9',     // Gris muy clarito para comunas de V Región con 0 trabajadores
+  regionExterna: '#cbd5e1', // Gris oscuro sólido para fundir las otras regiones
+  mar: '#dbeafe'            // Azul suave para el océano
 };
 
 const geoUrl = "./comunas.json";
@@ -105,11 +107,9 @@ export default function ComunasTab({ rawData }: ComunasProps) {
 
   const colorScale = scaleLinear()
     .domain([0, maxCount === 0 ? 1 : maxCount])
-    .range(["#e8f4f5", COLORS.naranjo]);
+    .range(["#e8f4f5", COLORS.naranjo]); // De celeste muy pálido a Naranjo Codelco
 
-  // 🔑 ESCÁNER ANTI-CORRUPCIÓN
   const getComunaName = (properties: any) => {
-    // 1. Evitamos leer la "Región" para no etiquetar todo como Valparaíso
     const possibleKeys = Object.keys(properties).filter(k => 
       k.toLowerCase().includes('com') || 
       k.toLowerCase().includes('nom')
@@ -123,7 +123,6 @@ export default function ComunasTab({ rawData }: ComunasProps) {
       
       if (COMUNAS_V_REGION.includes(cleaned)) return cleaned;
       
-      // 2. Filtros de emergencia por si el texto tiene caracteres rotos (Ej: ViÃ±a del Mar)
       if (rawVal.includes("del mar")) return "vina del mar";
       if (rawVal.includes("valpara")) return "valparaiso";
       if (rawVal.includes("quilpu")) return "quilpue";
@@ -161,7 +160,8 @@ export default function ComunasTab({ rawData }: ComunasProps) {
             <h4 style={{ margin: 0, color: COLORS.gris, fontSize: '1.1rem', fontWeight: 600 }}>Mapa de Distribución Geográfica (V Región Continental)</h4>
           </div>
 
-          <div style={{ position: 'relative', width: '100%', height: '500px', backgroundColor: '#eef5f9', borderRadius: '8px', overflow: 'hidden' }}>
+          {/* AQUÍ ESTÁ EL EFECTO DEL MAR: Cambiamos el fondo a azul suave */}
+          <div style={{ position: 'relative', width: '100%', height: '500px', backgroundColor: COLORS.mar, borderRadius: '8px', overflow: 'hidden', border: '1px solid #e2e8f0' }}>
             
             {mapStatus && (
               <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', backgroundColor: 'rgba(255,255,255,0.95)', padding: '20px', borderRadius: '8px', border: '2px solid red', textAlign: 'center', zIndex: 20 }}>
@@ -179,40 +179,70 @@ export default function ComunasTab({ rawData }: ComunasProps) {
             {geoData && (
               <ComposableMap 
                 projection="geoMercator" 
-                // Zoom y centro perfectamente calibrados para la costa de la V Región
                 projectionConfig={{ scale: 22000, center: [-71.4, -32.9] }}
                 style={{ width: "100%", height: "100%" }}
               >
-                {/* Puedes hacer clic y arrastrar el mapa para moverte */}
                 <ZoomableGroup zoom={1} minZoom={1} maxZoom={5}>
                   <Geographies geography={geoData}>
                     {({ geographies }: any) => {
                       
-                      const featuresVRegion = geographies.filter((geo: any) => getComunaName(geo.properties) !== '');
+                      const hasVRegion = geographies.some((geo: any) => getComunaName(geo.properties) !== '');
 
-                      return featuresVRegion.map((geo: any) => {
-                        const nombreCartografia = getComunaName(geo.properties);
-                        const count = comunasData[nombreCartografia] || 0;
-                        
+                      if (geographies.length > 0 && !hasVRegion) {
                         return (
-                          <Geography
-                            key={geo.rsmKey}
-                            geography={geo}
-                            onMouseEnter={() => setTooltip(`${nombreCartografia}: ${count} trabajadores`)}
-                            onMouseLeave={() => setTooltip("")}
-                            style={{
-                              default: {
-                                fill: count > 0 ? colorScale(count) : COLORS.mapaVacio,
-                                stroke: "#ffffff",
-                                strokeWidth: 0.7,
-                                outline: "none",
-                                transition: "all 250ms"
-                              },
-                              hover: { fill: count > 0 ? '#C2185B' : '#d1d5db', cursor: "pointer", outline: "none" },
-                              pressed: { outline: "none" }
-                            }}
-                          />
+                          <text x="50" y="50" fill="red" fontSize="14" fontWeight="bold">
+                            ⚠️ Error: No se detectaron comunas de la V Región en el archivo.
+                          </text>
                         );
+                      }
+
+                      // AQUÍ ESTÁ EL TRUCO: Dibujamos TODO Chile, pero filtramos visualmente
+                      return geographies.map((geo: any) => {
+                        const nombreCartografia = getComunaName(geo.properties);
+                        const isVRegion = nombreCartografia !== '';
+
+                        // SI ES DE LA V REGIÓN: Aplicamos colores, bordes blancos gruesos e interactividad
+                        if (isVRegion) {
+                          const count = comunasData[nombreCartografia] || 0;
+                          return (
+                            <Geography
+                              key={geo.rsmKey}
+                              geography={geo}
+                              onMouseEnter={() => setTooltip(`${nombreCartografia}: ${count} trabajadores`)}
+                              onMouseLeave={() => setTooltip("")}
+                              style={{
+                                default: {
+                                  fill: count > 0 ? colorScale(count) : COLORS.mapaVacio,
+                                  stroke: "#ffffff",
+                                  strokeWidth: 0.8, // Borde blanco para destacar
+                                  outline: "none",
+                                  transition: "all 250ms"
+                                },
+                                hover: { fill: count > 0 ? '#C2185B' : '#d1d5db', cursor: "pointer", outline: "none", strokeWidth: 1.5 },
+                                pressed: { outline: "none" }
+                              }}
+                            />
+                          );
+                        } 
+                        // SI NO ES DE LA V REGIÓN: Color gris plano y bordes del mismo gris para crear una masa sólida
+                        else {
+                          return (
+                            <Geography
+                              key={geo.rsmKey}
+                              geography={geo}
+                              style={{
+                                default: {
+                                  fill: COLORS.regionExterna,
+                                  stroke: COLORS.regionExterna, // Al ser igual al relleno, los bordes "desaparecen"
+                                  strokeWidth: 1,
+                                  outline: "none"
+                                },
+                                hover: { fill: COLORS.regionExterna, outline: "none", cursor: "default" },
+                                pressed: { outline: "none" }
+                              }}
+                            />
+                          );
+                        }
                       });
                     }}
                   </Geographies>
