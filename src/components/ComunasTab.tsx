@@ -15,6 +15,8 @@ const COLORS = {
   mapaVacio: '#e2e8f0'
 };
 
+const geoUrl = "./comunas.json";
+
 const COMUNAS_V_REGION = [
   "valparaiso", "vina del mar", "quilpue", "villa alemana", "concon",
   "puchuncavi", "quintero", "casablanca", "san antonio", "cartagena", 
@@ -35,14 +37,12 @@ export default function ComunasTab({ rawData }: ComunasProps) {
   const [maxCount, setMaxCount] = useState(0);
   const [tooltip, setTooltip] = useState("");
   
-  // Estados para el diagnóstico del mapa
   const [geoData, setGeoData] = useState<any>(null);
   const [mapStatus, setMapStatus] = useState<string>("Cargando archivo del mapa...");
 
   const cleanName = (name: string) => 
     String(name).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 
-  // 1. Efecto para procesar el Excel
   useEffect(() => {
     const counts: Record<string, number> = {};
     let max = 0;
@@ -75,27 +75,20 @@ export default function ComunasTab({ rawData }: ComunasProps) {
     setRanking(rankArray);
   }, [rawData]);
 
-  // 2. Efecto para leer de forma segura el archivo del mapa (con diagnóstico)
   useEffect(() => {
-    fetch('./comunas.json')
+    fetch(geoUrl)
       .then(async (res) => {
-        if (!res.ok) throw new Error(`HTTP Error ${res.status}: No se encontró comunas.json en la carpeta public`);
-        
+        if (!res.ok) throw new Error(`HTTP Error ${res.status}: No se encontró comunas.json`);
         const texto = await res.text();
-        
-        // Verificamos si descargaste la web de GitHub en vez del archivo puro
-        if (texto.trim().startsWith('<')) {
-          throw new Error("❌ CUIDADO: Descargaste una página web (HTML) en lugar del archivo JSON. Debes darle click al botón 'RAW' en GitHub antes de Guardar Como.");
-        }
-        
+        if (texto.trim().startsWith('<')) throw new Error("Error: Archivo HTML en lugar de JSON.");
         return JSON.parse(texto);
       })
       .then(data => {
         setGeoData(data);
-        setMapStatus(""); // Éxito, borramos el mensaje
+        setMapStatus(""); 
       })
       .catch(err => {
-        setMapStatus(err.message); // Mostramos el error en pantalla
+        setMapStatus(err.message); 
       });
   }, []);
 
@@ -103,10 +96,20 @@ export default function ComunasTab({ rawData }: ComunasProps) {
     .domain([0, maxCount === 0 ? 1 : maxCount])
     .range(["#e8f4f5", COLORS.naranjo]);
 
+  // 🔑 LLAVE MAESTRA: Busca el nombre correcto escaneando todo el archivo
+  const getComunaName = (properties: any) => {
+    for (const key in properties) {
+      if (typeof properties[key] === 'string') {
+        const cleaned = cleanName(properties[key]);
+        if (COMUNAS_V_REGION.includes(cleaned)) return cleaned;
+      }
+    }
+    return ''; // No pertenece a la V Región
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '25px', fontFamily: "'Poppins', sans-serif" }}>
       
-      {/* Tarjetas Superiores */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', width: '100%', justifyContent: 'space-between' }}>
         <div style={summaryCardStyle}>
           <h4 style={kpiTitleStyle}>Total Comunas</h4>
@@ -126,7 +129,6 @@ export default function ComunasTab({ rawData }: ComunasProps) {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '25px' }}>
         
-        {/* MAPA */}
         <div style={{...cardStyle, gridColumn: 'span 2' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '1px solid #eee', paddingBottom: '15px', marginBottom: '15px' }}>
             <div style={{ color: COLORS.naranjo }}><MapPin size={24} /></div>
@@ -135,7 +137,6 @@ export default function ComunasTab({ rawData }: ComunasProps) {
 
           <div style={{ position: 'relative', width: '100%', height: '500px', backgroundColor: '#eef5f9', borderRadius: '8px', overflow: 'hidden' }}>
             
-            {/* PANEL DE DIAGNÓSTICO EN PANTALLA */}
             {mapStatus && (
               <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', backgroundColor: 'rgba(255,255,255,0.95)', padding: '20px', borderRadius: '8px', border: '2px solid red', textAlign: 'center', zIndex: 20 }}>
                 <p style={{ fontWeight: 'bold', color: 'red', margin: 0 }}>{mapStatus}</p>
@@ -152,30 +153,25 @@ export default function ComunasTab({ rawData }: ComunasProps) {
             {geoData && (
               <ComposableMap 
                 projection="geoMercator" 
-                projectionConfig={{ scale: 15000, center: [-71.5, -32.8] }}
+                projectionConfig={{ scale: 18000, center: [-71.2, -32.8] }}
                 style={{ width: "100%", height: "100%" }}
               >
                 <ZoomableGroup zoom={1}>
                   <Geographies geography={geoData}>
                     {({ geographies }: any) => {
                       
-                      // Escáner de fallas en nombres internos
-                      const featuresVRegion = geographies.filter((geo: any) => {
-                        const nombreCartografia = cleanName(geo.properties.Comuna || geo.properties.comuna || geo.properties.NOM_COM || geo.properties.nom_comuna || '');
-                        return COMUNAS_V_REGION.includes(nombreCartografia);
-                      });
+                      const featuresVRegion = geographies.filter((geo: any) => getComunaName(geo.properties) !== '');
 
                       if (geographies.length > 0 && featuresVRegion.length === 0) {
-                        const ejemplo = JSON.stringify(geographies[0]?.properties || {});
                         return (
                           <text x="50" y="50" fill="red" fontSize="14" fontWeight="bold">
-                            ⚠️ Error: El archivo no usa "Comuna". Utiliza: {ejemplo}
+                            ⚠️ Error: No se detectaron comunas de la V Región en el archivo.
                           </text>
                         );
                       }
 
                       return featuresVRegion.map((geo: any) => {
-                        const nombreCartografia = cleanName(geo.properties.Comuna || geo.properties.comuna || geo.properties.NOM_COM || geo.properties.nom_comuna || '');
+                        const nombreCartografia = getComunaName(geo.properties);
                         const count = comunasData[nombreCartografia] || 0;
                         
                         return (
@@ -206,7 +202,6 @@ export default function ComunasTab({ rawData }: ComunasProps) {
           </div>
         </div>
 
-        {/* RANKING */}
         <div style={cardStyle}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '1px solid #eee', paddingBottom: '15px', marginBottom: '15px' }}>
             <div style={{ color: COLORS.celeste }}><Users size={24} /></div>
