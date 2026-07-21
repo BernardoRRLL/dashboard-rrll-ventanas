@@ -37,7 +37,6 @@ export default function App() {
   const [licenciasData, setLicenciasData] = useState<any[]>([]); 
   const [ausentismoData, setAusentismoData] = useState<any[]>([]); 
   const [discapacidadData, setDiscapacidadData] = useState<any[]>([]); 
-  // NUEVO: Estado para guardar los datos de la hoja Comuna
   const [comunasSheetData, setComunasSheetData] = useState<any[]>([]); 
 
   const [globalSummary, setGlobalSummary] = useState({ total: 0, mujeres: "0", ausentismo: "0", sobretiempo: "0" });
@@ -73,21 +72,18 @@ export default function App() {
         let licenciasName = sheetNames.find(n => n === "Licencias" || n.toLowerCase().includes('licencia')) || (sheetNames.length > 1 ? sheetNames[1] : null);
         let ausentismoName = sheetNames.find(n => n.toLowerCase().includes('ausdeo') || n.toLowerCase().includes('ausentismo'));
         let discapacidadName = sheetNames.find(n => n.toLowerCase().includes('discapacidad') || n.toLowerCase().includes('disc'));
-        // NUEVO: Buscamos la nueva hoja "Comuna"
         let comunasName = sheetNames.find(n => n.toLowerCase().includes('comuna'));
 
         const dotacionJson = XLSX.utils.sheet_to_json(workbook.Sheets[dotacionName], { raw: false, defval: "" });
         const licenciasJson = licenciasName ? XLSX.utils.sheet_to_json(workbook.Sheets[licenciasName], { raw: false, defval: "" }) : dotacionJson;
         const ausentismoJson = ausentismoName ? XLSX.utils.sheet_to_json(workbook.Sheets[ausentismoName], { header: 1, raw: false, defval: "" }) as any : [];
         const discapacidadJson = discapacidadName ? XLSX.utils.sheet_to_json(workbook.Sheets[discapacidadName], { raw: false, defval: "" }) : [];
-        // NUEVO: Extraemos los datos de la hoja Comuna
         const comunasJson = comunasName ? XLSX.utils.sheet_to_json(workbook.Sheets[comunasName], { raw: false, defval: "" }) : [];
 
         setRawData(dotacionJson);
         setLicenciasData(licenciasJson);
         setAusentismoData(ausentismoJson);
         setDiscapacidadData(discapacidadJson);
-        // NUEVO: Guardamos los datos
         setComunasSheetData(comunasJson); 
         
         calculateSummaries(dotacionJson, ausentismoJson);
@@ -270,7 +266,6 @@ export default function App() {
             ) : activeTab === 'cumpleanos' ? (
               <CumplesTab rawData={rawData} /> 
             ) : activeTab === 'comunas' ? (
-              {/* AQUÍ ESTÁ EL CAMBIO: Ahora inyectamos la hoja correcta */}
               <ComunasTab rawData={comunasSheetData} />
             ) : (
               <div style={{ padding: '40px', textAlign: 'center', backgroundColor: COLORS.blanco, borderRadius: '8px' }}>
