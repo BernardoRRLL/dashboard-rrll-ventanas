@@ -10,7 +10,7 @@ import LicenciasTab from './components/LicenciasTab';
 import AusentismoTab from './components/AusentismoTab';
 import DiscapacidadTab from './components/DiscapacidadTab';
 import CumplesTab from './components/CumplesTab';
-import ComunasTab from './components/ComunasTab'; // <-- Importamos el nuevo módulo
+import ComunasTab from './components/ComunasTab';
 
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement, LineElement, Filler } from 'chart.js';
 import ChartJSPluginDataLabels from 'chartjs-plugin-datalabels';
@@ -37,6 +37,9 @@ export default function App() {
   const [licenciasData, setLicenciasData] = useState<any[]>([]); 
   const [ausentismoData, setAusentismoData] = useState<any[]>([]); 
   const [discapacidadData, setDiscapacidadData] = useState<any[]>([]); 
+  // NUEVO: Estado para guardar los datos de la hoja Comuna
+  const [comunasSheetData, setComunasSheetData] = useState<any[]>([]); 
+
   const [globalSummary, setGlobalSummary] = useState({ total: 0, mujeres: "0", ausentismo: "0", sobretiempo: "0" });
   const [dotacionStats, setDotacionStats] = useState({ total: 0, indefinido: "0", edadPromedio: "0", edadPromedioF: "0", edadPromedioM: "0" });
   
@@ -70,16 +73,22 @@ export default function App() {
         let licenciasName = sheetNames.find(n => n === "Licencias" || n.toLowerCase().includes('licencia')) || (sheetNames.length > 1 ? sheetNames[1] : null);
         let ausentismoName = sheetNames.find(n => n.toLowerCase().includes('ausdeo') || n.toLowerCase().includes('ausentismo'));
         let discapacidadName = sheetNames.find(n => n.toLowerCase().includes('discapacidad') || n.toLowerCase().includes('disc'));
+        // NUEVO: Buscamos la nueva hoja "Comuna"
+        let comunasName = sheetNames.find(n => n.toLowerCase().includes('comuna'));
 
         const dotacionJson = XLSX.utils.sheet_to_json(workbook.Sheets[dotacionName], { raw: false, defval: "" });
         const licenciasJson = licenciasName ? XLSX.utils.sheet_to_json(workbook.Sheets[licenciasName], { raw: false, defval: "" }) : dotacionJson;
         const ausentismoJson = ausentismoName ? XLSX.utils.sheet_to_json(workbook.Sheets[ausentismoName], { header: 1, raw: false, defval: "" }) as any : [];
         const discapacidadJson = discapacidadName ? XLSX.utils.sheet_to_json(workbook.Sheets[discapacidadName], { raw: false, defval: "" }) : [];
+        // NUEVO: Extraemos los datos de la hoja Comuna
+        const comunasJson = comunasName ? XLSX.utils.sheet_to_json(workbook.Sheets[comunasName], { raw: false, defval: "" }) : [];
 
         setRawData(dotacionJson);
         setLicenciasData(licenciasJson);
         setAusentismoData(ausentismoJson);
         setDiscapacidadData(discapacidadJson);
+        // NUEVO: Guardamos los datos
+        setComunasSheetData(comunasJson); 
         
         calculateSummaries(dotacionJson, ausentismoJson);
         setIsLoading(false); 
@@ -163,7 +172,6 @@ export default function App() {
   };
 
   const renderHomeMenu = () => {
-    // <-- Agregamos Comunas al menú principal
     const menuItems = [
       { id: 'dotacion', label: 'Dotación', icon: <Users size={38} /> },
       { id: 'participacion', label: 'Participación Femenina', icon: <Venus size={38} /> },
@@ -172,7 +180,7 @@ export default function App() {
       { id: 'ausentismo', label: 'Ausentismo y Sobretiempo', icon: <Scale size={38} /> },
       { id: 'discapacidad', label: 'Discapacidad', icon: <Accessibility size={38} /> },
       { id: 'cumpleanos', label: 'Cumpleaños', icon: <Gift size={38} /> },
-      { id: 'comunas', label: 'Comunas', icon: <MapPin size={38} /> }, 
+      { id: 'comunas', label: 'Comunas', icon: <MapPin size={38} /> },
     ];
 
     return (
@@ -240,16 +248,13 @@ export default function App() {
             <button onClick={() => handleTabChange('home')} style={backButtonStyle}>← Volver al Menú Principal</button>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '25px', flexWrap: 'wrap' }}>
               <div style={{ color: COLORS.naranjo }}>
-                {/* <-- Inyectamos el ícono del mapa */}
                 {activeTab === 'participacion' ? <Venus size={32} /> : activeTab === 'sindicatos' ? <Handshake size={32} /> : activeTab === 'licencias' ? <Stethoscope size={32} /> : activeTab === 'ausentismo' ? <Scale size={32} /> : activeTab === 'discapacidad' ? <Accessibility size={32} /> : activeTab === 'cumpleanos' ? <Gift size={32} /> : activeTab === 'comunas' ? <MapPin size={32} /> : <Users size={32} />}
               </div>
               <h2 style={{ color: COLORS.gris, margin: 0, fontSize: 'clamp(1.4rem, 3vw, 1.8rem)', fontWeight: 600 }}>
-                {/* <-- Título del nuevo módulo */}
                 {activeTab === 'dotacion' ? 'Análisis Dotacional' : activeTab === 'participacion' ? 'Participación Femenina' : activeTab === 'sindicatos' ? 'Organizaciones Sindicales' : activeTab === 'licencias' ? 'Licencias Médicas' : activeTab === 'ausentismo' ? 'Ausentismo y Sobretiempo' : activeTab === 'discapacidad' ? 'Inclusión y Discapacidad' : activeTab === 'cumpleanos' ? 'Gestión de Cumpleaños' : activeTab === 'comunas' ? 'Distribución Geográfica' : activeTab.toUpperCase()}
               </h2>
             </div>
             
-            {/* <-- Le pasamos rawData al mapa para que pinte las comunas */}
             {activeTab === 'dotacion' ? (
               <DotacionTab rawData={rawData} stats={dotacionStats} />
             ) : activeTab === 'participacion' ? (
@@ -265,7 +270,8 @@ export default function App() {
             ) : activeTab === 'cumpleanos' ? (
               <CumplesTab rawData={rawData} /> 
             ) : activeTab === 'comunas' ? (
-              <ComunasTab rawData={rawData} />
+              {/* AQUÍ ESTÁ EL CAMBIO: Ahora inyectamos la hoja correcta */}
+              <ComunasTab rawData={comunasSheetData} />
             ) : (
               <div style={{ padding: '40px', textAlign: 'center', backgroundColor: COLORS.blanco, borderRadius: '8px' }}>
                 <p>Módulo de {activeTab} en desarrollo...</p>
