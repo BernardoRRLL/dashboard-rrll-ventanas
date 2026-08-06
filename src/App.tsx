@@ -17,6 +17,7 @@ import ChartJSPluginDataLabels from 'chartjs-plugin-datalabels';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement, LineElement, Filler, ChartJSPluginDataLabels);
 
+
 const COLORS = {
   gris: '#36424a',
   naranjo: '#e45302',
