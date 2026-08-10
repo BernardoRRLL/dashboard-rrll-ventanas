@@ -12,34 +12,36 @@ const COLORS = {
 
 export default function TurnosTab() {
   const [tipoTurno, setTipoTurno] = useState<'modificado' | 'lineal'>('modificado');
-  // Arrancamos en enero 2026 para cuadrar con el PDF
-  const [calendarDate, setCalendarDate] = useState(new Date(2026, 0, 1));
-  const [selectedDate, setSelectedDate] = useState(new Date(2026, 0, 1));
+  // Arrancamos en Agosto 2026 (mes 7 en JavaScript) para cuadrar con el PDF
+  const [calendarDate, setCalendarDate] = useState(new Date(2026, 7, 1));
+  const [selectedDate, setSelectedDate] = useState(new Date(2026, 7, 1));
   const [highlightGroup, setHighlightGroup] = useState<number | null>(null);
 
-  // --- MOTOR MATEMÁTICO DE TURNOS ---
-  // Fecha semilla referencial (Ajustaremos esta fecha exacta con tu feedback)
-  const fechaSemilla = new Date(2026, 0, 1); 
+  // --- MOTOR MATEMÁTICO DE TURNOS (Basado en el 1 de Agosto de 2026) ---
+  const fechaSemilla = new Date(2026, 7, 1); 
 
   const getShift = (date: Date, groupIndex: number, tipo: 'modificado' | 'lineal') => {
-    // Calculamos la diferencia en días desde la semilla
-    const diffTime = date.getTime() - fechaSemilla.getTime();
-    const diffDays = Math.floor(diffTime / (1000 * 3600 * 24));
+    // Calculamos la diferencia en días usando UTC para ser inmunes a los cambios de hora (DST)
+    const utcDate = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+    const utcSemilla = Date.UTC(fechaSemilla.getFullYear(), fechaSemilla.getMonth(), fechaSemilla.getDate());
+    const diffDays = Math.floor((utcDate - utcSemilla) / (1000 * 3600 * 24));
 
     if (tipo === 'modificado') {
-      // Ciclo de 16 días: 4 Día (0-3), 4 Descanso (4-7), 4 Noche (8-11), 4 Descanso (12-15)
-      // Cada grupo va desfasado por 4 días
-      const offset = groupIndex * 4;
-      const dayInCycle = ((diffDays - offset) % 16 + 16) % 16;
+      // Ciclo de 8 días: 2 Día (0-1), 2 Noche (2-3), 4 Descanso (4-7)
+      // Desfases calculados desde el 1 de Agosto de 2026
+      const offsets = [0, 4, 6, 2]; // Grupo 1, Grupo 2, Grupo 3, Grupo 4
       
-      if (dayInCycle < 4) return 'Día';
-      if (dayInCycle < 8) return 'Descanso';
-      if (dayInCycle < 12) return 'Noche';
+      // La fórmula ((x % 8) + 8) % 8 asegura que funcione perfecto hacia años anteriores (números negativos)
+      const dayInCycle = ((diffDays + offsets[groupIndex]) % 8 + 8) % 8;
+      
+      if (dayInCycle < 2) return 'Día';
+      if (dayInCycle < 4) return 'Noche';
       return 'Descanso';
+      
     } else {
-      // Lineal - Ciclo de 8 días: 4 Trabajo (0-3), 4 Descanso (4-7)
-      const offset = groupIndex * 4;
-      const dayInCycle = ((diffDays - offset) % 8 + 8) % 8;
+      // Lineal - Ciclo de 8 días: 4 Día (0-3), 4 Descanso (4-7)
+      const offsets = [0, 4]; // Grupo 1, Grupo 2
+      const dayInCycle = ((diffDays + offsets[groupIndex]) % 8 + 8) % 8;
       
       if (dayInCycle < 4) return 'Día';
       return 'Descanso';
@@ -68,6 +70,7 @@ export default function TurnosTab() {
     
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const firstDayOfWeek = new Date(year, month, 1).getDay();
+    // Ajuste para que la semana arranque el Lunes
     const emptyDaysCount = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
     const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
     
@@ -79,16 +82,15 @@ export default function TurnosTab() {
       const currentDay = new Date(year, month, i + 1);
       const isSelected = currentDay.getTime() === selectedDate.getTime();
       
-      // Lógica de colores si hay un grupo seleccionado
       let bgColor = '#fafafa';
       let textColor = '#888';
       let shiftLabel = '';
       
       if (highlightGroup !== null) {
         const shift = getShift(currentDay, highlightGroup, tipoTurno);
-        if (shift === 'Día') { bgColor = '#FFE0B2'; textColor = COLORS.naranjo; shiftLabel = '☀️ Día'; }
-        else if (shift === 'Noche') { bgColor = '#B2EBF2'; textColor = COLORS.celeste; shiftLabel = '🌙 Noche'; }
-        else { bgColor = '#F5F5F5'; textColor = '#aaa'; shiftLabel = 'Descanso'; }
+        if (shift === 'Día') { bgColor = '#FFF3E0'; textColor = COLORS.naranjo; shiftLabel = '☀️ Día'; }
+        else if (shift === 'Noche') { bgColor = '#E0F7FA'; textColor = COLORS.celeste; shiftLabel = '🌙 Noche'; }
+        else { bgColor = '#F5F5F5'; textColor = '#ccc'; shiftLabel = 'Libre'; }
       }
 
       return (
@@ -121,7 +123,6 @@ export default function TurnosTab() {
           <button style={navButton} onClick={() => setCalendarDate(new Date(year, month + 1, 1))}>Siguiente ▶</button>
         </div>
         
-        {/* Selector de Ruta (Grupo) */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '20px', justifyContent: 'center' }}>
           <button 
             onClick={() => setHighlightGroup(null)}
@@ -150,7 +151,7 @@ export default function TurnosTab() {
     );
   };
 
-  // --- RENDERIZADO DEL PANEL DERECHO (FOTO DEL DÍA) ---
+  // --- RENDERIZADO DEL PANEL DERECHO ---
   const renderPanelDia = () => {
     const dataDelDia = getGroupsForDate(selectedDate, tipoTurno);
     const options: Intl.DateTimeFormatOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
@@ -199,12 +200,6 @@ export default function TurnosTab() {
             </p>
           </div>
         </div>
-        
-        <div style={{ marginTop: 'auto', paddingTop: '30px', textAlign: 'center' }}>
-          <p style={{ margin: 0, fontSize: '0.85rem', color: '#999', fontStyle: 'italic' }}>
-            Selecciona cualquier día en el calendario para ver la distribución exacta de los grupos operativos.
-          </p>
-        </div>
       </div>
     );
   };
@@ -214,10 +209,9 @@ export default function TurnosTab() {
       
       <style>{`
         .turnos-layout { display: grid; grid-template-columns: 1.8fr 1fr; gap: 25px; align-items: start; }
-        @media (max-width: 900px) { .turnos-layout { display: flex; flexDirection: column; } }
+        @media (max-width: 900px) { .turnos-layout { display: flex; flex-direction: column-reverse; } }
       `}</style>
 
-      {/* TABS SUPERIORES */}
       <div style={{ display: 'flex', justifyContent: 'center', gap: '15px' }}>
         <button 
           onClick={() => { setTipoTurno('modificado'); setHighlightGroup(null); }}
@@ -233,7 +227,6 @@ export default function TurnosTab() {
         </button>
       </div>
 
-      {/* CENTRO DE MANDO */}
       <div className="turnos-layout">
         {renderCalendar()}
         {renderPanelDia()}
