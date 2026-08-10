@@ -41,20 +41,68 @@ interface LicenciasProps {
   rawData: any[];
 }
 
-// Función para traducir dd-mmm-yyyy a Date (Normalizada a medianoche)
-const parseCustomDate = (dateStr: string) => {
-  if (!dateStr) return null;
-  const parts = String(dateStr).trim().toLowerCase().split('-');
-  if (parts.length !== 3) return null;
-  
-  const [day, monthStr, year] = parts;
-  const monthMap: Record<string, number> = {
-    ene: 0, feb: 1, mar: 2, abr: 3, may: 4, jun: 5, jul: 6, ago: 7, sep: 8, oct: 9, nov: 10, dic: 11,
-    jan: 0, apr: 3, aug: 7, dec: 11
-  };
-  
-  const monthIndex = monthMap[monthStr] !== undefined ? monthMap[monthStr] : parseInt(monthStr) - 1;
-  return new Date(parseInt(year), monthIndex, parseInt(day), 0, 0, 0); 
+// --- EL NUEVO TRADUCTOR DE FECHAS TODOTERRENO ---
+const parseCustomDate = (dateVal: any) => {
+  if (!dateVal) return null;
+
+  // 1. ¿Es un número de serie nativo de Excel? (ej: 46245)
+  if (typeof dateVal === 'number' || (!isNaN(Number(dateVal)) && Number(dateVal) > 10000)) {
+    const serial = Number(dateVal);
+    // Fórmula para convertir serie de Excel a fecha JS (restando los días hasta 1970)
+    const jsDate = new Date(Math.round((serial - 25569) * 86400 * 1000));
+    // Normalizamos a medianoche local usando los datos UTC para evitar desfases de zona horaria
+    return new Date(jsDate.getUTCFullYear(), jsDate.getUTCMonth(), jsDate.getUTCDate(), 0, 0, 0);
+  }
+
+  // 2. Viene como texto: normalizamos barras a guiones
+  const dateStr = String(dateVal).trim().toLowerCase().replace(/\//g, '-');
+  const parts = dateStr.split('-');
+
+  if (parts.length === 3) {
+    let [dayStr, monthStr, yearStr] = parts;
+    
+    let parsedDay = parseInt(dayStr);
+    let parsedYear = parseInt(yearStr);
+
+    // Si viene invertido (Formato YYYY-MM-DD en vez de DD-MM-YYYY)
+    if (parsedDay > 1000) {
+      const temp = parsedYear;
+      parsedYear = parsedDay;
+      parsedDay = temp;
+    }
+
+    // Ajuste por si el año viene de 2 dígitos (ej: 26 -> 2026)
+    if (parsedYear < 100) {
+      parsedYear += parsedYear > 50 ? 1900 : 2000;
+    }
+
+    // Identificación inteligente del mes (letras o números)
+    const monthMap: Record<string, number> = {
+      ene: 0, feb: 1, mar: 2, abr: 3, may: 4, jun: 5, jul: 6, ago: 7, sep: 8, oct: 9, nov: 10, dic: 11,
+      jan: 0, apr: 3, aug: 7, dec: 11
+    };
+    
+    const cleanMonthStr = monthStr.replace(/[^a-z]/g, '');
+    let monthIndex = -1;
+    
+    if (cleanMonthStr && monthMap[cleanMonthStr] !== undefined) {
+      monthIndex = monthMap[cleanMonthStr];
+    } else {
+      monthIndex = parseInt(monthStr) - 1;
+    }
+
+    if (!isNaN(parsedYear) && !isNaN(monthIndex) && monthIndex >= 0 && monthIndex <= 11 && !isNaN(parsedDay)) {
+      return new Date(parsedYear, monthIndex, parsedDay, 0, 0, 0);
+    }
+  }
+
+  // 3. Fallback: Si no era ninguna de las anteriores, intentamos la lectura nativa del navegador
+  const fallbackDate = new Date(dateVal);
+  if (!isNaN(fallbackDate.getTime())) {
+    return new Date(fallbackDate.getFullYear(), fallbackDate.getMonth(), fallbackDate.getDate(), 0, 0, 0);
+  }
+
+  return null;
 };
 
 export default function LicenciasTab({ rawData }: LicenciasProps) {
@@ -84,7 +132,7 @@ export default function LicenciasTab({ rawData }: LicenciasProps) {
     const fInicio = row['Fecha de Inicio'];
     const fTermino = row['Fecha Termino'];
 
-    // Normalizamos la key a formato YYYY-MM-DD
+    // Normalizamos la key a formato YYYY-MM-DD para el calendario
     if (fInicio) {
       const dInicio = parseCustomDate(fInicio);
       if (dInicio) {
@@ -159,15 +207,13 @@ export default function LicenciasTab({ rawData }: LicenciasProps) {
   const verticalBarOptions: any = { ...commonOptions, plugins: { ...commonOptions.plugins, legend: { display: false }, datalabels: { ...datalabelConfig, anchor: 'end', align: 'start' } } };
   const doughnutOptions: any = { ...commonOptions, cutout: '65%', plugins: { ...commonOptions.plugins, legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 9, family: "'Poppins', sans-serif" } } } } };
 
-  // --- LÓGICA DEL CALENDARIO (CORREGIDA) ---
+  // --- LÓGICA DEL CALENDARIO (CORREGIDA Y VINCULADA) ---
   const renderCalendar = () => {
     const year = calendarDate.getFullYear();
     const month = calendarDate.getMonth();
     
     const daysInMonth = new Date(year, month + 1, 0).getDate();
-    // Obtener el día de la semana del primer día del mes (0 = Dom, 1 = Lun, ..., 6 = Sab)
     const firstDayOfWeek = new Date(year, month, 1).getDay();
-    // Ajuste para que empiece en Lunes (0 = Lunes, 6 = Domingo)
     const emptyDaysCount = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
 
     const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
@@ -178,7 +224,6 @@ export default function LicenciasTab({ rawData }: LicenciasProps) {
     
     const dayCells = Array.from({ length: daysInMonth }).map((_, i) => {
       const day = i + 1;
-      // Llave normalizada YYYY-MM-DD
       const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       
       const starts = startsByDate[key] || [];
@@ -243,7 +288,7 @@ export default function LicenciasTab({ rawData }: LicenciasProps) {
       {/* 1. Resumen Superior */}
       <div style={{ display: 'flex', flexWrap: 'nowrap', gap: 'clamp(4px, 1.5vw, 20px)', width: '100%', justifyContent: 'space-between' }}>
         <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>Licencias</h4><p style={kpiValueStyle}>{totalLicencias}</p></div>
-        <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>Días Acum.<br/>(Últimos 12 Meses)</h4><p style={{...kpiValueStyle, color: COLORS.naranjo}}>{totalDias12Meses}</p></div>
+        <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>Días Acum.<br/>(Últimos 12)</h4><p style={{...kpiValueStyle, color: COLORS.naranjo}}>{totalDias12Meses}</p></div>
         <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>LM Mayores<br/>a 100 Días</h4><p style={{...kpiValueStyle, color: COLORS.rosado}}>{licenciasMayoresA100}</p></div>
         <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>Promedio<br/>Días / Licencia</h4><p style={kpiValueStyle}>{promedioDias}</p></div>
       </div>
@@ -282,9 +327,9 @@ export default function LicenciasTab({ rawData }: LicenciasProps) {
 
 // --- ESTILOS ---
 const cardStyle: React.CSSProperties = { backgroundColor: COLORS.blanco, padding: 'clamp(10px, 2vw, 20px)', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)', minWidth: 0 };
-const summaryCardStyle: React.CSSProperties = { flex: 1, minWidth: 0, backgroundColor: COLORS.blanco, padding: 'clamp(8px, 1.5vw, 20px) clamp(2px, 0.5vw, 10px)', borderRadius: '10px', boxShadow: '0 4px 10px rgba(0,0,0,0.04)', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '100px' };
-const kpiTitleStyle: React.CSSProperties = { margin: 0, color: COLORS.gris, fontSize: 'clamp(0.50rem, 1.3vw, 0.9rem)', fontWeight: 600, lineHeight: 1.2 };
-const kpiValueStyle: React.CSSProperties = { fontSize: 'clamp(1rem, 3.5vw, 2.2rem)', fontWeight: 600, color: COLORS.celeste, margin: '5px 0 0 0' };
+const summaryCardStyle: React.CSSProperties = { flex: '1 1 0px', minWidth: 0, backgroundColor: COLORS.blanco, padding: 'clamp(6px, 1.2vw, 15px) clamp(2px, 0.5vw, 10px)', borderRadius: '10px', boxShadow: '0 4px 10px rgba(0,0,0,0.04)', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '80px' };
+const kpiTitleStyle: React.CSSProperties = { margin: 0, color: COLORS.gris, fontSize: 'clamp(0.55rem, 1.2vw, 0.9rem)', fontWeight: 600, lineHeight: 1.2, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' };
+const kpiValueStyle: React.CSSProperties = { fontSize: 'clamp(1.1rem, 3vw, 2.2rem)', fontWeight: 600, color: COLORS.celeste, margin: '5px 0 0 0' };
 const chartTitleStyle: React.CSSProperties = { margin: '0 0 15px 0', color: COLORS.gris, fontSize: 'clamp(0.70rem, 1.8vw, 1.1rem)', fontWeight: 600, borderBottom: '1px solid #eee', paddingBottom: '8px', whiteSpace: 'normal', lineHeight: 1.2 };
 const tabButton: React.CSSProperties = { padding: '8px 20px', borderRadius: '20px', border: `1px solid ${COLORS.celeste}`, fontWeight: 600, cursor: 'pointer', transition: 'all 0.3s ease', fontFamily: "'Poppins', sans-serif" };
 
