@@ -18,6 +18,7 @@ import ChartJSPluginDataLabels from 'chartjs-plugin-datalabels';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement, LineElement, Filler, ChartJSPluginDataLabels);
 
+
 const COLORS = {
   gris: '#36424a',
   naranjo: '#e45302',
@@ -178,7 +179,7 @@ export default function App() {
       { id: 'discapacidad', label: 'Discapacidad', icon: <Accessibility size={38} /> },
       { id: 'cumpleanos', label: 'Cumpleaños', icon: <Gift size={38} /> },
       { id: 'comunas', label: 'Comunas', icon: <MapPin size={38} /> },
-      { id: 'turnos', label: 'Rol de Turnos', icon: <Clock size={38} /> },
+      { id: 'turnos', label: 'Calendario de Turnos', icon: <Clock size={38} /> },
     ];
 
     return (
@@ -249,7 +250,7 @@ export default function App() {
                 {activeTab === 'participacion' ? <Venus size={32} /> : activeTab === 'sindicatos' ? <Handshake size={32} /> : activeTab === 'licencias' ? <Stethoscope size={32} /> : activeTab === 'ausentismo' ? <Scale size={32} /> : activeTab === 'discapacidad' ? <Accessibility size={32} /> : activeTab === 'cumpleanos' ? <Gift size={32} /> : activeTab === 'comunas' ? <MapPin size={32} /> : activeTab === 'turnos' ? <Clock size={32} /> : <Users size={32} />}
               </div>
               <h2 style={{ color: COLORS.gris, margin: 0, fontSize: 'clamp(1.4rem, 3vw, 1.8rem)', fontWeight: 600 }}>
-                {activeTab === 'dotacion' ? 'Análisis Dotacional' : activeTab === 'participacion' ? 'Participación Femenina' : activeTab === 'sindicatos' ? 'Organizaciones Sindicales' : activeTab === 'licencias' ? 'Licencias Médicas' : activeTab === 'ausentismo' ? 'Ausentismo y Sobretiempo' : activeTab === 'discapacidad' ? 'Inclusión y Discapacidad' : activeTab === 'cumpleanos' ? 'Gestión de Cumpleaños' : activeTab === 'comunas' ? 'Distribución Geográfica' : activeTab === 'turnos' ? 'Rol de Turnos' : activeTab.toUpperCase()}
+                {activeTab === 'dotacion' ? 'Análisis Dotacional' : activeTab === 'participacion' ? 'Participación Femenina' : activeTab === 'sindicatos' ? 'Organizaciones Sindicales' : activeTab === 'licencias' ? 'Licencias Médicas' : activeTab === 'ausentismo' ? 'Ausentismo y Sobretiempo' : activeTab === 'discapacidad' ? 'Inclusión y Discapacidad' : activeTab === 'cumpleanos' ? 'Gestión de Cumpleaños' : activeTab === 'comunas' ? 'Distribución Geográfica' : activeTab === 'turnos' ? 'Calendario de Turnos' : activeTab.toUpperCase()}
               </h2>
             </div>
             
