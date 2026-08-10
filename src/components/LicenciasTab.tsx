@@ -41,20 +41,16 @@ interface LicenciasProps {
   rawData: any[];
 }
 
-// --- EL NUEVO TRADUCTOR DE FECHAS TODOTERRENO ---
+// --- TRADUCTOR DE FECHAS TODOTERRENO ---
 const parseCustomDate = (dateVal: any) => {
   if (!dateVal) return null;
 
-  // 1. ¿Es un número de serie nativo de Excel? (ej: 46245)
   if (typeof dateVal === 'number' || (!isNaN(Number(dateVal)) && Number(dateVal) > 10000)) {
     const serial = Number(dateVal);
-    // Fórmula para convertir serie de Excel a fecha JS (restando los días hasta 1970)
     const jsDate = new Date(Math.round((serial - 25569) * 86400 * 1000));
-    // Normalizamos a medianoche local usando los datos UTC para evitar desfases de zona horaria
     return new Date(jsDate.getUTCFullYear(), jsDate.getUTCMonth(), jsDate.getUTCDate(), 0, 0, 0);
   }
 
-  // 2. Viene como texto: normalizamos barras a guiones
   const dateStr = String(dateVal).trim().toLowerCase().replace(/\//g, '-');
   const parts = dateStr.split('-');
 
@@ -64,19 +60,16 @@ const parseCustomDate = (dateVal: any) => {
     let parsedDay = parseInt(dayStr);
     let parsedYear = parseInt(yearStr);
 
-    // Si viene invertido (Formato YYYY-MM-DD en vez de DD-MM-YYYY)
     if (parsedDay > 1000) {
       const temp = parsedYear;
       parsedYear = parsedDay;
       parsedDay = temp;
     }
 
-    // Ajuste por si el año viene de 2 dígitos (ej: 26 -> 2026)
     if (parsedYear < 100) {
       parsedYear += parsedYear > 50 ? 1900 : 2000;
     }
 
-    // Identificación inteligente del mes (letras o números)
     const monthMap: Record<string, number> = {
       ene: 0, feb: 1, mar: 2, abr: 3, may: 4, jun: 5, jul: 6, ago: 7, sep: 8, oct: 9, nov: 10, dic: 11,
       jan: 0, apr: 3, aug: 7, dec: 11
@@ -96,7 +89,6 @@ const parseCustomDate = (dateVal: any) => {
     }
   }
 
-  // 3. Fallback: Si no era ninguna de las anteriores, intentamos la lectura nativa del navegador
   const fallbackDate = new Date(dateVal);
   if (!isNaN(fallbackDate.getTime())) {
     return new Date(fallbackDate.getFullYear(), fallbackDate.getMonth(), fallbackDate.getDate(), 0, 0, 0);
@@ -117,9 +109,16 @@ export default function LicenciasTab({ rawData }: LicenciasProps) {
   let totalDias12Meses = 0; 
   let licenciasMayoresA100 = 0; 
 
-  // Diccionarios: clave "YYYY-MM-DD" para evitar cruces
   const startsByDate: Record<string, string[]> = {};
   const endsByDate: Record<string, string[]> = {};
+  
+  // --- LÓGICA DEL RADAR DE REINTEGROS ---
+  const upcomingReturns: { nombre: string, fecha: Date }[] = [];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Normalizamos al inicio del día
+  
+  const limitDate = new Date(today);
+  limitDate.setDate(today.getDate() + 7); // Margen de 7 días
 
   licenciasData.forEach(row => {
     totalDiasLicenciaActual += Number(row['Días'] || row['Dias']) || 0;
@@ -132,7 +131,6 @@ export default function LicenciasTab({ rawData }: LicenciasProps) {
     const fInicio = row['Fecha de Inicio'];
     const fTermino = row['Fecha Termino'];
 
-    // Normalizamos la key a formato YYYY-MM-DD para el calendario
     if (fInicio) {
       const dInicio = parseCustomDate(fInicio);
       if (dInicio) {
@@ -148,9 +146,17 @@ export default function LicenciasTab({ rawData }: LicenciasProps) {
         const key = `${dTermino.getFullYear()}-${String(dTermino.getMonth() + 1).padStart(2, '0')}-${String(dTermino.getDate()).padStart(2, '0')}`;
         if (!endsByDate[key]) endsByDate[key] = [];
         endsByDate[key].push(nombre);
+
+        // NUEVO: Rescatar reintegros de la semana
+        if (dTermino >= today && dTermino <= limitDate) {
+          upcomingReturns.push({ nombre, fecha: dTermino });
+        }
       }
     }
   });
+
+  // Ordenar reintegros del más pronto al más lejano
+  upcomingReturns.sort((a, b) => a.fecha.getTime() - b.fecha.getTime());
 
   const promedioDias = totalLicencias > 0 ? (totalDiasLicenciaActual / totalLicencias).toFixed(1) : "0";
 
@@ -207,7 +213,19 @@ export default function LicenciasTab({ rawData }: LicenciasProps) {
   const verticalBarOptions: any = { ...commonOptions, plugins: { ...commonOptions.plugins, legend: { display: false }, datalabels: { ...datalabelConfig, anchor: 'end', align: 'start' } } };
   const doughnutOptions: any = { ...commonOptions, cutout: '65%', plugins: { ...commonOptions.plugins, legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 9, family: "'Poppins', sans-serif" } } } } };
 
-  // --- LÓGICA DEL CALENDARIO (CORREGIDA Y VINCULADA) ---
+  // Helper para formatear la fecha del radar
+  const formatReturnDate = (d: Date) => {
+    const isToday = d.getTime() === today.getTime();
+    const isTomorrow = d.getTime() === today.getTime() + 86400000;
+    if (isToday) return "HOY";
+    if (isTomorrow) return "Mañana";
+    
+    const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    return `${days[d.getDay()]} ${d.getDate()} de ${months[d.getMonth()]}`;
+  };
+
+  // --- LÓGICA DEL CALENDARIO ---
   const renderCalendar = () => {
     const year = calendarDate.getFullYear();
     const month = calendarDate.getMonth();
@@ -256,12 +274,14 @@ export default function LicenciasTab({ rawData }: LicenciasProps) {
 
     return (
       <div style={cardStyle}>
+        {/* Cabecera del calendario */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <button style={navButton} onClick={() => setCalendarDate(new Date(year, month - 1, 1))}>◀ Anterior</button>
           <h3 style={{ margin: 0, color: COLORS.gris, fontWeight: 600 }}>{monthNames[month]} {year}</h3>
           <button style={navButton} onClick={() => setCalendarDate(new Date(year, month + 1, 1))}>Siguiente ▶</button>
         </div>
         
+        {/* Leyenda visual */}
         <div style={{ display: 'flex', gap: '15px', marginBottom: '15px', justifyContent: 'center', fontSize: '0.85rem', color: COLORS.gris }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
             <div style={{...dotStyle, backgroundColor: COLORS.rojoInicio, position: 'relative', transform: 'none'}}></div> Inicio
@@ -271,12 +291,55 @@ export default function LicenciasTab({ rawData }: LicenciasProps) {
           </div>
         </div>
 
+        {/* Grilla principal */}
         <div style={calendarGrid}>
           {['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa', 'Do'].map(d => (
             <div key={d} style={calendarHeaderDay}>{d}</div>
           ))}
           {emptyCells}
           {dayCells}
+        </div>
+
+        {/* NUEVO: RADAR DE REINTEGROS (Se muestra solo en la vista calendario) */}
+        <div style={{ marginTop: '30px', borderTop: '2px solid #eee', paddingTop: '20px' }}>
+          <h4 style={{ margin: '0 0 15px 0', color: COLORS.gris, fontSize: '1.05rem', fontWeight: 600 }}>
+            Reintegros Programados (Próximos 7 días)
+          </h4>
+          
+          {upcomingReturns.length > 0 ? (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '12px' }}>
+              {upcomingReturns.map((ret, idx) => {
+                const isToday = ret.fecha.getTime() === today.getTime();
+                return (
+                  <div key={idx} style={{ 
+                    display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 15px', 
+                    backgroundColor: isToday ? '#E8F5E9' : '#fafafa', 
+                    border: isToday ? `1px solid ${COLORS.verdeFin}` : '1px solid #eee', 
+                    borderRadius: '8px' 
+                  }}>
+                    <div style={{...dotStyle, backgroundColor: COLORS.verdeFin, width: '12px', height: '12px', flexShrink: 0}}></div>
+                    <div style={{ flex: 1, overflow: 'hidden' }}>
+                      <p style={{ margin: 0, fontWeight: 600, color: COLORS.gris, fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {ret.nombre}
+                      </p>
+                    </div>
+                    <div style={{ 
+                      fontWeight: 600, fontSize: '0.80rem', 
+                      color: isToday ? COLORS.verdeFin : '#888', 
+                      backgroundColor: isToday ? '#C8E6C9' : '#eee', 
+                      padding: '4px 8px', borderRadius: '4px', flexShrink: 0
+                    }}>
+                      {formatReturnDate(ret.fecha)}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            <p style={{ color: '#888', fontSize: '0.9rem', fontStyle: 'italic', margin: 0 }}>
+              No hay retornos programados para los próximos días.
+            </p>
+          )}
         </div>
       </div>
     );
