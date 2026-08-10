@@ -113,12 +113,12 @@ export default function LicenciasTab({ rawData }: LicenciasProps) {
   const endsByDate: Record<string, string[]> = {};
   
   // --- LÓGICA DEL RADAR DE REINTEGROS ---
-  const upcomingReturns: { nombre: string, fecha: Date }[] = [];
+  const upcomingReturns: { nombre: string, fecha: Date, cargo: string, area: string, grupo: string }[] = [];
   const today = new Date();
-  today.setHours(0, 0, 0, 0); // Normalizamos al inicio del día
+  today.setHours(0, 0, 0, 0); 
   
   const limitDate = new Date(today);
-  limitDate.setDate(today.getDate() + 7); // Margen de 7 días
+  limitDate.setDate(today.getDate() + 7); 
 
   licenciasData.forEach(row => {
     totalDiasLicenciaActual += Number(row['Días'] || row['Dias']) || 0;
@@ -128,6 +128,18 @@ export default function LicenciasTab({ rawData }: LicenciasProps) {
     if (diasAcumulados >= 100) licenciasMayoresA100++;
 
     const nombre = row['Nombre trabajador/a']?.trim() || 'Colaborador';
+    const cargo = row['Cargo']?.trim() || row['Rol']?.trim() || 'Sin Cargo';
+    const area = row['Superintendencia / Dirección / Gerencia']?.trim() || 'Sin Área';
+    
+    // Tratamiento del grupo para evitar guiones
+    let grupo = row['Grupo']?.trim() || 'Admin.';
+    if (grupo === '-' || grupo.toLowerCase().includes('admin')) grupo = 'Admin.';
+    else if (['1', 'Grupo 1'].includes(grupo)) grupo = 'Grupo 1';
+    else if (['2', 'Grupo 2'].includes(grupo)) grupo = 'Grupo 2';
+    else if (['3', 'Grupo 3'].includes(grupo)) grupo = 'Grupo 3';
+    else if (['4', 'Grupo 4'].includes(grupo)) grupo = 'Grupo 4';
+    else grupo = 'Admin.';
+
     const fInicio = row['Fecha de Inicio'];
     const fTermino = row['Fecha Termino'];
 
@@ -147,9 +159,9 @@ export default function LicenciasTab({ rawData }: LicenciasProps) {
         if (!endsByDate[key]) endsByDate[key] = [];
         endsByDate[key].push(nombre);
 
-        // NUEVO: Rescatar reintegros de la semana
+        // Rescatar reintegros de la semana sumando cargo, área y grupo
         if (dTermino >= today && dTermino <= limitDate) {
-          upcomingReturns.push({ nombre, fecha: dTermino });
+          upcomingReturns.push({ nombre, fecha: dTermino, cargo, area, grupo });
         }
       }
     }
@@ -213,18 +225,6 @@ export default function LicenciasTab({ rawData }: LicenciasProps) {
   const verticalBarOptions: any = { ...commonOptions, plugins: { ...commonOptions.plugins, legend: { display: false }, datalabels: { ...datalabelConfig, anchor: 'end', align: 'start' } } };
   const doughnutOptions: any = { ...commonOptions, cutout: '65%', plugins: { ...commonOptions.plugins, legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 9, family: "'Poppins', sans-serif" } } } } };
 
-  // Helper para formatear la fecha del radar
-  const formatReturnDate = (d: Date) => {
-    const isToday = d.getTime() === today.getTime();
-    const isTomorrow = d.getTime() === today.getTime() + 86400000;
-    if (isToday) return "HOY";
-    if (isTomorrow) return "Mañana";
-    
-    const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-    const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-    return `${days[d.getDay()]} ${d.getDate()} de ${months[d.getMonth()]}`;
-  };
-
   // --- LÓGICA DEL CALENDARIO ---
   const renderCalendar = () => {
     const year = calendarDate.getFullYear();
@@ -273,74 +273,103 @@ export default function LicenciasTab({ rawData }: LicenciasProps) {
     });
 
     return (
-      <div style={cardStyle}>
-        {/* Cabecera del calendario */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <button style={navButton} onClick={() => setCalendarDate(new Date(year, month - 1, 1))}>◀ Anterior</button>
-          <h3 style={{ margin: 0, color: COLORS.gris, fontWeight: 600 }}>{monthNames[month]} {year}</h3>
-          <button style={navButton} onClick={() => setCalendarDate(new Date(year, month + 1, 1))}>Siguiente ▶</button>
-        </div>
+      <div className="licencias-calendar-layout">
         
-        {/* Leyenda visual */}
-        <div style={{ display: 'flex', gap: '15px', marginBottom: '15px', justifyContent: 'center', fontSize: '0.85rem', color: COLORS.gris }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-            <div style={{...dotStyle, backgroundColor: COLORS.rojoInicio, position: 'relative', transform: 'none'}}></div> Inicio
+        {/* LADO IZQUIERDO: EL CALENDARIO (Aparece abajo en celular) */}
+        <div style={cardStyle}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <button style={navButton} onClick={() => setCalendarDate(new Date(year, month - 1, 1))}>◀ Anterior</button>
+            <h3 style={{ margin: 0, color: COLORS.gris, fontWeight: 600 }}>{monthNames[month]} {year}</h3>
+            <button style={navButton} onClick={() => setCalendarDate(new Date(year, month + 1, 1))}>Siguiente ▶</button>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-            <div style={{...dotStyle, backgroundColor: COLORS.verdeFin, position: 'relative', transform: 'none'}}></div> Término
+          
+          <div style={{ display: 'flex', gap: '15px', marginBottom: '15px', justifyContent: 'center', fontSize: '0.85rem', color: COLORS.gris }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <div style={{...dotStyle, backgroundColor: COLORS.rojoInicio, position: 'relative', transform: 'none'}}></div> Inicio
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <div style={{...dotStyle, backgroundColor: COLORS.verdeFin, position: 'relative', transform: 'none'}}></div> Término
+            </div>
+          </div>
+
+          <div style={calendarGrid}>
+            {['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa', 'Do'].map(d => (
+              <div key={d} style={calendarHeaderDay}>{d}</div>
+            ))}
+            {emptyCells}
+            {dayCells}
           </div>
         </div>
 
-        {/* Grilla principal */}
-        <div style={calendarGrid}>
-          {['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa', 'Do'].map(d => (
-            <div key={d} style={calendarHeaderDay}>{d}</div>
-          ))}
-          {emptyCells}
-          {dayCells}
-        </div>
-
-        {/* NUEVO: RADAR DE REINTEGROS (Se muestra solo en la vista calendario) */}
-        <div style={{ marginTop: '30px', borderTop: '2px solid #eee', paddingTop: '20px' }}>
-          <h4 style={{ margin: '0 0 15px 0', color: COLORS.gris, fontSize: '1.05rem', fontWeight: 600 }}>
-            Reintegros Programados (Próximos 7 días)
-          </h4>
+        {/* LADO DERECHO: LISTA DE REINTEGROS (Aparece arriba en celular) */}
+        <div style={{ ...cardStyle, backgroundColor: 'transparent', boxShadow: 'none', padding: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
+            <div style={{ color: COLORS.naranjo }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            </div>
+            <h4 style={{ margin: 0, color: COLORS.gris, fontSize: '1.1rem', fontWeight: 600 }}>
+              Próximos 7 Días
+            </h4>
+            <span style={{ marginLeft: 'auto', backgroundColor: '#E0F7FA', color: COLORS.celeste, padding: '2px 8px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 600 }}>
+              {upcomingReturns.length}
+            </span>
+          </div>
           
           {upcomingReturns.length > 0 ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '12px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '550px', overflowY: 'auto', paddingRight: '5px' }}>
               {upcomingReturns.map((ret, idx) => {
                 const isToday = ret.fecha.getTime() === today.getTime();
+                const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+                
                 return (
                   <div key={idx} style={{ 
-                    display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 15px', 
-                    backgroundColor: isToday ? '#E8F5E9' : '#fafafa', 
-                    border: isToday ? `1px solid ${COLORS.verdeFin}` : '1px solid #eee', 
-                    borderRadius: '8px' 
+                    display: 'flex', 
+                    backgroundColor: COLORS.blanco, 
+                    borderRadius: '8px', 
+                    overflow: 'hidden', 
+                    border: isToday ? `2px solid ${COLORS.verdeFin}` : '1px solid #eee', 
+                    boxShadow: '0 2px 5px rgba(0,0,0,0.05)'
                   }}>
-                    <div style={{...dotStyle, backgroundColor: COLORS.verdeFin, width: '12px', height: '12px', flexShrink: 0}}></div>
-                    <div style={{ flex: 1, overflow: 'hidden' }}>
-                      <p style={{ margin: 0, fontWeight: 600, color: COLORS.gris, fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {ret.nombre}
-                      </p>
-                    </div>
                     <div style={{ 
-                      fontWeight: 600, fontSize: '0.80rem', 
-                      color: isToday ? COLORS.verdeFin : '#888', 
-                      backgroundColor: isToday ? '#C8E6C9' : '#eee', 
-                      padding: '4px 8px', borderRadius: '4px', flexShrink: 0
+                      backgroundColor: isToday ? COLORS.verdeFin : COLORS.celeste, 
+                      color: COLORS.blanco, 
+                      padding: '15px 10px', 
+                      display: 'flex', 
+                      flexDirection: 'column', 
+                      alignItems: 'center', 
+                      justifyContent: 'center', 
+                      minWidth: '75px' 
                     }}>
-                      {formatReturnDate(ret.fecha)}
+                      <span style={{ fontSize: '1.6rem', fontWeight: 700, lineHeight: 1 }}>{ret.fecha.getDate()}</span>
+                      <span style={{ fontSize: '0.85rem', textTransform: 'uppercase', fontWeight: 600, marginTop: '2px' }}>{months[ret.fecha.getMonth()]}</span>
+                    </div>
+                    <div style={{ padding: '12px 15px', flex: 1 }}>
+                      <h5 style={{ margin: '0 0 5px 0', fontSize: '0.95rem', color: COLORS.gris, fontWeight: 700 }}>{ret.nombre}</h5>
+                      <p style={{ margin: '0 0 2px 0', fontSize: '0.8rem', color: '#888' }}>{ret.cargo}</p>
+                      <p style={{ margin: '0 0 8px 0', fontSize: '0.85rem', color: COLORS.naranjo, fontWeight: 500 }}>{ret.area}</p>
+                      <span style={{ 
+                        display: 'inline-block', 
+                        padding: '2px 8px', 
+                        backgroundColor: isToday ? '#E8F5E9' : '#f5f7f8', 
+                        borderRadius: '4px', 
+                        fontSize: '0.75rem', 
+                        fontWeight: 600, 
+                        color: isToday ? COLORS.verdeFin : COLORS.gris 
+                      }}>
+                        {ret.grupo}
+                      </span>
                     </div>
                   </div>
                 )
               })}
             </div>
           ) : (
-            <p style={{ color: '#888', fontSize: '0.9rem', fontStyle: 'italic', margin: 0 }}>
+            <div style={{ ...cardStyle, textAlign: 'center', color: '#888', fontStyle: 'italic', padding: '30px 20px' }}>
               No hay retornos programados para los próximos días.
-            </p>
+            </div>
           )}
         </div>
+
       </div>
     );
   };
@@ -348,33 +377,49 @@ export default function LicenciasTab({ rawData }: LicenciasProps) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(15px, 3vw, 25px)', fontFamily: "'Poppins', sans-serif" }}>
       
+      {/* CSS Inyectado para que el Layout del calendario cambie en Celular */}
+      <style>{`
+        .licencias-calendar-layout {
+          display: grid;
+          grid-template-columns: 2fr 1.2fr;
+          gap: 25px;
+          align-items: start;
+        }
+        @media (max-width: 900px) {
+          .licencias-calendar-layout {
+            display: flex;
+            flex-direction: column-reverse;
+          }
+        }
+      `}</style>
+
+      {/* BOTONES DE VISTA FLOTANTES (Jalados hacia arriba para alinearse con el título) */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: 'clamp(-10px, -4vw, -45px)', position: 'relative', zIndex: 10 }}>
+        <button 
+          onClick={() => setView('tablero')}
+          style={{...tabButton, backgroundColor: view === 'tablero' ? COLORS.celeste : COLORS.blanco, color: view === 'tablero' ? COLORS.blanco : COLORS.gris}}
+        >
+          Tableros
+        </button>
+        <button 
+          onClick={() => setView('calendario')}
+          style={{...tabButton, backgroundColor: view === 'calendario' ? COLORS.celeste : COLORS.blanco, color: view === 'calendario' ? COLORS.blanco : COLORS.gris}}
+        >
+          Calendario
+        </button>
+      </div>
+
       {/* 1. Resumen Superior */}
-      <div style={{ display: 'flex', flexWrap: 'nowrap', gap: 'clamp(4px, 1.5vw, 20px)', width: '100%', justifyContent: 'space-between' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'clamp(10px, 1.5vw, 20px)', width: '100%', justifyContent: 'space-between' }}>
         <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>Licencias</h4><p style={kpiValueStyle}>{totalLicencias}</p></div>
         <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>Días Acum.<br/>(Últimos 12)</h4><p style={{...kpiValueStyle, color: COLORS.naranjo}}>{totalDias12Meses}</p></div>
         <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>LM Mayores<br/>a 100 Días</h4><p style={{...kpiValueStyle, color: COLORS.rosado}}>{licenciasMayoresA100}</p></div>
         <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>Promedio<br/>Días / Licencia</h4><p style={kpiValueStyle}>{promedioDias}</p></div>
       </div>
 
-      {/* TABS DE NAVEGACIÓN */}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '-5px' }}>
-        <button 
-          onClick={() => setView('tablero')}
-          style={{...tabButton, backgroundColor: view === 'tablero' ? COLORS.celeste : COLORS.blanco, color: view === 'tablero' ? COLORS.blanco : COLORS.gris}}
-        >
-          📊 Vista Tablero
-        </button>
-        <button 
-          onClick={() => setView('calendario')}
-          style={{...tabButton, backgroundColor: view === 'calendario' ? COLORS.celeste : COLORS.blanco, color: view === 'calendario' ? COLORS.blanco : COLORS.gris}}
-        >
-          📅 Vista Calendario
-        </button>
-      </div>
-
       {/* CONTENIDO DINÁMICO */}
       {view === 'tablero' ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 'clamp(10px, 2vw, 20px)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: 'clamp(10px, 2vw, 20px)' }}>
           <div style={cardStyle}><h4 style={chartTitleStyle}>Cantidad de Licencias por Gerencia</h4><div style={{ width: '100%', height: '260px' }}><Bar data={getLicenciasPorGerencia()} options={horizontalBarOptions} /></div></div>
           <div style={cardStyle}><h4 style={chartTitleStyle}>Distribución por Especialidad Médica</h4><div style={{ width: '100%', height: '260px' }}><Doughnut data={getEspecialidadData()} options={doughnutOptions} /></div></div>
           <div style={cardStyle}><h4 style={chartTitleStyle}>Distribución por Grupo de Trabajo</h4><div style={{ width: '100%', height: '260px' }}><Bar data={getGrupoData()} options={verticalBarOptions} /></div></div>
@@ -394,14 +439,14 @@ const summaryCardStyle: React.CSSProperties = { flex: '1 1 0px', minWidth: 0, ba
 const kpiTitleStyle: React.CSSProperties = { margin: 0, color: COLORS.gris, fontSize: 'clamp(0.55rem, 1.2vw, 0.9rem)', fontWeight: 600, lineHeight: 1.2, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' };
 const kpiValueStyle: React.CSSProperties = { fontSize: 'clamp(1.1rem, 3vw, 2.2rem)', fontWeight: 600, color: COLORS.celeste, margin: '5px 0 0 0' };
 const chartTitleStyle: React.CSSProperties = { margin: '0 0 15px 0', color: COLORS.gris, fontSize: 'clamp(0.70rem, 1.8vw, 1.1rem)', fontWeight: 600, borderBottom: '1px solid #eee', paddingBottom: '8px', whiteSpace: 'normal', lineHeight: 1.2 };
-const tabButton: React.CSSProperties = { padding: '8px 20px', borderRadius: '20px', border: `1px solid ${COLORS.celeste}`, fontWeight: 600, cursor: 'pointer', transition: 'all 0.3s ease', fontFamily: "'Poppins', sans-serif" };
+const tabButton: React.CSSProperties = { padding: '6px 18px', borderRadius: '8px', border: `1px solid ${COLORS.celeste}`, fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer', transition: 'all 0.3s ease', fontFamily: "'Poppins', sans-serif" };
 
 const navButton: React.CSSProperties = { padding: '5px 15px', backgroundColor: 'transparent', border: `1px solid #ddd`, borderRadius: '4px', cursor: 'pointer', color: COLORS.gris, fontWeight: 600, fontFamily: "'Poppins', sans-serif" };
 const calendarGrid: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '5px' };
-const calendarHeaderDay: React.CSSProperties = { textAlign: 'center', fontWeight: 600, color: COLORS.gris, padding: '10px 0', borderBottom: '2px solid #eee' };
-const calendarCell: React.CSSProperties = { minHeight: '80px', padding: '5px', border: '1px solid #eee', borderRadius: '4px', backgroundColor: '#fafafa', display: 'flex', flexDirection: 'column', transition: 'background-color 0.2s', cursor: 'default' };
-const calendarCellEmpty: React.CSSProperties = { minHeight: '80px', backgroundColor: 'transparent' };
+const calendarHeaderDay: React.CSSProperties = { textAlign: 'center', fontWeight: 600, color: COLORS.gris, padding: '10px 0', borderBottom: '2px solid #eee', fontSize: '0.9rem' };
+const calendarCell: React.CSSProperties = { minHeight: '75px', padding: '5px', border: '1px solid #eee', borderRadius: '4px', backgroundColor: '#fafafa', display: 'flex', flexDirection: 'column', transition: 'background-color 0.2s', cursor: 'default' };
+const calendarCellEmpty: React.CSSProperties = { minHeight: '75px', backgroundColor: 'transparent' };
 const calendarDayNumber: React.CSSProperties = { fontSize: '0.85rem', fontWeight: 600, color: '#888', alignSelf: 'flex-end', marginBottom: 'auto' };
 const dotsContainer: React.CSSProperties = { display: 'flex', justifyContent: 'space-around', alignItems: 'center', marginTop: '10px', gap: '5px' };
-const dotStyle: React.CSSProperties = { width: '16px', height: '16px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'transform 0.2s' };
-const dotCount: React.CSSProperties = { color: 'white', fontSize: '10px', fontWeight: 'bold' };
+const dotStyle: React.CSSProperties = { width: '14px', height: '14px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'transform 0.2s' };
+const dotCount: React.CSSProperties = { color: 'white', fontSize: '9px', fontWeight: 'bold' };
