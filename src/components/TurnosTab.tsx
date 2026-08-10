@@ -153,13 +153,14 @@ export default function TurnosTab() {
         content = (
           <div style={generalViewListContainer}>
             {inDay.map((g) => (
-              <div key={`d-${g.id}`} style={generalViewListItem}>
+              // Aplicamos className directamente al div, y removemos de los estilos
+              <div key={`d-${g.id}`} className="mobile-list-text" style={generalViewListItem}>
                 <div style={{...dotStyle, backgroundColor: COLORS.naranjo}}></div>
                 <span>{g.label}</span>
               </div>
             ))}
             {inNight.map((g) => (
-              <div key={`n-${g.id}`} style={generalViewListItem}>
+              <div key={`n-${g.id}`} className="mobile-list-text" style={generalViewListItem}>
                 <div style={{...dotStyle, backgroundColor: COLORS.celeste}}></div>
                 <span>{g.label}</span>
               </div>
@@ -240,7 +241,6 @@ export default function TurnosTab() {
         @media (max-width: 600px) { 
           .hide-on-mobile { display: none !important; }
           .show-on-mobile { display: inline !important; }
-          /* En móviles ultra pequeños, achicamos un pelo más la lista para que quepa */
           .mobile-list-text { font-size: 0.65rem !important; }
         }
       `}</style>
@@ -252,13 +252,13 @@ export default function TurnosTab() {
   );
 }
 
-// --- ESTILOS ---
+// --- ESTILOS CORREGIDOS ---
 const filterButton: React.CSSProperties = { padding: '8px 16px', border: 'none', borderRadius: '20px', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' };
 const navButton: React.CSSProperties = { padding: '8px 15px', backgroundColor: '#f5f5f5', border: 'none', borderRadius: '6px', cursor: 'pointer', color: COLORS.gris, fontWeight: 700, transition: 'background-color 0.2s', fontSize: '0.85rem' };
 const statusBadge: React.CSSProperties = { padding: '15px', borderRadius: '8px', display: 'flex', gap: '12px', borderLeftWidth: '5px', borderLeftStyle: 'solid' };
 const listTextItem: React.CSSProperties = { fontSize: '1rem', color: COLORS.gris, fontWeight: 700 };
 
-// Estilos específicos para la "Lista" en la Vista General
+// Le quitamos el className a este objeto de estilos de React
 const generalViewListContainer: React.CSSProperties = { display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', gap: '4px', width: 'fit-content', margin: '0 auto' };
-const generalViewListItem: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: '6px', className: 'mobile-list-text' };
+const generalViewListItem: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: '6px' };
 const dotStyle: React.CSSProperties = { width: '8px', height: '8px', borderRadius: '50%', flexShrink: 0 };
