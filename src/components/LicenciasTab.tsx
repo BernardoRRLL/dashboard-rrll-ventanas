@@ -39,7 +39,7 @@ const COLORS = {
 
 interface LicenciasProps {
   rawData: any[];
-  dotacionData: any[]; // Recibimos la base de dotación
+  dotacionData: any[];
 }
 
 // --- TRADUCTOR DE FECHAS TODOTERRENO ---
@@ -149,8 +149,8 @@ export default function LicenciasTab({ rawData, dotacionData }: LicenciasProps) 
 
     const nombre = row['Nombre trabajador/a']?.trim() || 'Colaborador';
     
-    // Extracción inteligente: Preferimos el maestro, si no hay, usamos la fila actual de Licencias
-    const cargo = empleadoMaestro ? (empleadoMaestro['Cargo']?.trim() || empleadoMaestro['Rol']?.trim() || 'Sin Cargo') : (row['Cargo']?.trim() || row['Rol']?.trim() || 'Sin Cargo');
+    // Extracción inteligente: Apuntamos directamente a "Posición"
+    const cargo = empleadoMaestro ? (empleadoMaestro['Posición']?.trim() || empleadoMaestro['Posicion']?.trim() || 'Sin Posición') : (row['Posición']?.trim() || row['Posicion']?.trim() || 'Sin Posición');
     const area = empleadoMaestro ? (empleadoMaestro['Gerencia / Superintendencia']?.trim() || empleadoMaestro['Superintendencia / Dirección / Gerencia']?.trim() || 'Sin Área') : (row['Superintendencia / Dirección / Gerencia']?.trim() || 'Sin Área');
     
     let rawGrupo = empleadoMaestro ? (empleadoMaestro['Grupo']?.trim()) : row['Grupo']?.trim();
@@ -350,7 +350,7 @@ export default function LicenciasTab({ rawData, dotacionData }: LicenciasProps) 
                     overflow: 'hidden', 
                     border: isToday ? `2px solid ${COLORS.verdeFin}` : '1px solid #eee', 
                     boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
-                    minHeight: '110px' // Damos más altura mínima para que respire
+                    minHeight: '110px' 
                   }}>
                     <div style={{ 
                       backgroundColor: isToday ? COLORS.verdeFin : COLORS.celeste, 
@@ -366,7 +366,6 @@ export default function LicenciasTab({ rawData, dotacionData }: LicenciasProps) 
                       <span style={{ fontSize: '0.90rem', textTransform: 'uppercase', fontWeight: 600, marginTop: '2px' }}>{months[ret.fecha.getMonth()]}</span>
                     </div>
                     
-                    {/* Contenedor de Información con distribución vertical mejorada */}
                     <div style={{ padding: '15px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                       <h5 style={{ margin: '0 0 4px 0', fontSize: '1rem', color: COLORS.gris, fontWeight: 700, lineHeight: 1.2 }}>{ret.nombre}</h5>
                       <p style={{ margin: '0 0 2px 0', fontSize: '0.85rem', color: '#666', fontWeight: 500 }}>{ret.cargo}</p>
