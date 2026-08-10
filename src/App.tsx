@@ -259,7 +259,7 @@ export default function App() {
             ) : activeTab === 'sindicatos' ? (
               <SindicatosTab rawData={rawData} />
             ) : activeTab === 'licencias' ? (
-              <LicenciasTab rawData={licenciasData} />
+              <LicenciasTab rawData={licenciasData} dotacionData={rawData} />
             ) : activeTab === 'ausentismo' ? (
               <AusentismoTab rawData={ausentismoData} /> 
             ) : activeTab === 'discapacidad' ? (
