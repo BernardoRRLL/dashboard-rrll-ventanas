@@ -10,37 +10,38 @@ const COLORS = {
   fondo: '#f5f7f8'
 };
 
-export default function TurnosTab() {
-  const [tipoTurno, setTipoTurno] = useState<'modificado' | 'lineal'>('modificado');
-  // Arrancamos en Agosto 2026 (mes 7 en JavaScript) para cuadrar con el PDF
-  const [calendarDate, setCalendarDate] = useState(new Date(2026, 7, 1));
-  const [selectedDate, setSelectedDate] = useState(new Date(2026, 7, 1));
-  const [highlightGroup, setHighlightGroup] = useState<number | null>(null);
+// Definición maestra de todos los grupos para el Súper Calendario
+const GRUPOS_TURNOS = [
+  { id: 'T4-0', label: 'T4 G1', tipo: 'modificado' as const, index: 0 },
+  { id: 'T4-1', label: 'T4 G2', tipo: 'modificado' as const, index: 1 },
+  { id: 'T4-2', label: 'T4 G3', tipo: 'modificado' as const, index: 2 },
+  { id: 'T4-3', label: 'T4 G4', tipo: 'modificado' as const, index: 3 },
+  { id: 'T4L-0', label: 'T4L G1', tipo: 'lineal' as const, index: 0 },
+  { id: 'T4L-1', label: 'T4L G2', tipo: 'lineal' as const, index: 1 },
+];
 
-  // --- MOTOR MATEMÁTICO DE TURNOS (Basado en el 1 de Agosto de 2026) ---
+export default function TurnosTab() {
+  const [calendarDate, setCalendarDate] = useState(new Date(2026, 7, 1)); // Arranca en Agosto 2026
+  const [selectedDate, setSelectedDate] = useState(new Date(2026, 7, 1));
+  const [activeFilter, setActiveFilter] = useState<string | null>(null); // null = Vista General
+
+  // --- MOTOR MATEMÁTICO UNIVERSAL (Día Cero: 1 de Agosto de 2026) ---
   const fechaSemilla = new Date(2026, 7, 1); 
 
-  const getShift = (date: Date, groupIndex: number, tipo: 'modificado' | 'lineal') => {
-    // Calculamos la diferencia en días usando UTC para ser inmunes a los cambios de hora (DST)
+  const getShift = (date: Date, tipo: 'modificado' | 'lineal', groupIndex: number) => {
     const utcDate = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
     const utcSemilla = Date.UTC(fechaSemilla.getFullYear(), fechaSemilla.getMonth(), fechaSemilla.getDate());
     const diffDays = Math.floor((utcDate - utcSemilla) / (1000 * 3600 * 24));
 
     if (tipo === 'modificado') {
-      // Ciclo de 8 días: 2 Día (0-1), 2 Noche (2-3), 4 Descanso (4-7)
-      // Desfases calculados desde el 1 de Agosto de 2026
-      const offsets = [0, 4, 6, 2]; // Grupo 1, Grupo 2, Grupo 3, Grupo 4
-      
-      // La fórmula ((x % 8) + 8) % 8 asegura que funcione perfecto hacia años anteriores (números negativos)
+      const offsets = [0, 4, 6, 2];
       const dayInCycle = ((diffDays + offsets[groupIndex]) % 8 + 8) % 8;
       
       if (dayInCycle < 2) return 'Día';
       if (dayInCycle < 4) return 'Noche';
       return 'Descanso';
-      
     } else {
-      // Lineal - Ciclo de 8 días: 4 Día (0-3), 4 Descanso (4-7)
-      const offsets = [0, 4]; // Grupo 1, Grupo 2
+      const offsets = [0, 4];
       const dayInCycle = ((diffDays + offsets[groupIndex]) % 8 + 8) % 8;
       
       if (dayInCycle < 4) return 'Día';
@@ -48,34 +49,69 @@ export default function TurnosTab() {
     }
   };
 
-  const getGroupsForDate = (date: Date, tipo: 'modificado' | 'lineal') => {
-    const totalGroups = tipo === 'modificado' ? 4 : 2;
-    const result = { dia: [] as string[], noche: [] as string[], descanso: [] as string[] };
+  // --- RESUMEN SUPERIOR (FOTO OPERATIVA DEL DÍA SELECCIONADO) ---
+  const renderFotoOperativa = () => {
+    const dataDelDia = GRUPOS_TURNOS.map(g => ({ ...g, shift: getShift(selectedDate, g.tipo, g.index) }));
     
-    for (let i = 0; i < totalGroups; i++) {
-      const groupName = tipo === 'modificado' ? `Grupo ${i + 1}` : `Grupo ${i === 0 ? '1' : '2'}`;
-      const shift = getShift(date, i, tipo);
-      
-      if (shift === 'Día') result.dia.push(groupName);
-      else if (shift === 'Noche') result.noche.push(groupName);
-      else result.descanso.push(groupName);
-    }
-    return result;
+    const enDia = dataDelDia.filter(g => g.shift === 'Día').map(g => g.label).join(', ');
+    const enNoche = dataDelDia.filter(g => g.shift === 'Noche').map(g => g.label).join(', ');
+    const enDescanso = dataDelDia.filter(g => g.shift === 'Descanso').map(g => g.label).join(', ');
+
+    const options: Intl.DateTimeFormatOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    const fechaFormateada = selectedDate.toLocaleDateString('es-CL', options);
+
+    return (
+      <div style={{ backgroundColor: COLORS.blanco, padding: '20px', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #eee', paddingBottom: '12px', marginBottom: '15px' }}>
+          <h4 style={{ margin: 0, color: COLORS.naranjo, fontSize: '1rem', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>
+            Foto Operativa
+          </h4>
+          <h3 style={{ margin: 0, color: COLORS.gris, fontSize: '1.1rem', fontWeight: 700, textTransform: 'capitalize' }}>
+            {fechaFormateada}
+          </h3>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '15px' }}>
+          <div style={{ ...statusBadge, borderLeftColor: COLORS.naranjo, backgroundColor: '#FFF3E0' }}>
+            <span style={{ fontSize: '1.2rem' }}>☀️</span>
+            <div>
+              <p style={{ margin: 0, fontSize: '0.8rem', color: COLORS.naranjo, fontWeight: 700, textTransform: 'uppercase' }}>Turno de Día</p>
+              <p style={{ margin: 0, fontSize: '1rem', color: COLORS.gris, fontWeight: 700 }}>{enDia || 'Ninguno'}</p>
+            </div>
+          </div>
+
+          <div style={{ ...statusBadge, borderLeftColor: COLORS.celeste, backgroundColor: '#E0F7FA' }}>
+            <span style={{ fontSize: '1.2rem' }}>🌙</span>
+            <div>
+              <p style={{ margin: 0, fontSize: '0.8rem', color: COLORS.celeste, fontWeight: 700, textTransform: 'uppercase' }}>Turno de Noche</p>
+              <p style={{ margin: 0, fontSize: '1rem', color: COLORS.gris, fontWeight: 700 }}>{enNoche || 'Ninguno'}</p>
+            </div>
+          </div>
+
+          <div style={{ ...statusBadge, borderLeftColor: COLORS.gris, backgroundColor: '#F5F5F5' }}>
+            <span style={{ fontSize: '1.2rem' }}>🏡</span>
+            <div>
+              <p style={{ margin: 0, fontSize: '0.8rem', color: COLORS.gris, fontWeight: 700, textTransform: 'uppercase' }}>En Descanso</p>
+              <p style={{ margin: 0, fontSize: '0.95rem', color: '#666', fontWeight: 600 }}>{enDescanso}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   };
 
-  // --- RENDERIZADO DEL CALENDARIO ---
+  // --- RENDERIZADO DEL SÚPER CALENDARIO ---
   const renderCalendar = () => {
     const year = calendarDate.getFullYear();
     const month = calendarDate.getMonth();
     
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const firstDayOfWeek = new Date(year, month, 1).getDay();
-    // Ajuste para que la semana arranque el Lunes
     const emptyDaysCount = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
     const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
     
     const emptyCells = Array.from({ length: emptyDaysCount }).map((_, i) => (
-      <div key={`empty-${i}`} style={{ minHeight: '80px', backgroundColor: 'transparent' }}></div>
+      <div key={`empty-${i}`} style={{ minHeight: '90px', backgroundColor: 'transparent' }}></div>
     ));
     
     const dayCells = Array.from({ length: daysInMonth }).map((_, i) => {
@@ -84,65 +120,100 @@ export default function TurnosTab() {
       
       let bgColor = '#fafafa';
       let textColor = '#888';
-      let shiftLabel = '';
+      let content = null;
+      let tooltip = '';
       
-      if (highlightGroup !== null) {
-        const shift = getShift(currentDay, highlightGroup, tipoTurno);
-        if (shift === 'Día') { bgColor = '#FFF3E0'; textColor = COLORS.naranjo; shiftLabel = '☀️ Día'; }
-        else if (shift === 'Noche') { bgColor = '#E0F7FA'; textColor = COLORS.celeste; shiftLabel = '🌙 Noche'; }
-        else { bgColor = '#F5F5F5'; textColor = '#ccc'; shiftLabel = 'Libre'; }
+      // MODO RUTA ESPECÍFICA (Filtro Aplicado)
+      if (activeFilter !== null) {
+        const grupoSeleccionado = GRUPOS_TURNOS.find(g => g.id === activeFilter);
+        if (grupoSeleccionado) {
+          const shift = getShift(currentDay, grupoSeleccionado.tipo, grupoSeleccionado.index);
+          if (shift === 'Día') { bgColor = '#FFF3E0'; textColor = COLORS.naranjo; content = '☀️ Día'; }
+          else if (shift === 'Noche') { bgColor = '#E0F7FA'; textColor = COLORS.celeste; content = '🌙 Noche'; }
+          else { bgColor = '#F5F5F5'; textColor = '#ccc'; content = 'Descanso'; }
+        }
+      } 
+      // MODO VISTA GENERAL (Puntitos)
+      else {
+        bgColor = '#ffffff';
+        const dayShifts = GRUPOS_TURNOS.map(g => ({ ...g, shift: getShift(currentDay, g.tipo, g.index) }));
+        const inDay = dayShifts.filter(g => g.shift === 'Día');
+        const inNight = dayShifts.filter(g => g.shift === 'Noche');
+        
+        tooltip = `☀️ DÍA:\n${inDay.map(g=>g.label).join(', ')}\n\n🌙 NOCHE:\n${inNight.length > 0 ? inNight.map(g=>g.label).join(', ') : 'Ninguno'}`;
+        
+        content = (
+          <div style={dotsContainer}>
+            <div style={{ display: 'flex', gap: '3px' }}>
+              {inDay.map((g, idx) => <div key={`d-${idx}`} style={{...dotStyle, backgroundColor: COLORS.naranjo}}></div>)}
+            </div>
+            {inNight.length > 0 && (
+              <div style={{ display: 'flex', gap: '3px' }}>
+                {inNight.map((g, idx) => <div key={`n-${idx}`} style={{...dotStyle, backgroundColor: COLORS.celeste}}></div>)}
+              </div>
+            )}
+          </div>
+        );
       }
 
       return (
         <div 
           key={i} 
           onClick={() => setSelectedDate(currentDay)}
+          title={tooltip}
           style={{ 
-            minHeight: '80px', padding: '8px', border: isSelected ? `2px solid ${COLORS.naranjo}` : '1px solid #eee', 
-            borderRadius: '6px', backgroundColor: isSelected ? '#fff' : bgColor, 
+            minHeight: '90px', padding: '8px', border: isSelected ? `2px solid ${COLORS.naranjo}` : '1px solid #eee', 
+            borderRadius: '6px', backgroundColor: isSelected && activeFilter === null ? '#fff9f5' : bgColor, 
             display: 'flex', flexDirection: 'column', cursor: 'pointer', transition: 'all 0.2s',
             boxShadow: isSelected ? '0 4px 8px rgba(228, 83, 2, 0.2)' : 'none',
             transform: isSelected ? 'scale(1.02)' : 'none', zIndex: isSelected ? 2 : 1
           }}
         >
           <div style={{ fontSize: '1rem', fontWeight: 700, color: isSelected ? COLORS.naranjo : textColor }}>{i + 1}</div>
-          {highlightGroup !== null && (
-            <div style={{ marginTop: 'auto', fontSize: '0.75rem', fontWeight: 600, color: textColor, textAlign: 'center' }}>
-              {shiftLabel}
-            </div>
-          )}
+          <div style={{ marginTop: 'auto', fontSize: '0.8rem', fontWeight: 600, color: textColor, textAlign: 'center' }}>
+            {content}
+          </div>
         </div>
       );
     });
 
     return (
-      <div style={{ backgroundColor: COLORS.blanco, padding: '25px', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <button style={navButton} onClick={() => setCalendarDate(new Date(year, month - 1, 1))}>◀ Anterior</button>
-          <h3 style={{ margin: 0, color: COLORS.gris, fontSize: '1.3rem', fontWeight: 700 }}>{monthNames[month]} {year}</h3>
-          <button style={navButton} onClick={() => setCalendarDate(new Date(year, month + 1, 1))}>Siguiente ▶</button>
-        </div>
+      <div style={{ backgroundColor: COLORS.blanco, padding: 'clamp(15px, 3vw, 30px)', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)' }}>
         
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '20px', justifyContent: 'center' }}>
+        {/* Filtros de Grupos */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '25px', justifyContent: 'center' }}>
           <button 
-            onClick={() => setHighlightGroup(null)}
-            style={{...filterButton, backgroundColor: highlightGroup === null ? COLORS.gris : '#f0f0f0', color: highlightGroup === null ? COLORS.blanco : '#666'}}
+            onClick={() => setActiveFilter(null)}
+            style={{...filterButton, backgroundColor: activeFilter === null ? COLORS.gris : '#f0f0f0', color: activeFilter === null ? COLORS.blanco : '#666'}}
           >
-            Vista General
+            👁️ Vista General
           </button>
-          {Array.from({ length: tipoTurno === 'modificado' ? 4 : 2 }).map((_, i) => (
+          <div style={{ width: '2px', backgroundColor: '#ddd', margin: '0 5px' }}></div> {/* Separador */}
+          {GRUPOS_TURNOS.map((g) => (
             <button 
-              key={i} onClick={() => setHighlightGroup(i)}
-              style={{...filterButton, backgroundColor: highlightGroup === i ? COLORS.celeste : '#f0f0f0', color: highlightGroup === i ? COLORS.blanco : '#666'}}
+              key={g.id} onClick={() => setActiveFilter(g.id)}
+              style={{...filterButton, backgroundColor: activeFilter === g.id ? COLORS.celeste : '#f0f0f0', color: activeFilter === g.id ? COLORS.blanco : '#666'}}
             >
-              Ruta {tipoTurno === 'modificado' ? `Grupo ${i + 1}` : `Grupo ${i === 0 ? '1' : '2'}`}
+              {g.label}
             </button>
           ))}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px' }}>
-          {['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa', 'Do'].map(d => (
-            <div key={d} style={{ textAlign: 'center', fontWeight: 700, color: COLORS.gris, paddingBottom: '10px', borderBottom: '2px solid #eee' }}>{d}</div>
+        {/* Cabecera del Calendario */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', padding: '0 10px' }}>
+          <button style={navButton} onClick={() => setCalendarDate(new Date(year, month - 1, 1))}>◀ Mes Anterior</button>
+          <h3 style={{ margin: 0, color: COLORS.gris, fontSize: 'clamp(1.2rem, 2.5vw, 1.5rem)', fontWeight: 700 }}>{monthNames[month]} {year}</h3>
+          <button style={navButton} onClick={() => setCalendarDate(new Date(year, month + 1, 1))}>Siguiente Mes ▶</button>
+        </div>
+
+        {/* Grilla del Calendario */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 'clamp(4px, 1vw, 10px)' }}>
+          {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map(d => (
+            <div key={d} style={{ textAlign: 'center', fontWeight: 700, color: COLORS.gris, paddingBottom: '10px', borderBottom: '2px solid #eee', fontSize: 'clamp(0.7rem, 1.2vw, 0.9rem)', textTransform: 'uppercase' }}>
+              {/* Mostramos 3 letras en móvil y palabra completa en PC */}
+              <span className="hide-on-mobile">{d}</span>
+              <span className="show-on-mobile" style={{ display: 'none' }}>{d.substring(0, 3)}</span>
+            </div>
           ))}
           {emptyCells}
           {dayCells}
@@ -151,93 +222,26 @@ export default function TurnosTab() {
     );
   };
 
-  // --- RENDERIZADO DEL PANEL DERECHO ---
-  const renderPanelDia = () => {
-    const dataDelDia = getGroupsForDate(selectedDate, tipoTurno);
-    const options: Intl.DateTimeFormatOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    const fechaFormateada = selectedDate.toLocaleDateString('es-CL', options);
-
-    return (
-      <div style={{ backgroundColor: COLORS.blanco, padding: '30px', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', display: 'flex', flexDirection: 'column' }}>
-        <h4 style={{ margin: '0 0 5px 0', color: COLORS.naranjo, fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>Foto Operativa</h4>
-        <h2 style={{ margin: '0 0 25px 0', color: COLORS.gris, fontSize: '1.4rem', fontWeight: 700, textTransform: 'capitalize', borderBottom: '2px solid #eee', paddingBottom: '15px' }}>
-          {fechaFormateada}
-        </h2>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-          {/* Turno Día */}
-          <div style={{ ...statusCard, borderLeft: `5px solid ${COLORS.naranjo}`, backgroundColor: '#FFF3E0' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-              <span style={{ fontSize: '1.5rem' }}>☀️</span>
-              <h5 style={{ margin: 0, color: COLORS.naranjo, fontSize: '1.1rem' }}>Turno de Día</h5>
-            </div>
-            <p style={{ margin: 0, fontWeight: 700, color: COLORS.gris, fontSize: '1.2rem' }}>
-              {dataDelDia.dia.length > 0 ? dataDelDia.dia.join(' y ') : 'Sin grupo asignado'}
-            </p>
-          </div>
-
-          {/* Turno Noche (Solo en Modificado) */}
-          {tipoTurno === 'modificado' && (
-            <div style={{ ...statusCard, borderLeft: `5px solid ${COLORS.celeste}`, backgroundColor: '#E0F7FA' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                <span style={{ fontSize: '1.5rem' }}>🌙</span>
-                <h5 style={{ margin: 0, color: COLORS.celeste, fontSize: '1.1rem' }}>Turno de Noche</h5>
-              </div>
-              <p style={{ margin: 0, fontWeight: 700, color: COLORS.gris, fontSize: '1.2rem' }}>
-                {dataDelDia.noche.length > 0 ? dataDelDia.noche.join(' y ') : 'Sin grupo asignado'}
-              </p>
-            </div>
-          )}
-
-          {/* Descanso */}
-          <div style={{ ...statusCard, borderLeft: `5px solid ${COLORS.gris}`, backgroundColor: '#F5F5F5' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-              <span style={{ fontSize: '1.5rem' }}>🏡</span>
-              <h5 style={{ margin: 0, color: COLORS.gris, fontSize: '1.1rem' }}>En Descanso</h5>
-            </div>
-            <p style={{ margin: 0, fontWeight: 600, color: '#666', fontSize: '1.1rem' }}>
-              {dataDelDia.descanso.join(' - ')}
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '25px', fontFamily: "'Poppins', sans-serif" }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', fontFamily: "'Poppins', sans-serif" }}>
       
       <style>{`
-        .turnos-layout { display: grid; grid-template-columns: 1.8fr 1fr; gap: 25px; align-items: start; }
-        @media (max-width: 900px) { .turnos-layout { display: flex; flex-direction: column-reverse; } }
+        @media (max-width: 600px) { 
+          .hide-on-mobile { display: none !important; }
+          .show-on-mobile { display: inline !important; }
+        }
       `}</style>
 
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '15px' }}>
-        <button 
-          onClick={() => { setTipoTurno('modificado'); setHighlightGroup(null); }}
-          style={{...mainTabButton, backgroundColor: tipoTurno === 'modificado' ? COLORS.celeste : COLORS.blanco, color: tipoTurno === 'modificado' ? COLORS.blanco : COLORS.gris}}
-        >
-          ⚙️ 4x4 Modificado (4 Grupos)
-        </button>
-        <button 
-          onClick={() => { setTipoTurno('lineal'); setHighlightGroup(null); }}
-          style={{...mainTabButton, backgroundColor: tipoTurno === 'lineal' ? COLORS.celeste : COLORS.blanco, color: tipoTurno === 'lineal' ? COLORS.blanco : COLORS.gris}}
-        >
-          📏 4x4 Lineal (2 Grupos)
-        </button>
-      </div>
-
-      <div className="turnos-layout">
-        {renderCalendar()}
-        {renderPanelDia()}
-      </div>
+      {renderFotoOperativa()}
+      {renderCalendar()}
 
     </div>
   );
 }
 
 // --- ESTILOS ---
-const mainTabButton: React.CSSProperties = { padding: '12px 25px', borderRadius: '8px', border: `2px solid ${COLORS.celeste}`, fontWeight: 700, fontSize: '1rem', cursor: 'pointer', transition: 'all 0.3s ease', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' };
-const navButton: React.CSSProperties = { padding: '8px 15px', backgroundColor: '#f5f5f5', border: 'none', borderRadius: '6px', cursor: 'pointer', color: COLORS.gris, fontWeight: 700, transition: 'background-color 0.2s' };
-const filterButton: React.CSSProperties = { padding: '6px 15px', border: 'none', borderRadius: '20px', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', transition: 'all 0.2s' };
-const statusCard: React.CSSProperties = { padding: '20px', borderRadius: '8px', display: 'flex', flexDirection: 'column' };
+const filterButton: React.CSSProperties = { padding: '8px 16px', border: 'none', borderRadius: '20px', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' };
+const navButton: React.CSSProperties = { padding: '8px 15px', backgroundColor: '#f5f5f5', border: 'none', borderRadius: '6px', cursor: 'pointer', color: COLORS.gris, fontWeight: 700, transition: 'background-color 0.2s', fontSize: '0.85rem' };
+const statusBadge: React.CSSProperties = { padding: '12px 15px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '12px', borderLeftWidth: '5px', borderLeftStyle: 'solid' };
+const dotsContainer: React.CSSProperties = { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px', marginTop: '5px' };
+const dotStyle: React.CSSProperties = { width: '8px', height: '8px', borderRadius: '50%' };
