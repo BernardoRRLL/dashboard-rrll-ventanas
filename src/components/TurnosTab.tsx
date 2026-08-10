@@ -145,11 +145,13 @@ export default function TurnosTab() {
         content = (
           <div style={dotsContainer}>
             <div style={{ display: 'flex', gap: '3px' }}>
-              {inDay.map((g, idx) => <div key={`d-${idx}`} style={{...dotStyle, backgroundColor: COLORS.naranjo}}></div>)}
+              {/* Cambiamos la 'g' por '_' para evitar el error de TypeScript */}
+              {inDay.map((_, idx) => <div key={`d-${idx}`} style={{...dotStyle, backgroundColor: COLORS.naranjo}}></div>)}
             </div>
             {inNight.length > 0 && (
               <div style={{ display: 'flex', gap: '3px' }}>
-                {inNight.map((g, idx) => <div key={`n-${idx}`} style={{...dotStyle, backgroundColor: COLORS.celeste}}></div>)}
+                {/* Cambiamos la 'g' por '_' para evitar el error de TypeScript */}
+                {inNight.map((_, idx) => <div key={`n-${idx}`} style={{...dotStyle, backgroundColor: COLORS.celeste}}></div>)}
               </div>
             )}
           </div>
