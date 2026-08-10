@@ -39,6 +39,7 @@ const COLORS = {
 
 interface LicenciasProps {
   rawData: any[];
+  dotacionData: any[]; // Recibimos la base de dotación
 }
 
 // --- TRADUCTOR DE FECHAS TODOTERRENO ---
@@ -97,11 +98,25 @@ const parseCustomDate = (dateVal: any) => {
   return null;
 };
 
-export default function LicenciasTab({ rawData }: LicenciasProps) {
+export default function LicenciasTab({ rawData, dotacionData }: LicenciasProps) {
   const [view, setView] = useState<'tablero' | 'calendario'>('tablero');
   const [calendarDate, setCalendarDate] = useState(new Date());
   
   const licenciasData = useMemo(() => rawData.filter(row => row['Rut'] && String(row['Rut']).trim() !== ''), [rawData]);
+
+  // --- DICCIONARIO MAESTRO (DOTACIÓN) ---
+  const dotacionDict = useMemo(() => {
+    const dict: Record<string, any> = {};
+    if (dotacionData) {
+      dotacionData.forEach(row => {
+        const rut = String(row['Rut'] || row['SAP'] || '').trim().toLowerCase();
+        const nombre = String(row['Nombre'] || row['Nombre trabajador/a'] || '').trim().toLowerCase();
+        if (rut) dict[rut] = row;
+        if (nombre) dict[nombre] = row; 
+      });
+    }
+    return dict;
+  }, [dotacionData]);
 
   // --- CÁLCULOS SUPERIORES Y PROCESAMIENTO ---
   const totalLicencias = licenciasData.length;
@@ -127,12 +142,21 @@ export default function LicenciasTab({ rawData }: LicenciasProps) {
     const diasAcumulados = Number(row['Acum.'] || row['Acum'] || 0);
     if (diasAcumulados >= 100) licenciasMayoresA100++;
 
+    // Búsqueda en el maestro
+    const rutVal = String(row['Rut'] || row['SAP'] || '').trim().toLowerCase();
+    const nombreVal = String(row['Nombre trabajador/a'] || '').trim().toLowerCase();
+    const empleadoMaestro = dotacionDict[rutVal] || dotacionDict[nombreVal] || null;
+
     const nombre = row['Nombre trabajador/a']?.trim() || 'Colaborador';
-    const cargo = row['Cargo']?.trim() || row['Rol']?.trim() || 'Sin Cargo';
-    const area = row['Superintendencia / Dirección / Gerencia']?.trim() || 'Sin Área';
     
-    // Tratamiento del grupo para evitar guiones
-    let grupo = row['Grupo']?.trim() || 'Admin.';
+    // Extracción inteligente: Preferimos el maestro, si no hay, usamos la fila actual de Licencias
+    const cargo = empleadoMaestro ? (empleadoMaestro['Cargo']?.trim() || empleadoMaestro['Rol']?.trim() || 'Sin Cargo') : (row['Cargo']?.trim() || row['Rol']?.trim() || 'Sin Cargo');
+    const area = empleadoMaestro ? (empleadoMaestro['Gerencia / Superintendencia']?.trim() || empleadoMaestro['Superintendencia / Dirección / Gerencia']?.trim() || 'Sin Área') : (row['Superintendencia / Dirección / Gerencia']?.trim() || 'Sin Área');
+    
+    let rawGrupo = empleadoMaestro ? (empleadoMaestro['Grupo']?.trim()) : row['Grupo']?.trim();
+    if (!rawGrupo) rawGrupo = 'Admin.';
+    
+    let grupo = rawGrupo;
     if (grupo === '-' || grupo.toLowerCase().includes('admin')) grupo = 'Admin.';
     else if (['1', 'Grupo 1'].includes(grupo)) grupo = 'Grupo 1';
     else if (['2', 'Grupo 2'].includes(grupo)) grupo = 'Grupo 2';
@@ -159,7 +183,6 @@ export default function LicenciasTab({ rawData }: LicenciasProps) {
         if (!endsByDate[key]) endsByDate[key] = [];
         endsByDate[key].push(nombre);
 
-        // Rescatar reintegros de la semana sumando cargo, área y grupo
         if (dTermino >= today && dTermino <= limitDate) {
           upcomingReturns.push({ nombre, fecha: dTermino, cargo, area, grupo });
         }
@@ -167,7 +190,6 @@ export default function LicenciasTab({ rawData }: LicenciasProps) {
     }
   });
 
-  // Ordenar reintegros del más pronto al más lejano
   upcomingReturns.sort((a, b) => a.fecha.getTime() - b.fecha.getTime());
 
   const promedioDias = totalLicencias > 0 ? (totalDiasLicenciaActual / totalLicencias).toFixed(1) : "0";
@@ -275,7 +297,6 @@ export default function LicenciasTab({ rawData }: LicenciasProps) {
     return (
       <div className="licencias-calendar-layout">
         
-        {/* LADO IZQUIERDO: EL CALENDARIO (Aparece abajo en celular) */}
         <div style={cardStyle}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <button style={navButton} onClick={() => setCalendarDate(new Date(year, month - 1, 1))}>◀ Anterior</button>
@@ -301,7 +322,7 @@ export default function LicenciasTab({ rawData }: LicenciasProps) {
           </div>
         </div>
 
-        {/* LADO DERECHO: LISTA DE REINTEGROS (Aparece arriba en celular) */}
+        {/* LADO DERECHO: LISTA DE REINTEGROS AMPLIADA */}
         <div style={{ ...cardStyle, backgroundColor: 'transparent', boxShadow: 'none', padding: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
             <div style={{ color: COLORS.naranjo }}>
@@ -316,7 +337,7 @@ export default function LicenciasTab({ rawData }: LicenciasProps) {
           </div>
           
           {upcomingReturns.length > 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '550px', overflowY: 'auto', paddingRight: '5px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', maxHeight: '550px', overflowY: 'auto', paddingRight: '5px' }}>
               {upcomingReturns.map((ret, idx) => {
                 const isToday = ret.fecha.getTime() === today.getTime();
                 const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
@@ -328,7 +349,8 @@ export default function LicenciasTab({ rawData }: LicenciasProps) {
                     borderRadius: '8px', 
                     overflow: 'hidden', 
                     border: isToday ? `2px solid ${COLORS.verdeFin}` : '1px solid #eee', 
-                    boxShadow: '0 2px 5px rgba(0,0,0,0.05)'
+                    boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
+                    minHeight: '110px' // Damos más altura mínima para que respire
                   }}>
                     <div style={{ 
                       backgroundColor: isToday ? COLORS.verdeFin : COLORS.celeste, 
@@ -338,26 +360,31 @@ export default function LicenciasTab({ rawData }: LicenciasProps) {
                       flexDirection: 'column', 
                       alignItems: 'center', 
                       justifyContent: 'center', 
-                      minWidth: '75px' 
+                      minWidth: '85px' 
                     }}>
-                      <span style={{ fontSize: '1.6rem', fontWeight: 700, lineHeight: 1 }}>{ret.fecha.getDate()}</span>
-                      <span style={{ fontSize: '0.85rem', textTransform: 'uppercase', fontWeight: 600, marginTop: '2px' }}>{months[ret.fecha.getMonth()]}</span>
+                      <span style={{ fontSize: '1.8rem', fontWeight: 700, lineHeight: 1 }}>{ret.fecha.getDate()}</span>
+                      <span style={{ fontSize: '0.90rem', textTransform: 'uppercase', fontWeight: 600, marginTop: '2px' }}>{months[ret.fecha.getMonth()]}</span>
                     </div>
-                    <div style={{ padding: '12px 15px', flex: 1 }}>
-                      <h5 style={{ margin: '0 0 5px 0', fontSize: '0.95rem', color: COLORS.gris, fontWeight: 700 }}>{ret.nombre}</h5>
-                      <p style={{ margin: '0 0 2px 0', fontSize: '0.8rem', color: '#888' }}>{ret.cargo}</p>
-                      <p style={{ margin: '0 0 8px 0', fontSize: '0.85rem', color: COLORS.naranjo, fontWeight: 500 }}>{ret.area}</p>
-                      <span style={{ 
-                        display: 'inline-block', 
-                        padding: '2px 8px', 
-                        backgroundColor: isToday ? '#E8F5E9' : '#f5f7f8', 
-                        borderRadius: '4px', 
-                        fontSize: '0.75rem', 
-                        fontWeight: 600, 
-                        color: isToday ? COLORS.verdeFin : COLORS.gris 
-                      }}>
-                        {ret.grupo}
-                      </span>
+                    
+                    {/* Contenedor de Información con distribución vertical mejorada */}
+                    <div style={{ padding: '15px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                      <h5 style={{ margin: '0 0 4px 0', fontSize: '1rem', color: COLORS.gris, fontWeight: 700, lineHeight: 1.2 }}>{ret.nombre}</h5>
+                      <p style={{ margin: '0 0 2px 0', fontSize: '0.85rem', color: '#666', fontWeight: 500 }}>{ret.cargo}</p>
+                      <p style={{ margin: '0 0 10px 0', fontSize: '0.85rem', color: COLORS.naranjo, fontWeight: 600 }}>{ret.area}</p>
+                      
+                      <div style={{ marginTop: 'auto' }}>
+                        <span style={{ 
+                          display: 'inline-block', 
+                          padding: '3px 10px', 
+                          backgroundColor: isToday ? '#E8F5E9' : '#f0f4f8', 
+                          borderRadius: '6px', 
+                          fontSize: '0.75rem', 
+                          fontWeight: 700, 
+                          color: isToday ? COLORS.verdeFin : COLORS.celeste 
+                        }}>
+                          {ret.grupo}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 )
@@ -377,7 +404,6 @@ export default function LicenciasTab({ rawData }: LicenciasProps) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(15px, 3vw, 25px)', fontFamily: "'Poppins', sans-serif" }}>
       
-      {/* CSS Inyectado para que el Layout del calendario cambie en Celular */}
       <style>{`
         .licencias-calendar-layout {
           display: grid;
@@ -393,7 +419,6 @@ export default function LicenciasTab({ rawData }: LicenciasProps) {
         }
       `}</style>
 
-      {/* BOTONES DE VISTA FLOTANTES (Jalados hacia arriba para alinearse con el título) */}
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: 'clamp(-10px, -4vw, -45px)', position: 'relative', zIndex: 10 }}>
         <button 
           onClick={() => setView('tablero')}
@@ -409,7 +434,6 @@ export default function LicenciasTab({ rawData }: LicenciasProps) {
         </button>
       </div>
 
-      {/* 1. Resumen Superior */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'clamp(10px, 1.5vw, 20px)', width: '100%', justifyContent: 'space-between' }}>
         <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>Licencias</h4><p style={kpiValueStyle}>{totalLicencias}</p></div>
         <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>Días Acum.<br/>(Últimos 12)</h4><p style={{...kpiValueStyle, color: COLORS.naranjo}}>{totalDias12Meses}</p></div>
@@ -417,7 +441,6 @@ export default function LicenciasTab({ rawData }: LicenciasProps) {
         <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>Promedio<br/>Días / Licencia</h4><p style={kpiValueStyle}>{promedioDias}</p></div>
       </div>
 
-      {/* CONTENIDO DINÁMICO */}
       {view === 'tablero' ? (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: 'clamp(10px, 2vw, 20px)' }}>
           <div style={cardStyle}><h4 style={chartTitleStyle}>Cantidad de Licencias por Gerencia</h4><div style={{ width: '100%', height: '260px' }}><Bar data={getLicenciasPorGerencia()} options={horizontalBarOptions} /></div></div>
@@ -433,7 +456,6 @@ export default function LicenciasTab({ rawData }: LicenciasProps) {
   );
 }
 
-// --- ESTILOS ---
 const cardStyle: React.CSSProperties = { backgroundColor: COLORS.blanco, padding: 'clamp(10px, 2vw, 20px)', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)', minWidth: 0 };
 const summaryCardStyle: React.CSSProperties = { flex: '1 1 0px', minWidth: 0, backgroundColor: COLORS.blanco, padding: 'clamp(6px, 1.2vw, 15px) clamp(2px, 0.5vw, 10px)', borderRadius: '10px', boxShadow: '0 4px 10px rgba(0,0,0,0.04)', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '80px' };
 const kpiTitleStyle: React.CSSProperties = { margin: 0, color: COLORS.gris, fontSize: 'clamp(0.55rem, 1.2vw, 0.9rem)', fontWeight: 600, lineHeight: 1.2, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' };
