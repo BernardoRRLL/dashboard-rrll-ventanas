@@ -82,7 +82,11 @@ export default function App() {
   }, []);
 
   const fetchUserProfile = async (userId: string) => {
+    // CORRECCIÓN: Ahora manejamos el error para que TypeScript no bloquee la compilación
     const { data, error } = await supabase.from('perfiles_usuarios').select('*').eq('id', userId).single();
+    if (error) {
+      console.error("Error al cargar perfil de usuario:", error);
+    }
     if (data) {
       setUserProfile(data);
     }
