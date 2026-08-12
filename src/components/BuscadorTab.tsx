@@ -75,7 +75,7 @@ export default function BuscadorTab({ dotacionData, jefaturaData }: BuscadorTabP
         chain.push(bossData);
         currentSap = bossSap;
         
-        // CORRECCIÓN 1: Detener la cadena de mando en el Gerente General
+        // Detener la cadena de mando en el Gerente General
         const bossName = String(bossData['Nombre'] || bossData['Nombre trabajador/a'] || '').trim().toUpperCase();
         if (bossName === 'WEISHAUPT HIDALGO RICARDO ARMANDO') {
             break; // Cima de la pirámide alcanzada
@@ -101,7 +101,7 @@ export default function BuscadorTab({ dotacionData, jefaturaData }: BuscadorTabP
   const getArea = (row: any) => row['Gerencia / Superintendencia'] || row['Superintendencia / Dirección / Gerencia'] || 'Sin Área';
   const getSap = (row: any) => row['SAP'] || row['Número de personal'] || 'Sin SAP';
   
-  // Helper para agrupar Turno, Grupo y Rol (en reemplazo del RUT)
+  // Helper para agrupar Turno, Grupo y Rol
   const getDetalleOperativo = (row: any) => {
       const turno = row['Turno']?.trim() || '';
       const grupo = row['Grupo']?.trim() || '';
@@ -200,13 +200,12 @@ export default function BuscadorTab({ dotacionData, jefaturaData }: BuscadorTabP
               </div>
               <div style={infoRowStyle}>
                 <div style={iconBoxStyle}><MapPin size={18} /></div>
-                {/* CORRECCIÓN 2: Reemplazo del RUT por Turno/Grupo/Rol */}
                 <div><p style={labelStyle}>Detalle Operativo</p><p style={valueStyle}>{getDetalleOperativo(selectedEmployee)}</p></div>
               </div>
             </div>
           </div>
 
-          {/* Cadena de Mando (Efecto Dominó) */}
+          {/* Cadena de Mando (Efecto Dominó Clickable) */}
           <div style={{ backgroundColor: COLORS.blanco, padding: '30px', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
             <h4 style={{ margin: '0 0 25px 0', color: COLORS.gris, fontSize: '1.2rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '2px solid #eee', paddingBottom: '10px' }}>
               <ChevronUp size={24} color={COLORS.naranjo} />
@@ -219,10 +218,28 @@ export default function BuscadorTab({ dotacionData, jefaturaData }: BuscadorTabP
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
                 {chainOfCommand.map((boss, idx) => {
                   const isTop = idx === chainOfCommand.length - 1;
+                  const isExternal = boss['Posición'] === 'Desconocido';
+
                   return (
-                    <div key={idx} style={{ display: 'flex', position: 'relative' }}>
+                    <div 
+                      key={idx} 
+                      onClick={() => {
+                        if (!isExternal) setSelectedEmployee(boss);
+                      }}
+                      style={{ 
+                        display: 'flex', 
+                        position: 'relative',
+                        padding: '10px',
+                        borderRadius: '8px',
+                        marginLeft: '-10px', // Para que el hover no mueva visualmente el contenido
+                        cursor: isExternal ? 'default' : 'pointer',
+                        transition: 'background-color 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => { if (!isExternal) e.currentTarget.style.backgroundColor = '#f9f9f9'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                    >
                       {/* Línea de conexión visual */}
-                      {!isTop && <div style={{ position: 'absolute', left: '19px', top: '40px', bottom: '-15px', width: '2px', backgroundColor: '#ddd', zIndex: 1 }}></div>}
+                      {!isTop && <div style={{ position: 'absolute', left: '29px', top: '45px', bottom: '-15px', width: '2px', backgroundColor: '#ddd', zIndex: 1 }}></div>}
                       
                       {/* Nodo (Punto) */}
                       <div style={{ width: '40px', display: 'flex', justifyContent: 'center', zIndex: 2, paddingTop: '5px' }}>
@@ -230,7 +247,7 @@ export default function BuscadorTab({ dotacionData, jefaturaData }: BuscadorTabP
                       </div>
                       
                       {/* Información del Jefe */}
-                      <div style={{ paddingBottom: '25px', paddingLeft: '10px', flex: 1 }}>
+                      <div style={{ paddingBottom: '15px', paddingLeft: '10px', flex: 1 }}>
                         <p style={{ margin: 0, fontSize: '0.8rem', color: '#888', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                           {idx === 0 ? 'Jefatura Directa' : 'Reporta a'}
                         </p>
