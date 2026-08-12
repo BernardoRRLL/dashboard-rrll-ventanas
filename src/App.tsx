@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
-import { Users, Venus, Handshake, Stethoscope, Scale, Accessibility, Gift, MapPin, Clock } from 'lucide-react';
+import { Users, Venus, Handshake, Stethoscope, Scale, Accessibility, Gift, MapPin, Clock, Search } from 'lucide-react';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import DotacionTab from './components/DotacionTab';
@@ -12,12 +12,12 @@ import DiscapacidadTab from './components/DiscapacidadTab';
 import CumplesTab from './components/CumplesTab';
 import ComunasTab from './components/ComunasTab';
 import TurnosTab from './components/TurnosTab';
+import BuscadorTab from './components/BuscadorTab';
 
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement, LineElement, Filler } from 'chart.js';
 import ChartJSPluginDataLabels from 'chartjs-plugin-datalabels';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement, LineElement, Filler, ChartJSPluginDataLabels);
-
 
 const COLORS = {
   gris: '#36424a',
@@ -40,6 +40,7 @@ export default function App() {
   const [ausentismoData, setAusentismoData] = useState<any[]>([]); 
   const [discapacidadData, setDiscapacidadData] = useState<any[]>([]); 
   const [comunasSheetData, setComunasSheetData] = useState<any[]>([]); 
+  const [jefaturaData, setJefaturaData] = useState<any[]>([]);
 
   const [globalSummary, setGlobalSummary] = useState({ total: 0, mujeres: "0", ausentismo: "0", sobretiempo: "0" });
   const [dotacionStats, setDotacionStats] = useState({ total: 0, indefinido: "0", edadPromedio: "0", edadPromedioF: "0", edadPromedioM: "0" });
@@ -75,18 +76,21 @@ export default function App() {
         let ausentismoName = sheetNames.find(n => n.toLowerCase().includes('ausdeo') || n.toLowerCase().includes('ausentismo'));
         let discapacidadName = sheetNames.find(n => n.toLowerCase().includes('discapacidad') || n.toLowerCase().includes('disc'));
         let comunasName = sheetNames.find(n => n.toLowerCase().includes('comuna'));
+        let jefaturaName = sheetNames.find(n => n.toLowerCase().includes('jefatura'));
 
         const dotacionJson = XLSX.utils.sheet_to_json(workbook.Sheets[dotacionName], { raw: false, defval: "" });
         const licenciasJson = licenciasName ? XLSX.utils.sheet_to_json(workbook.Sheets[licenciasName], { raw: false, defval: "" }) : dotacionJson;
         const ausentismoJson = ausentismoName ? XLSX.utils.sheet_to_json(workbook.Sheets[ausentismoName], { header: 1, raw: false, defval: "" }) as any : [];
         const discapacidadJson = discapacidadName ? XLSX.utils.sheet_to_json(workbook.Sheets[discapacidadName], { raw: false, defval: "" }) : [];
         const comunasJson = comunasName ? XLSX.utils.sheet_to_json(workbook.Sheets[comunasName], { raw: false, defval: "" }) : [];
+        const jefaturaJson = jefaturaName ? XLSX.utils.sheet_to_json(workbook.Sheets[jefaturaName], { raw: false, defval: "" }) : [];
 
         setRawData(dotacionJson);
         setLicenciasData(licenciasJson);
         setAusentismoData(ausentismoJson);
         setDiscapacidadData(discapacidadJson);
         setComunasSheetData(comunasJson); 
+        setJefaturaData(jefaturaJson);
         
         calculateSummaries(dotacionJson, ausentismoJson);
         setIsLoading(false); 
@@ -180,6 +184,7 @@ export default function App() {
       { id: 'cumpleanos', label: 'Cumpleaños', icon: <Gift size={38} /> },
       { id: 'comunas', label: 'Comunas', icon: <MapPin size={38} /> },
       { id: 'turnos', label: 'Calendario de Turnos', icon: <Clock size={38} /> },
+      { id: 'buscador', label: 'Buscador de Jefaturas', icon: <Search size={38} /> },
     ];
 
     return (
@@ -247,10 +252,10 @@ export default function App() {
             <button onClick={() => handleTabChange('home')} style={backButtonStyle}>← Volver al Menú Principal</button>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '25px', flexWrap: 'wrap' }}>
               <div style={{ color: COLORS.naranjo }}>
-                {activeTab === 'participacion' ? <Venus size={32} /> : activeTab === 'sindicatos' ? <Handshake size={32} /> : activeTab === 'licencias' ? <Stethoscope size={32} /> : activeTab === 'ausentismo' ? <Scale size={32} /> : activeTab === 'discapacidad' ? <Accessibility size={32} /> : activeTab === 'cumpleanos' ? <Gift size={32} /> : activeTab === 'comunas' ? <MapPin size={32} /> : activeTab === 'turnos' ? <Clock size={32} /> : <Users size={32} />}
+                {activeTab === 'participacion' ? <Venus size={32} /> : activeTab === 'sindicatos' ? <Handshake size={32} /> : activeTab === 'licencias' ? <Stethoscope size={32} /> : activeTab === 'ausentismo' ? <Scale size={32} /> : activeTab === 'discapacidad' ? <Accessibility size={32} /> : activeTab === 'cumpleanos' ? <Gift size={32} /> : activeTab === 'comunas' ? <MapPin size={32} /> : activeTab === 'turnos' ? <Clock size={32} /> : activeTab === 'buscador' ? <Search size={32} /> : <Users size={32} />}
               </div>
               <h2 style={{ color: COLORS.gris, margin: 0, fontSize: 'clamp(1.4rem, 3vw, 1.8rem)', fontWeight: 600 }}>
-                {activeTab === 'dotacion' ? 'Análisis Dotacional' : activeTab === 'participacion' ? 'Participación Femenina' : activeTab === 'sindicatos' ? 'Organizaciones Sindicales' : activeTab === 'licencias' ? 'Licencias Médicas' : activeTab === 'ausentismo' ? 'Ausentismo y Sobretiempo' : activeTab === 'discapacidad' ? 'Inclusión y Discapacidad' : activeTab === 'cumpleanos' ? 'Gestión de Cumpleaños' : activeTab === 'comunas' ? 'Distribución Geográfica' : activeTab === 'turnos' ? 'Calendario de Turnos' : activeTab.toUpperCase()}
+                {activeTab === 'dotacion' ? 'Análisis Dotacional' : activeTab === 'participacion' ? 'Participación Femenina' : activeTab === 'sindicatos' ? 'Organizaciones Sindicales' : activeTab === 'licencias' ? 'Licencias Médicas' : activeTab === 'ausentismo' ? 'Ausentismo y Sobretiempo' : activeTab === 'discapacidad' ? 'Inclusión y Discapacidad' : activeTab === 'cumpleanos' ? 'Gestión de Cumpleaños' : activeTab === 'comunas' ? 'Distribución Geográfica' : activeTab === 'turnos' ? 'Calendario de Turnos' : activeTab === 'buscador' ? 'Directorio y Jefaturas' : activeTab.toUpperCase()}
               </h2>
             </div>
             
@@ -272,6 +277,8 @@ export default function App() {
               <ComunasTab rawData={comunasSheetData} />
             ) : activeTab === 'turnos' ? (
               <TurnosTab />
+            ) : activeTab === 'buscador' ? (
+              <BuscadorTab dotacionData={rawData} jefaturaData={jefaturaData} />
             ) : (
               <div style={{ padding: '40px', textAlign: 'center', backgroundColor: COLORS.blanco, borderRadius: '8px' }}>
                 <p>Módulo de {activeTab} en desarrollo...</p>
