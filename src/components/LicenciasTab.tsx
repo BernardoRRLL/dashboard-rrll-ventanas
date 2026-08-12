@@ -133,7 +133,7 @@ export default function LicenciasTab({ rawData, dotacionData }: LicenciasProps) 
   let licenciasMayoresA100 = 0; 
 
   const startsByDate: Record<string, string[]> = {};
-  const returnsByDate: Record<string, string[]> = {}; // CAMBIO: Ahora guardamos retornos en vez de términos
+  const returnsByDate: Record<string, string[]> = {}; 
   
   // --- LÓGICA DEL RADAR DE REINTEGROS ---
   const upcomingReturns: { id: number, nombre: string, fechaInicio: Date | null, fechaTermino: Date | null, fechaRetorno: Date, cargo: string, area: string, grupo: string, diasAcumulados: number }[] = [];
@@ -356,6 +356,7 @@ export default function LicenciasTab({ rawData, dotacionData }: LicenciasProps) 
           <div style={{ display: 'flex', gap: '15px', marginBottom: '15px', justifyContent: 'center', fontSize: '0.85rem', color: COLORS.gris }}>
             {!selectedLicense ? (
               <>
+                {/* CORRECCIÓN DE LA LEYENDA GENERAL: Rojo (Inicio) y Verde (Retorno) */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                   <div style={{...dotStyle, backgroundColor: COLORS.rojoInicio, position: 'relative', transform: 'none'}}></div> Inicio
                 </div>
