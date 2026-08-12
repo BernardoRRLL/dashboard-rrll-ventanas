@@ -421,7 +421,7 @@ export default function LicenciasTab({ rawData, dotacionData }: LicenciasProps) 
                 </div>
                 <div style={{ marginTop: '10px', paddingTop: '15px', borderTop: '1px dashed #eee' }}>
                   <p style={{ margin: 0, fontSize: '0.8rem', color: '#888', textTransform: 'uppercase', fontWeight: 600 }}>Días Acumulados (Histórico)</p>
-                  <p style={{ margin: 0, fontSize: '1.2rem', color: selectedLicense.diasAcumulados > 100 ? COLORS.rosado : COLORS.naranjo, fontWeight: 700 }}>
+                  <p style={{ margin: 0, fontSize: '1.2rem', color: selectedLicense.diasAcumulados >= 100 ? COLORS.rosado : COLORS.naranjo, fontWeight: 700 }}>
                     {selectedLicense.diasAcumulados} días
                   </p>
                 </div>
@@ -551,8 +551,8 @@ export default function LicenciasTab({ rawData, dotacionData }: LicenciasProps) 
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'clamp(10px, 1.5vw, 20px)', width: '100%', justifyContent: 'space-between' }}>
         <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>Licencias</h4><p style={kpiValueStyle}>{totalLicencias}</p></div>
-        <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>Días Acum.<br/>(Últimos 12 Meses)</h4><p style={{...kpiValueStyle, color: COLORS.naranjo}}>{totalDias12Meses}</p></div>
-        <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>Días Acum.<br/>(Últimos 24 Meses)</h4><p style={{...kpiValueStyle, color: COLORS.gris}}>{totalDias24Meses}</p></div>
+        <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>Días Acum.<br/>(Últimos 12)</h4><p style={{...kpiValueStyle, color: COLORS.naranjo}}>{totalDias12Meses}</p></div>
+        <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>LM Mayores<br/>a 100 Días</h4><p style={{...kpiValueStyle, color: COLORS.rosado}}>{licenciasMayoresA100}</p></div>
         <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>Promedio<br/>Días / Licencia</h4><p style={kpiValueStyle}>{promedioDias}</p></div>
       </div>
 
