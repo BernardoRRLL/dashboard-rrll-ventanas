@@ -64,12 +64,18 @@ export default function AdminTab() {
     setUsuarios(prev => prev.map(u => u.id === userId ? { ...u, estado: nuevoEstado } : u));
   };
 
+  // NUEVA FUNCIÓN: Cambiar el estado de Súper Administrador
+  const toggleAdmin = (userId: string) => {
+    setUsuarios(prev => prev.map(u => u.id === userId ? { ...u, es_admin: !u.es_admin } : u));
+  };
+
   const guardarCambios = async (usuario: any) => {
     const { error } = await supabase
       .from('perfiles_usuarios')
       .update({ 
         estado: usuario.estado, 
-        modulos_permitidos: usuario.modulos_permitidos 
+        modulos_permitidos: usuario.modulos_permitidos,
+        es_admin: usuario.es_admin // Ahora también guardamos el poder de admin
       })
       .eq('id', usuario.id);
       
@@ -92,7 +98,7 @@ export default function AdminTab() {
           Panel de Administración de Usuarios
         </h2>
         <p style={{ color: '#666', margin: 0, fontSize: '0.9rem' }}>
-          Aprueba nuevos usuarios, revoca accesos y define qué módulos pueden visualizar.
+          Aprueba nuevos usuarios, revoca accesos, define módulos y otorga permisos de Súper Administrador.
         </p>
       </div>
 
@@ -103,17 +109,26 @@ export default function AdminTab() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px', borderBottom: '1px solid #eee', paddingBottom: '15px', marginBottom: '15px' }}>
               <div>
                 <h3 style={{ margin: 0, color: COLORS.gris, fontSize: '1.1rem' }}>{user.email}</h3>
-                <span style={{ fontSize: '0.8rem', color: '#888', textTransform: 'uppercase', fontWeight: 600 }}>
-                  {user.es_admin ? '⭐ Súper Administrador' : 'Usuario Estándar'}
-                </span>
+                
+                {/* NUEVO CHECKBOX: Súper Administrador */}
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px', cursor: 'pointer', userSelect: 'none' }}>
+                  <input 
+                    type="checkbox" 
+                    checked={user.es_admin} 
+                    onChange={() => toggleAdmin(user.id)}
+                    style={{ accentColor: COLORS.naranjo, width: '16px', height: '16px', cursor: 'pointer' }}
+                  />
+                  <span style={{ fontSize: '0.85rem', color: user.es_admin ? COLORS.naranjo : '#888', textTransform: 'uppercase', fontWeight: 700 }}>
+                    {user.es_admin ? '⭐ Súper Administrador' : 'Usuario Estándar'}
+                  </span>
+                </label>
               </div>
 
               <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                 <select 
                   value={user.estado} 
                   onChange={(e) => cambiarEstado(user.id, e.target.value)}
-                  disabled={user.es_admin}
-                  style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd', outline: 'none', fontWeight: 600, color: COLORS.gris, cursor: user.es_admin ? 'not-allowed' : 'pointer', backgroundColor: '#f9f9f9' }}
+                  style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd', outline: 'none', fontWeight: 600, color: COLORS.gris, cursor: 'pointer', backgroundColor: '#f9f9f9' }}
                 >
                   <option value="pendiente">⏳ Pendiente</option>
                   <option value="aprobado">✅ Aprobado</option>
