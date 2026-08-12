@@ -77,9 +77,9 @@ export default function TurnosTab() {
           
           <div style={{ ...statusBadge, borderLeftColor: COLORS.naranjo, backgroundColor: '#FFF3E0', alignItems: 'flex-start' }}>
             <span style={{ fontSize: '1.2rem', marginTop: '2px' }}>☀️</span>
-            <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: '100%' }}>
               <p style={{ margin: '0 0 5px 0', fontSize: '0.8rem', color: COLORS.naranjo, fontWeight: 700, textTransform: 'uppercase' }}>Turno de Día</p>
-              {/* Contenedor con flex y flex-grow para empujar el contenido al centro vertical */}
+              {/* Contenedor flex para empujar el contenido al centro vertical */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', flex: 1, justifyContent: 'center' }}>
                 {enDia.length > 0 ? enDia.map(g => <span key={g.id} style={listTextItem}>{g.label}</span>) : <span style={listTextItem}>Ninguno</span>}
               </div>
@@ -88,7 +88,7 @@ export default function TurnosTab() {
 
           <div style={{ ...statusBadge, borderLeftColor: COLORS.celeste, backgroundColor: '#E0F7FA', alignItems: 'flex-start' }}>
             <span style={{ fontSize: '1.2rem', marginTop: '2px' }}>🌙</span>
-            <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: '100%' }}>
               <p style={{ margin: '0 0 5px 0', fontSize: '0.8rem', color: COLORS.celeste, fontWeight: 700, textTransform: 'uppercase' }}>Turno de Noche</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', flex: 1, justifyContent: 'center' }}>
                 {enNoche.length > 0 ? enNoche.map(g => <span key={g.id} style={listTextItem}>{g.label}</span>) : <span style={listTextItem}>Ninguno</span>}
@@ -98,7 +98,7 @@ export default function TurnosTab() {
 
           <div style={{ ...statusBadge, borderLeftColor: COLORS.gris, backgroundColor: '#F5F5F5', alignItems: 'flex-start' }}>
             <span style={{ fontSize: '1.2rem', marginTop: '2px' }}>🏡</span>
-            <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: '100%' }}>
               <p style={{ margin: '0 0 5px 0', fontSize: '0.8rem', color: COLORS.gris, fontWeight: 700, textTransform: 'uppercase' }}>En Descanso</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', flex: 1, justifyContent: 'center' }}>
                 {enDescanso.length > 0 ? enDescanso.map(g => <span key={g.id} style={{...listTextItem, color: '#666', fontWeight: 500}}>{g.label}</span>) : <span style={listTextItem}>Ninguno</span>}
@@ -128,6 +128,7 @@ export default function TurnosTab() {
     const dayCells = Array.from({ length: daysInMonth }).map((_, i) => {
       const currentDay = new Date(year, month, i + 1);
       const isSelected = currentDay.getTime() === selectedDate.getTime();
+      const isToday = currentDay.toLocaleDateString() === new Date().toLocaleDateString();
       
       let bgColor = '#fafafa';
       let textColor = '#888';
@@ -177,14 +178,19 @@ export default function TurnosTab() {
           onClick={() => setSelectedDate(currentDay)}
           title={tooltip}
           style={{ 
-            minHeight: '100px', padding: '8px', border: isSelected ? `2px solid ${COLORS.naranjo}` : '1px solid #eee', 
-            borderRadius: '6px', backgroundColor: isSelected && activeFilter === null ? '#fff9f5' : bgColor, 
+            minHeight: '100px', padding: '8px', 
+            // Destacado para el día seleccionado, y un borde sutil para el día de hoy si no está seleccionado
+            border: isSelected ? `2px solid ${COLORS.naranjo}` : isToday ? `2px solid #ccc` : '1px solid #eee', 
+            borderRadius: '6px', 
+            backgroundColor: isSelected && activeFilter === null ? '#fff9f5' : bgColor, 
             display: 'flex', flexDirection: 'column', cursor: 'pointer', transition: 'all 0.2s',
             boxShadow: isSelected ? '0 4px 8px rgba(228, 83, 2, 0.2)' : 'none',
             transform: isSelected ? 'scale(1.02)' : 'none', zIndex: isSelected ? 2 : 1
           }}
         >
-          <div style={{ fontSize: '1rem', fontWeight: 700, color: isSelected ? COLORS.naranjo : textColor }}>{i + 1}</div>
+          <div style={{ fontSize: '1rem', fontWeight: 700, color: isSelected ? COLORS.naranjo : isToday ? COLORS.gris : textColor }}>
+            {i + 1}
+          </div>
           <div style={{ marginTop: 'auto', marginBottom: 'auto', fontSize: '0.75rem', fontWeight: 600, color: textColor, width: '100%' }}>
             {content}
           </div>
@@ -195,7 +201,7 @@ export default function TurnosTab() {
     return (
       <div style={{ backgroundColor: COLORS.blanco, padding: 'clamp(15px, 3vw, 30px)', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)' }}>
         
-        {/* Filtros de Grupos */}
+        {/* Filtros de Grupos (Usamos Nomenclatura Larga) */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '25px', justifyContent: 'center' }}>
           <button 
             onClick={() => setActiveFilter(null)}
@@ -254,7 +260,7 @@ export default function TurnosTab() {
   );
 }
 
-// --- ESTILOS ---
+// --- ESTILOS CORREGIDOS ---
 const filterButton: React.CSSProperties = { padding: '8px 16px', border: 'none', borderRadius: '20px', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' };
 const navButton: React.CSSProperties = { padding: '8px 15px', backgroundColor: '#f5f5f5', border: 'none', borderRadius: '6px', cursor: 'pointer', color: COLORS.gris, fontWeight: 700, transition: 'background-color 0.2s', fontSize: '0.85rem' };
 const statusBadge: React.CSSProperties = { padding: '15px', borderRadius: '8px', display: 'flex', gap: '12px', borderLeftWidth: '5px', borderLeftStyle: 'solid', minHeight: '120px' };
