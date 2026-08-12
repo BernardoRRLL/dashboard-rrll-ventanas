@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
-import { Users, Venus, Handshake, Stethoscope, Scale, Accessibility, Gift, MapPin, Clock, Search, Lock, Mail, Key } from 'lucide-react';
+import { Users, Venus, Handshake, Stethoscope, Scale, Accessibility, Gift, MapPin, Clock, Search, Lock, Mail, Key, Shield, Clock4 } from 'lucide-react';
 
 // Importamos nuestra conexión segura a Supabase
 import { supabase } from './supabase';
@@ -17,6 +17,7 @@ import CumplesTab from './components/CumplesTab';
 import ComunasTab from './components/ComunasTab';
 import TurnosTab from './components/TurnosTab';
 import BuscadorTab from './components/BuscadorTab';
+import AdminTab from './components/AdminTab'; // El nuevo Panel de Control
 
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement, LineElement, Filler } from 'chart.js';
 import ChartJSPluginDataLabels from 'chartjs-plugin-datalabels';
@@ -36,6 +37,8 @@ const COLORS = {
 export default function App() {
   // --- ESTADOS DE SEGURIDAD (SUPABASE) ---
   const [session, setSession] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<any>(null); // Perfil y permisos del usuario
+  
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
@@ -57,20 +60,33 @@ export default function App() {
 
   const [globalSummary, setGlobalSummary] = useState({ total: 0, mujeres: "0", ausentismo: "0", sobretiempo: "0" });
   const [dotacionStats, setDotacionStats] = useState({ total: 0, indefinido: "0", edadPromedio: "0", edadPromedioF: "0", edadPromedioM: "0" });
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // --- VERIFICAR SESIÓN ACTIVA ---
+  // --- VERIFICAR SESIÓN Y PERFIL ---
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
+      if (session) fetchUserProfile(session.user.id);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
+      if (session) {
+        fetchUserProfile(session.user.id);
+      } else {
+        setUserProfile(null);
+      }
     });
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const fetchUserProfile = async (userId: string) => {
+    const { data, error } = await supabase.from('perfiles_usuarios').select('*').eq('id', userId).single();
+    if (data) {
+      setUserProfile(data);
+    }
+  };
 
   // --- NAVEGACIÓN Y CARGA DE DATOS ---
   useEffect(() => {
@@ -83,8 +99,8 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    // SOLO cargar los datos si hay una sesión iniciada
-    if (!session) return;
+    // SOLO cargar los datos si hay sesión Y el usuario está aprobado (o es admin)
+    if (!session || !userProfile || userProfile.estado !== 'aprobado') return;
 
     const loadSecureData = async () => {
       try {
@@ -130,7 +146,7 @@ export default function App() {
     };
 
     loadSecureData();
-  }, [session]); // Se ejecuta cada vez que el usuario inicia sesión
+  }, [session, userProfile]);
 
   // --- FUNCIONES DE LOGIN Y REGISTRO ---
   const handleLogin = async (e: React.FormEvent) => {
@@ -144,16 +160,22 @@ export default function App() {
     e.preventDefault();
     setAuthError('');
     setAuthMessage('');
-    const { error } = await supabase.auth.signUp({ email, password });
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    
     if (error) {
       setAuthError(error.message);
-    } else {
-      setAuthMessage('Solicitud recibida. Cuenta creada exitosamente.');
+    } else if (data.user) {
+      // Registrar automáticamente en la tabla de perfiles en estado pendiente
+      await supabase.from('perfiles_usuarios').insert([
+        { id: data.user.id, email: email, estado: 'pendiente', es_admin: false, modulos_permitidos: [] }
+      ]);
+      setAuthMessage('Solicitud recibida. Cuenta creada exitosamente. Espera aprobación del administrador.');
     }
   };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
+    setUserProfile(null);
   };
 
   const handleTabChange = (tabId: string) => {
@@ -279,9 +301,34 @@ export default function App() {
     );
   }
 
+  // --- RENDER DE SALA DE ESPERA ---
+  if (userProfile && userProfile.estado !== 'aprobado') {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.fondo, fontFamily: "'Poppins', sans-serif" }}>
+        <div style={{ backgroundColor: COLORS.blanco, padding: '40px', borderRadius: '12px', boxShadow: '0 4px 25px rgba(0,0,0,0.06)', maxWidth: '450px', width: '90%', textAlign: 'center' }}>
+          <div style={{ backgroundColor: userProfile.estado === 'bloqueado' ? '#ffebee' : '#fff8e1', width: '70px', height: '70px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+            <Clock4 size={35} color={userProfile.estado === 'bloqueado' ? 'red' : COLORS.amarillo} />
+          </div>
+          <h2 style={{ margin: '0 0 10px 0', color: COLORS.gris, fontSize: '1.4rem', fontWeight: 700 }}>
+            {userProfile.estado === 'bloqueado' ? 'Acceso Suspendido' : 'Cuenta en Revisión'}
+          </h2>
+          <p style={{ color: '#666', fontSize: '0.95rem', marginBottom: '25px', lineHeight: '1.5' }}>
+            {userProfile.estado === 'bloqueado' 
+              ? 'Tu acceso a la plataforma ha sido revocado. Por favor, contacta con la gerencia.' 
+              : 'Tu solicitud de acceso ha sido recibida. Un administrador debe aprobar tu cuenta y asignar tus permisos de visualización antes de que puedas ingresar al Dashboard.'}
+          </p>
+          <button onClick={handleLogout} style={{ backgroundColor: COLORS.gris, color: COLORS.blanco, border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>
+            Cerrar Sesión y Volver
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   // --- RENDER DEL DASHBOARD PRINCIPAL ---
   const renderHomeMenu = () => {
-    const menuItems = [
+    // 1. Definimos todos los módulos posibles
+    const allMenuItems = [
       { id: 'dotacion', label: 'Dotación', icon: <Users size={38} /> },
       { id: 'participacion', label: 'Participación Femenina', icon: <Venus size={38} /> },
       { id: 'sindicatos', label: 'Sindicatos', icon: <Handshake size={38} /> },
@@ -291,14 +338,33 @@ export default function App() {
       { id: 'cumpleanos', label: 'Cumpleaños', icon: <Gift size={38} /> },
       { id: 'comunas', label: 'Comunas', icon: <MapPin size={38} /> },
       { id: 'turnos', label: 'Calendario de Turnos', icon: <Clock size={38} /> },
-      { id: 'buscador', label: 'Buscador de Jefaturas', icon: <Search size={38} /> },
+      { id: 'buscador', label: 'Directorio y Jefaturas', icon: <Search size={38} /> },
     ];
+
+    // 2. Filtramos según los permisos (Si es admin, los ve todos)
+    const isAdmin = userProfile?.es_admin === true;
+    const allowedModules = userProfile?.modulos_permitidos || [];
+    
+    let menuItems = allMenuItems.filter(item => isAdmin || allowedModules.includes(item.id));
+
+    // 3. Si es Admin, inyectamos el botón del Panel de Control al principio
+    if (isAdmin) {
+      menuItems.unshift({ id: 'admin', label: 'Panel de Administración', icon: <Shield size={38} /> });
+    }
+
+    if (menuItems.length === 0) {
+      return (
+        <div style={{ textAlign: 'center', padding: '40px', backgroundColor: '#fff', borderRadius: '12px', marginTop: '30px' }}>
+          <p style={{ color: '#888', fontStyle: 'italic' }}>No tienes módulos asignados. Contacta al administrador.</p>
+        </div>
+      );
+    }
 
     return (
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(clamp(140px, 30vw, 320px), 1fr))', gap: '20px', marginTop: '30px' }}>
         {menuItems.map((item: any) => (
-          <button key={item.id} onClick={() => handleTabChange(item.id)} style={gridButtonStyle}>
-            <div style={{ color: COLORS.celeste, marginBottom: '12px' }}>{item.icon}</div>
+          <button key={item.id} onClick={() => handleTabChange(item.id)} style={{...gridButtonStyle, borderTop: item.id === 'admin' ? `4px solid ${COLORS.naranjo}` : '1px solid #eee' }}>
+            <div style={{ color: item.id === 'admin' ? COLORS.naranjo : COLORS.celeste, marginBottom: '12px' }}>{item.icon}</div>
             <span style={{ fontSize: 'clamp(0.9rem, 2vw, 1.15rem)', fontWeight: 600, color: COLORS.gris, textAlign: 'center' }}>{item.label}</span>
           </button>
         ))}
@@ -309,10 +375,11 @@ export default function App() {
   return (
     <div style={{ fontFamily: "'Poppins', sans-serif", backgroundColor: COLORS.fondo, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       
-      {/* Nuevo Header modificado para incluir el botón de Cerrar Sesión */}
       <Header />
       <div style={{ backgroundColor: COLORS.celeste, padding: '5px 20px', textAlign: 'right' }}>
-         <span style={{ color: 'white', fontSize: '0.8rem', marginRight: '15px' }}>👤 {session.user.email}</span>
+         <span style={{ color: 'white', fontSize: '0.8rem', marginRight: '15px' }}>
+           👤 {session.user.email} {userProfile?.es_admin && '(Admin)'}
+         </span>
          <button onClick={handleLogout} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.4)', color: 'white', borderRadius: '4px', padding: '4px 10px', fontSize: '0.75rem', cursor: 'pointer' }}>Cerrar Sesión</button>
       </div>
       
@@ -327,7 +394,7 @@ export default function App() {
 
         {!isLoading && activeTab === 'home' && (
           <>
-            <div style={{ display: 'flex', flexWrap: 'nowrap', gap: 'clamp(6px, 1.5vw, 20px)', width: '100%', justifyContent: 'space-between', marginBottom: '25px' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'clamp(6px, 1.5vw, 20px)', width: '100%', justifyContent: 'space-between', marginBottom: '25px' }}>
               <div style={summaryCardStyle}>
                 <h3 style={summaryTitleStyle}>Dotación Total</h3>
                 <p style={summaryValueStyle}>{globalSummary.total}</p>
@@ -365,14 +432,16 @@ export default function App() {
             <button onClick={() => handleTabChange('home')} style={backButtonStyle}>← Volver al Menú Principal</button>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '25px', flexWrap: 'wrap' }}>
               <div style={{ color: COLORS.naranjo }}>
-                {activeTab === 'participacion' ? <Venus size={32} /> : activeTab === 'sindicatos' ? <Handshake size={32} /> : activeTab === 'licencias' ? <Stethoscope size={32} /> : activeTab === 'ausentismo' ? <Scale size={32} /> : activeTab === 'discapacidad' ? <Accessibility size={32} /> : activeTab === 'cumpleanos' ? <Gift size={32} /> : activeTab === 'comunas' ? <MapPin size={32} /> : activeTab === 'turnos' ? <Clock size={32} /> : activeTab === 'buscador' ? <Search size={32} /> : <Users size={32} />}
+                {activeTab === 'participacion' ? <Venus size={32} /> : activeTab === 'sindicatos' ? <Handshake size={32} /> : activeTab === 'licencias' ? <Stethoscope size={32} /> : activeTab === 'ausentismo' ? <Scale size={32} /> : activeTab === 'discapacidad' ? <Accessibility size={32} /> : activeTab === 'cumpleanos' ? <Gift size={32} /> : activeTab === 'comunas' ? <MapPin size={32} /> : activeTab === 'turnos' ? <Clock size={32} /> : activeTab === 'buscador' ? <Search size={32} /> : activeTab === 'admin' ? <Shield size={32} /> : <Users size={32} />}
               </div>
               <h2 style={{ color: COLORS.gris, margin: 0, fontSize: 'clamp(1.4rem, 3vw, 1.8rem)', fontWeight: 600 }}>
-                {activeTab === 'dotacion' ? 'Análisis Dotacional' : activeTab === 'participacion' ? 'Participación Femenina' : activeTab === 'sindicatos' ? 'Organizaciones Sindicales' : activeTab === 'licencias' ? 'Licencias Médicas' : activeTab === 'ausentismo' ? 'Ausentismo y Sobretiempo' : activeTab === 'discapacidad' ? 'Inclusión y Discapacidad' : activeTab === 'cumpleanos' ? 'Gestión de Cumpleaños' : activeTab === 'comunas' ? 'Distribución Geográfica' : activeTab === 'turnos' ? 'Calendario de Turnos' : activeTab === 'buscador' ? 'Directorio y Jefaturas' : activeTab.toUpperCase()}
+                {activeTab === 'dotacion' ? 'Análisis Dotacional' : activeTab === 'participacion' ? 'Participación Femenina' : activeTab === 'sindicatos' ? 'Organizaciones Sindicales' : activeTab === 'licencias' ? 'Licencias Médicas' : activeTab === 'ausentismo' ? 'Ausentismo y Sobretiempo' : activeTab === 'discapacidad' ? 'Inclusión y Discapacidad' : activeTab === 'cumpleanos' ? 'Gestión de Cumpleaños' : activeTab === 'comunas' ? 'Distribución Geográfica' : activeTab === 'turnos' ? 'Calendario de Turnos' : activeTab === 'buscador' ? 'Directorio y Jefaturas' : activeTab === 'admin' ? 'Administración del Sistema' : activeTab.toUpperCase()}
               </h2>
             </div>
             
-            {activeTab === 'dotacion' ? (
+            {activeTab === 'admin' ? (
+              <AdminTab />
+            ) : activeTab === 'dotacion' ? (
               <DotacionTab rawData={rawData} stats={dotacionStats} />
             ) : activeTab === 'participacion' ? (
               <ParticipacionFemeninaTab rawData={rawData} />
@@ -406,7 +475,7 @@ export default function App() {
   );
 }
 
-const summaryCardStyle: React.CSSProperties = { flex: '1 1 0px', minWidth: 0, backgroundColor: COLORS.blanco, padding: 'clamp(8px, 1.8vw, 20px) 4px', borderRadius: '10px', boxShadow: '0 4px 10px rgba(0,0,0,0.04)', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '110px', borderTop: `5px solid ${COLORS.celeste}` };
+const summaryCardStyle: React.CSSProperties = { flex: '1 1 0px', minWidth: 'clamp(100px, 20vw, 200px)', backgroundColor: COLORS.blanco, padding: 'clamp(8px, 1.8vw, 20px) 4px', borderRadius: '10px', boxShadow: '0 4px 10px rgba(0,0,0,0.04)', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '110px', borderTop: `5px solid ${COLORS.celeste}` };
 const summaryTitleStyle: React.CSSProperties = { margin: 0, color: '#666', fontSize: 'clamp(0.55rem, 1.3vw, 0.9rem)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' };
 const summaryValueStyle: React.CSSProperties = { fontSize: 'clamp(1.1rem, 3.2vw, 2.8rem)', fontWeight: 600, color: COLORS.celeste, margin: '6px 0 0 0' };
 const gridButtonStyle: React.CSSProperties = { backgroundColor: COLORS.blanco, border: '1px solid #eee', borderRadius: '12px', padding: 'clamp(20px, 4vw, 45px) 10px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.02)', transition: 'transform 0.2s ease, box-shadow 0.2s ease' };
