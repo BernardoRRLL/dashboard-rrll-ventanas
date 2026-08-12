@@ -108,7 +108,6 @@ export default function LicenciasTab({ rawData, dotacionData }: LicenciasProps) 
   const [view, setView] = useState<'tablero' | 'calendario'>('tablero');
   const [calendarDate, setCalendarDate] = useState(new Date());
   
-  // NUEVO ESTADO: Trabajador seleccionado para ver detalle de licencia
   const [selectedLicense, setSelectedLicense] = useState<any | null>(null);
   
   const licenciasData = useMemo(() => rawData.filter(row => row['Rut'] && String(row['Rut']).trim() !== ''), [rawData]);
@@ -134,7 +133,7 @@ export default function LicenciasTab({ rawData, dotacionData }: LicenciasProps) 
   let licenciasMayoresA100 = 0; 
 
   const startsByDate: Record<string, string[]> = {};
-  const endsByDate: Record<string, string[]> = {};
+  const returnsByDate: Record<string, string[]> = {}; // CAMBIO: Ahora guardamos retornos en vez de términos
   
   // --- LÓGICA DEL RADAR DE REINTEGROS ---
   const upcomingReturns: { id: number, nombre: string, fechaInicio: Date | null, fechaTermino: Date | null, fechaRetorno: Date, cargo: string, area: string, grupo: string, diasAcumulados: number }[] = [];
@@ -183,13 +182,14 @@ export default function LicenciasTab({ rawData, dotacionData }: LicenciasProps) 
     }
     
     if (dTermino) {
-      const key = `${dTermino.getFullYear()}-${String(dTermino.getMonth() + 1).padStart(2, '0')}-${String(dTermino.getDate()).padStart(2, '0')}`;
-      if (!endsByDate[key]) endsByDate[key] = [];
-      endsByDate[key].push(nombre);
-
       // CÁLCULO DE FECHA DE RETORNO (Término + 1)
       const dRetorno = new Date(dTermino);
       dRetorno.setDate(dRetorno.getDate() + 1);
+
+      // Guardamos la fecha de retorno para los puntos verdes del calendario general
+      const keyRetorno = `${dRetorno.getFullYear()}-${String(dRetorno.getMonth() + 1).padStart(2, '0')}-${String(dRetorno.getDate()).padStart(2, '0')}`;
+      if (!returnsByDate[keyRetorno]) returnsByDate[keyRetorno] = [];
+      returnsByDate[keyRetorno].push(nombre);
 
       if (dRetorno >= today && dRetorno <= limitDate) {
         upcomingReturns.push({ 
@@ -298,7 +298,7 @@ export default function LicenciasTab({ rawData, dotacionData }: LicenciasProps) 
         const isRetorno = retT === cellTime;
 
         if (isLicencia) {
-          cellBg = 'rgba(229, 57, 53, 0.12)'; // Fondo rojo claro (línea continua visual)
+          cellBg = 'rgba(229, 57, 53, 0.12)'; 
           cellBorder = '1px solid rgba(229, 57, 53, 0.3)';
         }
 
@@ -313,11 +313,11 @@ export default function LicenciasTab({ rawData, dotacionData }: LicenciasProps) 
           );
         }
       } 
-      // LÓGICA DE PUNTOS CLÁSICA (VISTA GENERAL)
+      // LÓGICA DE PUNTOS ROJOS (INICIO) Y VERDES (RETORNO) (VISTA GENERAL)
       else {
         const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         const starts = startsByDate[key] || [];
-        const ends = endsByDate[key] || [];
+        const returns = returnsByDate[key] || [];
 
         content = (
           <div style={dotsContainer}>
@@ -326,9 +326,9 @@ export default function LicenciasTab({ rawData, dotacionData }: LicenciasProps) 
                 {starts.length > 1 && <span style={dotCount}>{starts.length}</span>}
               </div>
             )}
-            {ends.length > 0 && (
-              <div style={{...dotStyle, backgroundColor: COLORS.naranjo}} title={`TERMINAN LICENCIA:\n${ends.join('\n')}`}>
-                {ends.length > 1 && <span style={dotCount}>{ends.length}</span>}
+            {returns.length > 0 && (
+              <div style={{...dotStyle, backgroundColor: COLORS.verdeFin}} title={`RETORNAN AL TRABAJO:\n${returns.join('\n')}`}>
+                {returns.length > 1 && <span style={dotCount}>{returns.length}</span>}
               </div>
             )}
           </div>
@@ -360,7 +360,7 @@ export default function LicenciasTab({ rawData, dotacionData }: LicenciasProps) 
                   <div style={{...dotStyle, backgroundColor: COLORS.rojoInicio, position: 'relative', transform: 'none'}}></div> Inicio
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                  <div style={{...dotStyle, backgroundColor: COLORS.naranjo, position: 'relative', transform: 'none'}}></div> Término
+                  <div style={{...dotStyle, backgroundColor: COLORS.verdeFin, position: 'relative', transform: 'none'}}></div> Retorno
                 </div>
               </>
             ) : (
