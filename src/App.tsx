@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
-import { Users, Venus, Handshake, Stethoscope, Scale, Accessibility, Gift, MapPin, Clock, Search, Lock, Mail, Key, Shield, Clock4 } from 'lucide-react';
+import { Users, Venus, Handshake, Stethoscope, Scale, Accessibility, Gift, MapPin, Clock, Search, Lock, Mail, Key, Shield, Clock4, Settings, X } from 'lucide-react';
 
 // Importamos nuestra conexión segura a Supabase
 import { supabase } from './supabase';
@@ -37,13 +37,22 @@ const COLORS = {
 export default function App() {
   // --- ESTADOS DE SEGURIDAD (SUPABASE) ---
   const [session, setSession] = useState<any>(null);
-  const [userProfile, setUserProfile] = useState<any>(null); // Perfil y permisos del usuario
+  const [userProfile, setUserProfile] = useState<any>(null); 
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
   const [authError, setAuthError] = useState('');
   const [authMessage, setAuthMessage] = useState('');
+
+  // --- ESTADOS DE CAMBIO DE CLAVE ---
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [pwdError, setPwdError] = useState('');
+  const [pwdSuccess, setPwdSuccess] = useState('');
+  const [isUpdatingPwd, setIsUpdatingPwd] = useState(false);
 
   // --- ESTADOS DEL DASHBOARD ---
   const [activeTab, setActiveTab] = useState(() => {
@@ -82,7 +91,6 @@ export default function App() {
   }, []);
 
   const fetchUserProfile = async (userId: string) => {
-    // CORRECCIÓN: Ahora manejamos el error para que TypeScript no bloquee la compilación
     const { data, error } = await supabase.from('perfiles_usuarios').select('*').eq('id', userId).single();
     if (error) {
       console.error("Error al cargar perfil de usuario:", error);
@@ -103,13 +111,11 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    // SOLO cargar los datos si hay sesión Y el usuario está aprobado (o es admin)
     if (!session || !userProfile || userProfile.estado !== 'aprobado') return;
 
     const loadSecureData = async () => {
       try {
         setIsLoading(true);
-        // DESCARGA SECRETA DESDE SUPABASE STORAGE
         const { data, error } = await supabase.storage.from('rrll-data').download('data.xlsx');
         
         if (error) throw error;
@@ -169,7 +175,6 @@ export default function App() {
     if (error) {
       setAuthError(error.message);
     } else if (data.user) {
-      // Registrar automáticamente en la tabla de perfiles en estado pendiente
       await supabase.from('perfiles_usuarios').insert([
         { id: data.user.id, email: email, estado: 'pendiente', es_admin: false, modulos_permitidos: [] }
       ]);
@@ -180,6 +185,56 @@ export default function App() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setUserProfile(null);
+  };
+
+  // --- FUNCIÓN DE CAMBIO DE CLAVE ---
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPwdError('');
+    setPwdSuccess('');
+
+    if (newPassword !== confirmPassword) {
+      setPwdError('Las nuevas contraseñas no coinciden.');
+      return;
+    }
+    if (newPassword.length < 6) {
+      setPwdError('La nueva contraseña debe tener al menos 6 caracteres.');
+      return;
+    }
+
+    setIsUpdatingPwd(true);
+
+    // 1. Verificamos que la clave actual sea correcta re-iniciando sesión
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: session.user.email,
+      password: currentPassword,
+    });
+
+    if (signInError) {
+      setPwdError('La contraseña actual ingresada es incorrecta.');
+      setIsUpdatingPwd(false);
+      return;
+    }
+
+    // 2. Si pasó la prueba, actualizamos a la nueva clave
+    const { error: updateError } = await supabase.auth.updateUser({
+      password: newPassword
+    });
+
+    if (updateError) {
+      setPwdError(updateError.message);
+    } else {
+      setPwdSuccess('¡Contraseña actualizada con éxito!');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setTimeout(() => {
+        setIsSettingsOpen(false);
+        setPwdSuccess('');
+      }, 2000); // Cerramos el modal después de 2 segundos
+    }
+    
+    setIsUpdatingPwd(false);
   };
 
   const handleTabChange = (tabId: string) => {
@@ -331,7 +386,6 @@ export default function App() {
 
   // --- RENDER DEL DASHBOARD PRINCIPAL ---
   const renderHomeMenu = () => {
-    // 1. Definimos todos los módulos posibles
     const allMenuItems = [
       { id: 'dotacion', label: 'Dotación', icon: <Users size={38} /> },
       { id: 'participacion', label: 'Participación Femenina', icon: <Venus size={38} /> },
@@ -345,13 +399,11 @@ export default function App() {
       { id: 'buscador', label: 'Directorio y Jefaturas', icon: <Search size={38} /> },
     ];
 
-    // 2. Filtramos según los permisos (Si es admin, los ve todos)
     const isAdmin = userProfile?.es_admin === true;
     const allowedModules = userProfile?.modulos_permitidos || [];
     
     let menuItems = allMenuItems.filter(item => isAdmin || allowedModules.includes(item.id));
 
-    // 3. Si es Admin, inyectamos el botón del Panel de Control al principio
     if (isAdmin) {
       menuItems.unshift({ id: 'admin', label: 'Panel de Administración', icon: <Shield size={38} /> });
     }
@@ -377,14 +429,22 @@ export default function App() {
   };
 
   return (
-    <div style={{ fontFamily: "'Poppins', sans-serif", backgroundColor: COLORS.fondo, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ fontFamily: "'Poppins', sans-serif", backgroundColor: COLORS.fondo, minHeight: '100vh', display: 'flex', flexDirection: 'column', position: 'relative' }}>
       
       <Header />
-      <div style={{ backgroundColor: COLORS.celeste, padding: '5px 20px', textAlign: 'right' }}>
-         <span style={{ color: 'white', fontSize: '0.8rem', marginRight: '15px' }}>
+      <div style={{ backgroundColor: COLORS.celeste, padding: '5px 20px', textAlign: 'right', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '15px' }}>
+         <span style={{ color: 'white', fontSize: '0.85rem', fontWeight: 500 }}>
            👤 {session.user.email} {userProfile?.es_admin && '(Admin)'}
          </span>
-         <button onClick={handleLogout} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.4)', color: 'white', borderRadius: '4px', padding: '4px 10px', fontSize: '0.75rem', cursor: 'pointer' }}>Cerrar Sesión</button>
+         
+         {/* Botón de Configuración (Cambio de Clave) */}
+         <button onClick={() => setIsSettingsOpen(true)} title="Cambiar Contraseña" style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px' }}>
+           <Settings size={20} />
+         </button>
+         
+         <button onClick={handleLogout} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.4)', color: 'white', borderRadius: '4px', padding: '4px 10px', fontSize: '0.75rem', cursor: 'pointer', transition: 'background-color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
+           Cerrar Sesión
+         </button>
       </div>
       
       <div style={{ maxWidth: '1300px', width: '100%', margin: '0 auto', padding: '30px 20px', flex: 1 }}>
@@ -473,6 +533,51 @@ export default function App() {
           </div>
         )}
       </div>
+
+      {/* --- MODAL PARA CAMBIAR CLAVE --- */}
+      {isSettingsOpen && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, backdropFilter: 'blur(3px)' }}>
+          <div style={{ backgroundColor: COLORS.blanco, padding: '30px', borderRadius: '12px', width: '90%', maxWidth: '400px', position: 'relative', boxShadow: '0 10px 25px rgba(0,0,0,0.15)' }}>
+            
+            <button onClick={() => setIsSettingsOpen(false)} style={{ position: 'absolute', top: '15px', right: '15px', background: 'none', border: 'none', cursor: 'pointer', color: '#888' }}>
+              <X size={24} />
+            </button>
+            
+            <h3 style={{ margin: '0 0 20px 0', color: COLORS.gris, fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <Settings size={20} color={COLORS.celeste} />
+              Cambiar Contraseña
+            </h3>
+
+            <form onSubmit={handleChangePassword} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.85rem', color: COLORS.gris, fontWeight: 600 }}>Contraseña Actual</label>
+                <input type="password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} required 
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #ddd', outline: 'none', fontFamily: "'Poppins', sans-serif" }} />
+              </div>
+              
+              <div style={{ height: '1px', backgroundColor: '#eee', margin: '5px 0' }}></div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.85rem', color: COLORS.gris, fontWeight: 600 }}>Nueva Contraseña <span style={{ fontSize: '0.75rem', fontWeight: 400, color: '#888' }}>(mín. 6 caracteres)</span></label>
+                <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} required 
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #ddd', outline: 'none', fontFamily: "'Poppins', sans-serif" }} />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.85rem', color: COLORS.gris, fontWeight: 600 }}>Confirmar Nueva Contraseña</label>
+                <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required 
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #ddd', outline: 'none', fontFamily: "'Poppins', sans-serif" }} />
+              </div>
+
+              {pwdError && <p style={{ color: 'red', fontSize: '0.8rem', margin: 0, textAlign: 'center', backgroundColor: '#ffebee', padding: '8px', borderRadius: '4px' }}>{pwdError}</p>}
+              {pwdSuccess && <p style={{ color: 'green', fontSize: '0.8rem', margin: 0, textAlign: 'center', backgroundColor: '#e8f5e9', padding: '8px', borderRadius: '4px' }}>{pwdSuccess}</p>}
+
+              <button type="submit" disabled={isUpdatingPwd} style={{ backgroundColor: COLORS.celeste, color: COLORS.blanco, border: 'none', padding: '12px', borderRadius: '6px', fontWeight: 600, cursor: isUpdatingPwd ? 'not-allowed' : 'pointer', marginTop: '10px' }}>
+                {isUpdatingPwd ? 'Actualizando...' : 'Guardar Nueva Contraseña'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
       
       <Footer />
     </div>
