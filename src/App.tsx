@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
-import { Users, Venus, Handshake, Stethoscope, Scale, Accessibility, Gift, MapPin, Clock, Search } from 'lucide-react';
+import { Users, Venus, Handshake, Stethoscope, Scale, Accessibility, Gift, MapPin, Clock, Search, Lock, Mail, Key } from 'lucide-react';
+
+// Importamos nuestra conexión segura a Supabase
+import { supabase } from './supabase';
+
 import Header from './components/Header';
 import Footer from './components/Footer';
 import DotacionTab from './components/DotacionTab';
@@ -30,6 +34,15 @@ const COLORS = {
 };
 
 export default function App() {
+  // --- ESTADOS DE SEGURIDAD (SUPABASE) ---
+  const [session, setSession] = useState<any>(null);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [authError, setAuthError] = useState('');
+  const [authMessage, setAuthMessage] = useState('');
+
+  // --- ESTADOS DEL DASHBOARD ---
   const [activeTab, setActiveTab] = useState(() => {
     const hash = window.location.hash.replace('#', '');
     return hash || 'home';
@@ -44,9 +57,22 @@ export default function App() {
 
   const [globalSummary, setGlobalSummary] = useState({ total: 0, mujeres: "0", ausentismo: "0", sobretiempo: "0" });
   const [dotacionStats, setDotacionStats] = useState({ total: 0, indefinido: "0", edadPromedio: "0", edadPromedioF: "0", edadPromedioM: "0" });
-  
   const [isLoading, setIsLoading] = useState(true);
 
+  // --- VERIFICAR SESIÓN ACTIVA ---
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // --- NAVEGACIÓN Y CARGA DE DATOS ---
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '');
@@ -56,18 +82,20 @@ export default function App() {
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
-  const handleTabChange = (tabId: string) => {
-    window.location.hash = tabId === 'home' ? '' : tabId;
-    setActiveTab(tabId);
-  };
-
   useEffect(() => {
-    const loadFixedData = async () => {
+    // SOLO cargar los datos si hay una sesión iniciada
+    if (!session) return;
+
+    const loadSecureData = async () => {
       try {
-        const response = await fetch('./data.xlsx');
-        if (!response.ok) throw new Error("No se encontró el archivo data.xlsx");
+        setIsLoading(true);
+        // DESCARGA SECRETA DESDE SUPABASE STORAGE
+        const { data, error } = await supabase.storage.from('rrll-data').download('data.xlsx');
         
-        const arrayBuffer = await response.arrayBuffer();
+        if (error) throw error;
+        if (!data) throw new Error("No se pudo descargar el archivo de la bóveda.");
+
+        const arrayBuffer = await data.arrayBuffer();
         const workbook = XLSX.read(arrayBuffer, { type: 'array' });
         const sheetNames = workbook.SheetNames;
 
@@ -96,13 +124,42 @@ export default function App() {
         setIsLoading(false); 
 
       } catch (error) {
-        console.error("Error al cargar la base de datos:", error);
+        console.error("Error al cargar la base de datos de Supabase:", error);
         setIsLoading(false);
       }
     };
 
-    loadFixedData();
-  }, []);
+    loadSecureData();
+  }, [session]); // Se ejecuta cada vez que el usuario inicia sesión
+
+  // --- FUNCIONES DE LOGIN Y REGISTRO ---
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError('');
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) setAuthError('Credenciales incorrectas o acceso denegado.');
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError('');
+    setAuthMessage('');
+    const { error } = await supabase.auth.signUp({ email, password });
+    if (error) {
+      setAuthError(error.message);
+    } else {
+      setAuthMessage('Solicitud recibida. Cuenta creada exitosamente.');
+    }
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+  };
+
+  const handleTabChange = (tabId: string) => {
+    window.location.hash = tabId === 'home' ? '' : tabId;
+    setActiveTab(tabId);
+  };
 
   const calculateSummaries = (dotData: any[], ausData: any) => {
     const total = dotData.length; 
@@ -173,6 +230,56 @@ export default function App() {
     setDotacionStats({ total, indefinido: ((indefinidos / total) * 100).toFixed(1), edadPromedio: (sumaEdades / total).toFixed(1), edadPromedioF: totalF > 0 ? (sumaF / totalF).toFixed(1) : "0", edadPromedioM: totalM > 0 ? (sumaM / totalM).toFixed(1) : "0" });
   };
 
+  // --- RENDER DE LA PANTALLA DE LOGIN ---
+  if (!session) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.fondo, fontFamily: "'Poppins', sans-serif" }}>
+        <div style={{ backgroundColor: COLORS.blanco, padding: '40px', borderRadius: '12px', boxShadow: '0 4px 25px rgba(0,0,0,0.06)', maxWidth: '400px', width: '90%' }}>
+          <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+            <div style={{ backgroundColor: '#FFF3E0', width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 15px' }}>
+              <Lock size={30} color={COLORS.naranjo} />
+            </div>
+            <h2 style={{ margin: 0, color: COLORS.gris, fontSize: '1.5rem', fontWeight: 700 }}>Portal RRLL</h2>
+            <p style={{ margin: '5px 0 0 0', color: '#888', fontSize: '0.9rem' }}>Codelco División Ventanas</p>
+          </div>
+          
+          <form onSubmit={isRegistering ? handleRegister : handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            <div>
+              <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.85rem', color: COLORS.gris, fontWeight: 600 }}>Correo Electrónico</label>
+              <div style={{ position: 'relative' }}>
+                <Mail size={18} color="#aaa" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="usuario@codelco.cl"
+                  style={{ width: '100%', padding: '12px 12px 12px 40px', borderRadius: '8px', border: '1px solid #ddd', outline: 'none', fontFamily: "'Poppins', sans-serif", fontSize: '0.95rem' }} />
+              </div>
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.85rem', color: COLORS.gris, fontWeight: 600 }}>Contraseña</label>
+              <div style={{ position: 'relative' }}>
+                <Key size={18} color="#aaa" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
+                <input type="password" value={password} onChange={e => setPassword(e.target.value)} required placeholder="••••••••"
+                  style={{ width: '100%', padding: '12px 12px 12px 40px', borderRadius: '8px', border: '1px solid #ddd', outline: 'none', fontFamily: "'Poppins', sans-serif", fontSize: '0.95rem' }} />
+              </div>
+            </div>
+            
+            {authError && <p style={{ color: 'red', fontSize: '0.8rem', margin: 0, textAlign: 'center' }}>{authError}</p>}
+            {authMessage && <p style={{ color: 'green', fontSize: '0.8rem', margin: 0, textAlign: 'center' }}>{authMessage}</p>}
+            
+            <button type="submit" style={{ backgroundColor: COLORS.celeste, color: COLORS.blanco, border: 'none', padding: '14px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', marginTop: '10px', fontSize: '1rem', transition: 'background-color 0.2s' }}>
+              {isRegistering ? 'Solicitar Cuenta' : 'Iniciar Sesión'}
+            </button>
+          </form>
+          
+          <div style={{ textAlign: 'center', marginTop: '20px', borderTop: '1px solid #eee', paddingTop: '15px' }}>
+            <button onClick={() => {setIsRegistering(!isRegistering); setAuthError(''); setAuthMessage('');}} style={{ background: 'none', border: 'none', color: COLORS.naranjo, cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}>
+              {isRegistering ? '¿Ya tienes acceso? Inicia sesión' : 'Solicitar un nuevo usuario'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // --- RENDER DEL DASHBOARD PRINCIPAL ---
   const renderHomeMenu = () => {
     const menuItems = [
       { id: 'dotacion', label: 'Dotación', icon: <Users size={38} /> },
@@ -201,14 +308,20 @@ export default function App() {
 
   return (
     <div style={{ fontFamily: "'Poppins', sans-serif", backgroundColor: COLORS.fondo, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      
+      {/* Nuevo Header modificado para incluir el botón de Cerrar Sesión */}
       <Header />
+      <div style={{ backgroundColor: COLORS.celeste, padding: '5px 20px', textAlign: 'right' }}>
+         <span style={{ color: 'white', fontSize: '0.8rem', marginRight: '15px' }}>👤 {session.user.email}</span>
+         <button onClick={handleLogout} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.4)', color: 'white', borderRadius: '4px', padding: '4px 10px', fontSize: '0.75rem', cursor: 'pointer' }}>Cerrar Sesión</button>
+      </div>
       
       <div style={{ maxWidth: '1300px', width: '100%', margin: '0 auto', padding: '30px 20px', flex: 1 }}>
         
         {isLoading && (
           <div style={{ textAlign: 'center', padding: '100px 0', color: COLORS.gris }}>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 600 }}>Cargando base de datos corporativa...</h2>
-            <p style={{ color: '#666' }}>Sincronizando información de RRLL</p>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 600 }}>Descargando datos seguros...</h2>
+            <p style={{ color: '#666' }}>Conectando con la bóveda cifrada</p>
           </div>
         )}
 
@@ -242,7 +355,7 @@ export default function App() {
             {renderHomeMenu()}
             
             <div style={{ marginTop: '50px', textAlign: 'center' }}>
-              <p style={{ color: 'green', fontSize: '0.85rem', fontWeight: 600 }}>✓ Datos sincronizados correctamente desde archivo central</p>
+              <p style={{ color: 'green', fontSize: '0.85rem', fontWeight: 600 }}>🔒 Conexión segura y cifrada activa (Supabase)</p>
             </div>
           </>
         )}
