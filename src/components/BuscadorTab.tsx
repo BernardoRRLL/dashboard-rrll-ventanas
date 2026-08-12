@@ -74,6 +74,13 @@ export default function BuscadorTab({ dotacionData, jefaturaData }: BuscadorTabP
       if (bossData) {
         chain.push(bossData);
         currentSap = bossSap;
+        
+        // CORRECCIÓN 1: Detener la cadena de mando en el Gerente General
+        const bossName = String(bossData['Nombre'] || bossData['Nombre trabajador/a'] || '').trim().toUpperCase();
+        if (bossName === 'WEISHAUPT HIDALGO RICARDO ARMANDO') {
+            break; // Cima de la pirámide alcanzada
+        }
+
       } else {
         // Si el jefe no está en la base de datos de dotación, guardamos solo su SAP como referencia
         chain.push({ 'SAP': bossSap, 'Nombre': 'Jefatura Externa / No en Dotación', 'Posición': 'Desconocido' });
@@ -90,10 +97,23 @@ export default function BuscadorTab({ dotacionData, jefaturaData }: BuscadorTabP
 
   // Helpers de visualización
   const getNombre = (row: any) => row['Nombre'] || row['Nombre trabajador/a'] || 'Sin Nombre';
-  const getCargo = (row: any) => row['Posición'] || row['Cargo'] || row['Rol'] || 'Sin Posición';
+  const getCargo = (row: any) => row['Posición'] || row['Cargo'] || 'Sin Posición';
   const getArea = (row: any) => row['Gerencia / Superintendencia'] || row['Superintendencia / Dirección / Gerencia'] || 'Sin Área';
-  const getRut = (row: any) => row['Rut'] || row['RUT'] || 'Sin RUT';
   const getSap = (row: any) => row['SAP'] || row['Número de personal'] || 'Sin SAP';
+  
+  // Helper para agrupar Turno, Grupo y Rol (en reemplazo del RUT)
+  const getDetalleOperativo = (row: any) => {
+      const turno = row['Turno']?.trim() || '';
+      const grupo = row['Grupo']?.trim() || '';
+      const rol = row['Rol']?.trim() || '';
+
+      const parts = [];
+      if (turno && turno !== '-') parts.push(`Turno ${turno}`);
+      if (grupo && grupo !== '-') parts.push(`Grupo ${grupo}`);
+      if (rol && rol !== '-') parts.push(rol);
+
+      return parts.length > 0 ? parts.join(' | ') : 'Sin detalle operativo';
+  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '25px', fontFamily: "'Poppins', sans-serif" }}>
@@ -180,7 +200,8 @@ export default function BuscadorTab({ dotacionData, jefaturaData }: BuscadorTabP
               </div>
               <div style={infoRowStyle}>
                 <div style={iconBoxStyle}><MapPin size={18} /></div>
-                <div><p style={labelStyle}>RUT</p><p style={valueStyle}>{getRut(selectedEmployee)}</p></div>
+                {/* CORRECCIÓN 2: Reemplazo del RUT por Turno/Grupo/Rol */}
+                <div><p style={labelStyle}>Detalle Operativo</p><p style={valueStyle}>{getDetalleOperativo(selectedEmployee)}</p></div>
               </div>
             </div>
           </div>
