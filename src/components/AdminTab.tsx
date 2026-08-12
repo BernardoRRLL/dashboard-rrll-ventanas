@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../supabase';
 import { Shield, Save } from 'lucide-react';
 
@@ -6,6 +6,7 @@ const COLORS = {
   gris: '#36424a',
   naranjo: '#e45302',
   celeste: '#0098aa',
+  amarillo: '#f4ab03',
   blanco: '#ffffff',
   fondo: '#f5f7f8'
 };
@@ -38,7 +39,9 @@ export default function AdminTab() {
       .select('*')
       .order('estado', { ascending: false });
       
-    if (data) {
+    if (error) {
+      console.error("Error al cargar usuarios:", error);
+    } else if (data) {
       setUsuarios(data);
     }
     setLoading(false);
