@@ -21,8 +21,9 @@ const GRUPOS_TURNOS = [
 ];
 
 export default function TurnosTab() {
-  const [calendarDate, setCalendarDate] = useState(new Date(2026, 7, 1)); 
-  const [selectedDate, setSelectedDate] = useState(new Date(2026, 7, 1));
+  // MEJORA 2: Arrancar por defecto en el día actual
+  const [calendarDate, setCalendarDate] = useState(new Date()); 
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
   // --- MOTOR MATEMÁTICO UNIVERSAL (Día Cero: 1 de Agosto de 2026) ---
@@ -71,13 +72,15 @@ export default function TurnosTab() {
           </h3>
         </div>
 
+        {/* MEJORA 1: Centrado Vertical de los contenidos dentro de las tarjetas */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '15px' }}>
           
           <div style={{ ...statusBadge, borderLeftColor: COLORS.naranjo, backgroundColor: '#FFF3E0', alignItems: 'flex-start' }}>
             <span style={{ fontSize: '1.2rem', marginTop: '2px' }}>☀️</span>
-            <div>
+            <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
               <p style={{ margin: '0 0 5px 0', fontSize: '0.8rem', color: COLORS.naranjo, fontWeight: 700, textTransform: 'uppercase' }}>Turno de Día</p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+              {/* Contenedor con flex y flex-grow para empujar el contenido al centro vertical */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', flex: 1, justifyContent: 'center' }}>
                 {enDia.length > 0 ? enDia.map(g => <span key={g.id} style={listTextItem}>{g.label}</span>) : <span style={listTextItem}>Ninguno</span>}
               </div>
             </div>
@@ -85,9 +88,9 @@ export default function TurnosTab() {
 
           <div style={{ ...statusBadge, borderLeftColor: COLORS.celeste, backgroundColor: '#E0F7FA', alignItems: 'flex-start' }}>
             <span style={{ fontSize: '1.2rem', marginTop: '2px' }}>🌙</span>
-            <div>
+            <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
               <p style={{ margin: '0 0 5px 0', fontSize: '0.8rem', color: COLORS.celeste, fontWeight: 700, textTransform: 'uppercase' }}>Turno de Noche</p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', flex: 1, justifyContent: 'center' }}>
                 {enNoche.length > 0 ? enNoche.map(g => <span key={g.id} style={listTextItem}>{g.label}</span>) : <span style={listTextItem}>Ninguno</span>}
               </div>
             </div>
@@ -95,9 +98,9 @@ export default function TurnosTab() {
 
           <div style={{ ...statusBadge, borderLeftColor: COLORS.gris, backgroundColor: '#F5F5F5', alignItems: 'flex-start' }}>
             <span style={{ fontSize: '1.2rem', marginTop: '2px' }}>🏡</span>
-            <div>
+            <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
               <p style={{ margin: '0 0 5px 0', fontSize: '0.8rem', color: COLORS.gris, fontWeight: 700, textTransform: 'uppercase' }}>En Descanso</p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', flex: 1, justifyContent: 'center' }}>
                 {enDescanso.length > 0 ? enDescanso.map(g => <span key={g.id} style={{...listTextItem, color: '#666', fontWeight: 500}}>{g.label}</span>) : <span style={listTextItem}>Ninguno</span>}
               </div>
             </div>
@@ -153,7 +156,6 @@ export default function TurnosTab() {
         content = (
           <div style={generalViewListContainer}>
             {inDay.map((g) => (
-              // Aplicamos className directamente al div, y removemos de los estilos
               <div key={`d-${g.id}`} className="mobile-list-text" style={generalViewListItem}>
                 <div style={{...dotStyle, backgroundColor: COLORS.naranjo}}></div>
                 <span>{g.label}</span>
@@ -193,7 +195,7 @@ export default function TurnosTab() {
     return (
       <div style={{ backgroundColor: COLORS.blanco, padding: 'clamp(15px, 3vw, 30px)', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)' }}>
         
-        {/* Filtros de Grupos (Usamos Nomenclatura Larga) */}
+        {/* Filtros de Grupos */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '25px', justifyContent: 'center' }}>
           <button 
             onClick={() => setActiveFilter(null)}
@@ -252,13 +254,12 @@ export default function TurnosTab() {
   );
 }
 
-// --- ESTILOS CORREGIDOS ---
+// --- ESTILOS ---
 const filterButton: React.CSSProperties = { padding: '8px 16px', border: 'none', borderRadius: '20px', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' };
 const navButton: React.CSSProperties = { padding: '8px 15px', backgroundColor: '#f5f5f5', border: 'none', borderRadius: '6px', cursor: 'pointer', color: COLORS.gris, fontWeight: 700, transition: 'background-color 0.2s', fontSize: '0.85rem' };
-const statusBadge: React.CSSProperties = { padding: '15px', borderRadius: '8px', display: 'flex', gap: '12px', borderLeftWidth: '5px', borderLeftStyle: 'solid' };
+const statusBadge: React.CSSProperties = { padding: '15px', borderRadius: '8px', display: 'flex', gap: '12px', borderLeftWidth: '5px', borderLeftStyle: 'solid', minHeight: '120px' };
 const listTextItem: React.CSSProperties = { fontSize: '1rem', color: COLORS.gris, fontWeight: 700 };
 
-// Le quitamos el className a este objeto de estilos de React
 const generalViewListContainer: React.CSSProperties = { display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', gap: '4px', width: 'fit-content', margin: '0 auto' };
 const generalViewListItem: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: '6px' };
 const dotStyle: React.CSSProperties = { width: '8px', height: '8px', borderRadius: '50%', flexShrink: 0 };
