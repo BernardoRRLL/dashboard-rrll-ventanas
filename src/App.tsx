@@ -330,7 +330,7 @@ export default function App() {
               <div style={{ position: 'relative' }}>
                 <Mail size={18} color="#aaa" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
                 <input type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="usuario@codelco.cl"
-                  style={{ width: '100%', padding: '12px 12px 12px 40px', borderRadius: '8px', border: '1px solid #ddd', outline: 'none', fontFamily: "'Poppins', sans-serif", fontSize: '0.95rem' }} />
+                  style={{ width: '100%', padding: '12px 12px 12px 40px', borderRadius: '8px', border: '1px solid #ddd', outline: 'none', fontFamily: "'Poppins', sans-serif", fontSize: '0.95rem', boxSizing: 'border-box' }} />
               </div>
             </div>
             <div>
@@ -338,7 +338,7 @@ export default function App() {
               <div style={{ position: 'relative' }}>
                 <Key size={18} color="#aaa" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
                 <input type="password" value={password} onChange={e => setPassword(e.target.value)} required placeholder="••••••••"
-                  style={{ width: '100%', padding: '12px 12px 12px 40px', borderRadius: '8px', border: '1px solid #ddd', outline: 'none', fontFamily: "'Poppins', sans-serif", fontSize: '0.95rem' }} />
+                  style={{ width: '100%', padding: '12px 12px 12px 40px', borderRadius: '8px', border: '1px solid #ddd', outline: 'none', fontFamily: "'Poppins', sans-serif", fontSize: '0.95rem', boxSizing: 'border-box' }} />
               </div>
             </div>
             
@@ -552,7 +552,7 @@ export default function App() {
               <div>
                 <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.85rem', color: COLORS.gris, fontWeight: 600 }}>Contraseña Actual</label>
                 <input type="password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} required 
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #ddd', outline: 'none', fontFamily: "'Poppins', sans-serif" }} />
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #ddd', outline: 'none', fontFamily: "'Poppins', sans-serif", boxSizing: 'border-box' }} />
               </div>
               
               <div style={{ height: '1px', backgroundColor: '#eee', margin: '5px 0' }}></div>
@@ -560,12 +560,12 @@ export default function App() {
               <div>
                 <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.85rem', color: COLORS.gris, fontWeight: 600 }}>Nueva Contraseña <span style={{ fontSize: '0.75rem', fontWeight: 400, color: '#888' }}>(mín. 6 caracteres)</span></label>
                 <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} required 
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #ddd', outline: 'none', fontFamily: "'Poppins', sans-serif" }} />
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #ddd', outline: 'none', fontFamily: "'Poppins', sans-serif", boxSizing: 'border-box' }} />
               </div>
               <div>
                 <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.85rem', color: COLORS.gris, fontWeight: 600 }}>Confirmar Nueva Contraseña</label>
                 <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required 
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #ddd', outline: 'none', fontFamily: "'Poppins', sans-serif" }} />
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #ddd', outline: 'none', fontFamily: "'Poppins', sans-serif", boxSizing: 'border-box' }} />
               </div>
 
               {pwdError && <p style={{ color: 'red', fontSize: '0.8rem', margin: 0, textAlign: 'center', backgroundColor: '#ffebee', padding: '8px', borderRadius: '4px' }}>{pwdError}</p>}
