@@ -301,8 +301,8 @@ export default function App() {
 
   if (!session) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.fondo, fontFamily: "'Poppins', sans-serif" }}>
-        <div style={{ backgroundColor: COLORS.blanco, padding: '40px', borderRadius: '12px', boxShadow: '0 4px 25px rgba(0,0,0,0.06)', maxWidth: '400px', width: '90%' }}>
+      <div style={{ width: '100%', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.fondo, fontFamily: "'Poppins', sans-serif", boxSizing: 'border-box', overflowX: 'hidden' }}>
+        <div style={{ backgroundColor: COLORS.blanco, padding: '40px', borderRadius: '12px', boxShadow: '0 4px 25px rgba(0,0,0,0.06)', maxWidth: '400px', width: '90%', boxSizing: 'border-box' }}>
           <div style={{ textAlign: 'center', marginBottom: '30px' }}>
             <div style={{ backgroundColor: '#FFF3E0', width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 15px' }}>
               <Lock size={30} color={COLORS.naranjo} />
@@ -349,8 +349,8 @@ export default function App() {
 
   if (userProfile && userProfile.estado !== 'aprobado') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.fondo, fontFamily: "'Poppins', sans-serif" }}>
-        <div style={{ backgroundColor: COLORS.blanco, padding: '40px', borderRadius: '12px', boxShadow: '0 4px 25px rgba(0,0,0,0.06)', maxWidth: '450px', width: '90%', textAlign: 'center' }}>
+      <div style={{ width: '100%', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.fondo, fontFamily: "'Poppins', sans-serif", boxSizing: 'border-box', overflowX: 'hidden' }}>
+        <div style={{ backgroundColor: COLORS.blanco, padding: '40px', borderRadius: '12px', boxShadow: '0 4px 25px rgba(0,0,0,0.06)', maxWidth: '450px', width: '90%', textAlign: 'center', boxSizing: 'border-box' }}>
           <div style={{ backgroundColor: userProfile.estado === 'bloqueado' ? '#ffebee' : '#fff8e1', width: '70px', height: '70px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
             <Clock4 size={35} color={userProfile.estado === 'bloqueado' ? 'red' : COLORS.amarillo} />
           </div>
@@ -410,10 +410,10 @@ export default function App() {
   };
 
   return (
-    <div style={{ fontFamily: "'Poppins', sans-serif", backgroundColor: COLORS.fondo, minHeight: '100vh', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+    <div style={{ fontFamily: "'Poppins', sans-serif", backgroundColor: COLORS.fondo, minHeight: '100vh', display: 'flex', flexDirection: 'column', position: 'relative', width: '100%', boxSizing: 'border-box', overflowX: 'hidden' }}>
       
       <Header />
-      <div style={{ backgroundColor: COLORS.celeste, padding: '5px 20px', textAlign: 'right', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '15px' }}>
+      <div style={{ backgroundColor: COLORS.celeste, padding: '5px 20px', textAlign: 'right', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '15px', width: '100%', boxSizing: 'border-box', flexWrap: 'wrap' }}>
          <span style={{ color: 'white', fontSize: '0.85rem', fontWeight: 500 }}>
            👤 {session.user.email} {userProfile?.es_admin && '(Admin)'}
          </span>
@@ -466,7 +466,7 @@ export default function App() {
          </button>
       </div>
       
-      <div style={{ maxWidth: '1300px', width: '100%', margin: '0 auto', padding: '20px', flex: 1 }}>
+      <div style={{ maxWidth: '1300px', width: '100%', margin: '0 auto', padding: '20px', flex: 1, boxSizing: 'border-box' }}>
         
         {isLoading && (
           <div style={{ textAlign: 'center', padding: '100px 0', color: COLORS.gris }}>
@@ -477,7 +477,7 @@ export default function App() {
 
         {!isLoading && activeTab === 'home' && (
           <>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', width: '100%', justifyContent: 'space-between', marginBottom: '15px' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', width: '100%', justifyContent: 'space-between', marginBottom: '15px', boxSizing: 'border-box' }}>
               <div style={summaryCardStyle}>
                 <h3 style={summaryTitleStyle}>Dotación Total</h3>
                 <p style={summaryValueStyle}>{globalSummary.total}</p>
@@ -555,7 +555,7 @@ export default function App() {
 
       {isSettingsOpen && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, backdropFilter: 'blur(3px)' }}>
-          <div style={{ backgroundColor: COLORS.blanco, padding: '30px', borderRadius: '12px', width: '90%', maxWidth: '400px', position: 'relative', boxShadow: '0 10px 25px rgba(0,0,0,0.15)' }}>
+          <div style={{ backgroundColor: COLORS.blanco, padding: '30px', borderRadius: '12px', width: '90%', maxWidth: '400px', position: 'relative', boxShadow: '0 10px 25px rgba(0,0,0,0.15)', boxSizing: 'border-box' }}>
             
             <button onClick={() => setIsSettingsOpen(false)} style={{ position: 'absolute', top: '15px', right: '15px', background: 'none', border: 'none', cursor: 'pointer', color: '#888' }}>
               <X size={24} />
@@ -602,8 +602,8 @@ export default function App() {
   );
 }
 
-const summaryCardStyle: React.CSSProperties = { flex: '1 1 0px', minWidth: 'clamp(90px, 15vw, 150px)', backgroundColor: COLORS.blanco, padding: '10px 4px', borderRadius: '8px', boxShadow: '0 4px 10px rgba(0,0,0,0.04)', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '80px', borderTop: `4px solid ${COLORS.celeste}` };
+const summaryCardStyle: React.CSSProperties = { flex: '1 1 0px', minWidth: 'clamp(90px, 15vw, 150px)', backgroundColor: COLORS.blanco, padding: '10px 4px', borderRadius: '8px', boxShadow: '0 4px 10px rgba(0,0,0,0.04)', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '80px', borderTop: `4px solid ${COLORS.celeste}`, boxSizing: 'border-box' };
 const summaryTitleStyle: React.CSSProperties = { margin: 0, color: '#666', fontSize: 'clamp(0.55rem, 1.1vw, 0.8rem)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' };
 const summaryValueStyle: React.CSSProperties = { fontSize: 'clamp(1.1rem, 2.5vw, 2rem)', fontWeight: 600, color: COLORS.celeste, margin: '2px 0 0 0' };
-const gridButtonStyle: React.CSSProperties = { backgroundColor: COLORS.blanco, border: '1px solid #eee', borderRadius: '10px', padding: '15px 10px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.02)', transition: 'transform 0.2s ease, box-shadow 0.2s ease' };
+const gridButtonStyle: React.CSSProperties = { backgroundColor: COLORS.blanco, border: '1px solid #eee', borderRadius: '10px', padding: '15px 10px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.02)', transition: 'transform 0.2s ease, box-shadow 0.2s ease', boxSizing: 'border-box' };
 const backButtonStyle: React.CSSProperties = { backgroundColor: 'transparent', border: 'none', color: COLORS.naranjo, fontWeight: 600, fontSize: '1rem', cursor: 'pointer', margin: '0 0 20px 0', padding: 0, display: 'flex', alignItems: 'center', gap: '5px' };
