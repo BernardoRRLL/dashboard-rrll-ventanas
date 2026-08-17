@@ -391,14 +391,14 @@ export default function App() {
 
     if (menuItems.length === 0) {
       return (
-        <div style={{ textAlign: 'center', padding: '40px', backgroundColor: '#fff', borderRadius: '12px', marginTop: '30px' }}>
+        <div style={{ textAlign: 'center', padding: '40px', backgroundColor: '#fff', borderRadius: '12px', marginTop: '20px' }}>
           <p style={{ color: '#888', fontStyle: 'italic' }}>No tienes módulos asignados. Contacta al administrador.</p>
         </div>
       );
     }
 
     return (
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '15px', marginTop: '15px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px', marginTop: '5px' }}>
         {menuItems.map((item: any) => (
           <button key={item.id} onClick={() => handleTabChange(item.id)} style={gridButtonStyle}>
             <div style={{ color: COLORS.celeste, marginBottom: '8px' }}>{item.icon}</div>
@@ -466,7 +466,8 @@ export default function App() {
          </button>
       </div>
       
-      <div style={{ maxWidth: '1300px', width: '100%', margin: '0 auto', padding: '20px', flex: 1, boxSizing: 'border-box' }}>
+      {/* Contenedor principal convertido en Flex Column */}
+      <div style={{ maxWidth: '1300px', width: '100%', margin: '0 auto', padding: '10px 20px', flex: 1, display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
         
         {isLoading && (
           <div style={{ textAlign: 'center', padding: '100px 0', color: COLORS.gris }}>
@@ -477,7 +478,7 @@ export default function App() {
 
         {!isLoading && activeTab === 'home' && (
           <>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', width: '100%', justifyContent: 'space-between', marginBottom: '15px', boxSizing: 'border-box' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', width: '100%', justifyContent: 'space-between', marginBottom: '10px', boxSizing: 'border-box' }}>
               <div style={summaryCardStyle}>
                 <h3 style={summaryTitleStyle}>Dotación Total</h3>
                 <p style={summaryValueStyle}>{globalSummary.total}</p>
@@ -496,7 +497,7 @@ export default function App() {
               </div>
             </div>
 
-            <div style={{ borderBottom: `2px solid #ddd`, margin: '20px 0 10px 0', display: 'flex', alignItems: 'center' }}>
+            <div style={{ borderBottom: `2px solid #ddd`, margin: '5px 0 10px 0', display: 'flex', alignItems: 'center' }}>
               <h2 style={{ color: COLORS.gris, fontSize: '1.2rem', fontWeight: 600, margin: 0, paddingBottom: '8px', borderBottom: `4px solid ${COLORS.naranjo}`, marginBottom: '-3px' }}>
                 Módulos de Análisis
               </h2>
@@ -504,14 +505,15 @@ export default function App() {
 
             {renderHomeMenu()}
             
-            <div style={{ marginTop: '30px', textAlign: 'center' }}>
-              <p style={{ color: 'green', fontSize: '0.8rem', fontWeight: 600 }}>🔒 Conexión segura y cifrada activa (Supabase)</p>
+            {/* Mensaje pegado al pie gracias al marginTop: 'auto' */}
+            <div style={{ marginTop: 'auto', textAlign: 'center', paddingTop: '15px' }}>
+              <p style={{ color: 'green', fontSize: '0.8rem', fontWeight: 600, margin: 0 }}>🔒 Conexión segura y cifrada</p>
             </div>
           </>
         )}
 
         {!isLoading && activeTab !== 'home' && (
-          <div>
+          <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
             <button onClick={() => handleTabChange('home')} style={backButtonStyle}>← Volver al Menú Principal</button>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '25px', flexWrap: 'wrap' }}>
               <div style={{ color: COLORS.naranjo }}>
