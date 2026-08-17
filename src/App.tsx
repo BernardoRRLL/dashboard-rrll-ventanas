@@ -45,7 +45,8 @@ export default function App() {
   const [authError, setAuthError] = useState('');
   const [authMessage, setAuthMessage] = useState('');
 
-  // --- ESTADOS DE CAMBIO DE CLAVE ---
+  // --- ESTADOS DE CONFIGURACIÓN Y CLAVE ---
+  const [isSettingsDropdownOpen, setIsSettingsDropdownOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -204,7 +205,6 @@ export default function App() {
 
     setIsUpdatingPwd(true);
 
-    // 1. Verificamos que la clave actual sea correcta re-iniciando sesión
     const { error: signInError } = await supabase.auth.signInWithPassword({
       email: session.user.email,
       password: currentPassword,
@@ -216,7 +216,6 @@ export default function App() {
       return;
     }
 
-    // 2. Si pasó la prueba, actualizamos a la nueva clave
     const { error: updateError } = await supabase.auth.updateUser({
       password: newPassword
     });
@@ -231,7 +230,7 @@ export default function App() {
       setTimeout(() => {
         setIsSettingsOpen(false);
         setPwdSuccess('');
-      }, 2000); // Cerramos el modal después de 2 segundos
+      }, 2000);
     }
     
     setIsUpdatingPwd(false);
@@ -404,10 +403,6 @@ export default function App() {
     
     let menuItems = allMenuItems.filter(item => isAdmin || allowedModules.includes(item.id));
 
-    if (isAdmin) {
-      menuItems.unshift({ id: 'admin', label: 'Panel de Administración', icon: <Shield size={38} /> });
-    }
-
     if (menuItems.length === 0) {
       return (
         <div style={{ textAlign: 'center', padding: '40px', backgroundColor: '#fff', borderRadius: '12px', marginTop: '30px' }}>
@@ -419,8 +414,8 @@ export default function App() {
     return (
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(clamp(140px, 30vw, 320px), 1fr))', gap: '20px', marginTop: '30px' }}>
         {menuItems.map((item: any) => (
-          <button key={item.id} onClick={() => handleTabChange(item.id)} style={{...gridButtonStyle, borderTop: item.id === 'admin' ? `4px solid ${COLORS.naranjo}` : '1px solid #eee' }}>
-            <div style={{ color: item.id === 'admin' ? COLORS.naranjo : COLORS.celeste, marginBottom: '12px' }}>{item.icon}</div>
+          <button key={item.id} onClick={() => handleTabChange(item.id)} style={gridButtonStyle}>
+            <div style={{ color: COLORS.celeste, marginBottom: '12px' }}>{item.icon}</div>
             <span style={{ fontSize: 'clamp(0.9rem, 2vw, 1.15rem)', fontWeight: 600, color: COLORS.gris, textAlign: 'center' }}>{item.label}</span>
           </button>
         ))}
@@ -437,10 +432,51 @@ export default function App() {
            👤 {session.user.email} {userProfile?.es_admin && '(Admin)'}
          </span>
          
-         {/* Botón de Configuración (Cambio de Clave) */}
-         <button onClick={() => setIsSettingsOpen(true)} title="Cambiar Contraseña" style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px' }}>
-           <Settings size={20} />
-         </button>
+         {/* Menú Dropdown de Configuración */}
+         <div style={{ position: 'relative' }}>
+           <button 
+             onClick={() => setIsSettingsDropdownOpen(!isSettingsDropdownOpen)} 
+             title="Opciones" 
+             style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px' }}
+           >
+             <Settings size={20} />
+           </button>
+
+           {isSettingsDropdownOpen && (
+             <>
+               {/* Overlay invisible para detectar clic fuera y cerrar */}
+               <div 
+                 style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 998 }} 
+                 onClick={() => setIsSettingsDropdownOpen(false)} 
+               />
+               
+               {/* Caja del menú desplegable */}
+               <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '8px', backgroundColor: COLORS.blanco, borderRadius: '8px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', padding: '8px 0', zIndex: 999, minWidth: '220px', border: '1px solid #eee' }}>
+                 
+                 <button 
+                   onClick={() => { setIsSettingsDropdownOpen(false); setIsSettingsOpen(true); }}
+                   style={{ width: '100%', padding: '10px 16px', border: 'none', background: 'transparent', textAlign: 'left', color: COLORS.gris, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', transition: 'background-color 0.2s' }}
+                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f7f8'}
+                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                 >
+                   <Key size={16} color={COLORS.celeste} /> Cambiar Contraseña
+                 </button>
+                 
+                 {userProfile?.es_admin && (
+                   <button 
+                     onClick={() => { setIsSettingsDropdownOpen(false); handleTabChange('admin'); }}
+                     style={{ width: '100%', padding: '10px 16px', border: 'none', background: 'transparent', textAlign: 'left', color: COLORS.gris, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', transition: 'background-color 0.2s' }}
+                     onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f7f8'}
+                     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                   >
+                     <Shield size={16} color={COLORS.naranjo} /> Administración de Cuentas
+                   </button>
+                 )}
+
+               </div>
+             </>
+           )}
+         </div>
          
          <button onClick={handleLogout} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.4)', color: 'white', borderRadius: '4px', padding: '4px 10px', fontSize: '0.75rem', cursor: 'pointer', transition: 'background-color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
            Cerrar Sesión
