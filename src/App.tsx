@@ -17,7 +17,7 @@ import CumplesTab from './components/CumplesTab';
 import ComunasTab from './components/ComunasTab';
 import TurnosTab from './components/TurnosTab';
 import BuscadorTab from './components/BuscadorTab';
-import AdminTab from './components/AdminTab'; // El nuevo Panel de Control
+import AdminTab from './components/AdminTab';
 
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement, LineElement, Filler } from 'chart.js';
 import ChartJSPluginDataLabels from 'chartjs-plugin-datalabels';
@@ -35,7 +35,6 @@ const COLORS = {
 };
 
 export default function App() {
-  // --- ESTADOS DE SEGURIDAD (SUPABASE) ---
   const [session, setSession] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<any>(null); 
   
@@ -45,7 +44,6 @@ export default function App() {
   const [authError, setAuthError] = useState('');
   const [authMessage, setAuthMessage] = useState('');
 
-  // --- ESTADOS DE CONFIGURACIÓN Y CLAVE ---
   const [isSettingsDropdownOpen, setIsSettingsDropdownOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
@@ -55,7 +53,6 @@ export default function App() {
   const [pwdSuccess, setPwdSuccess] = useState('');
   const [isUpdatingPwd, setIsUpdatingPwd] = useState(false);
 
-  // --- ESTADOS DEL DASHBOARD ---
   const [activeTab, setActiveTab] = useState(() => {
     const hash = window.location.hash.replace('#', '');
     return hash || 'home';
@@ -72,7 +69,6 @@ export default function App() {
   const [dotacionStats, setDotacionStats] = useState({ total: 0, indefinido: "0", edadPromedio: "0", edadPromedioF: "0", edadPromedioM: "0" });
   const [isLoading, setIsLoading] = useState(false);
 
-  // --- VERIFICAR SESIÓN Y PERFIL ---
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -93,15 +89,10 @@ export default function App() {
 
   const fetchUserProfile = async (userId: string) => {
     const { data, error } = await supabase.from('perfiles_usuarios').select('*').eq('id', userId).single();
-    if (error) {
-      console.error("Error al cargar perfil de usuario:", error);
-    }
-    if (data) {
-      setUserProfile(data);
-    }
+    if (error) console.error("Error al cargar perfil de usuario:", error);
+    if (data) setUserProfile(data);
   };
 
-  // --- NAVEGACIÓN Y CARGA DE DATOS ---
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '');
@@ -159,7 +150,6 @@ export default function App() {
     loadSecureData();
   }, [session, userProfile]);
 
-  // --- FUNCIONES DE LOGIN Y REGISTRO ---
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError('');
@@ -188,7 +178,6 @@ export default function App() {
     setUserProfile(null);
   };
 
-  // --- FUNCIÓN DE CAMBIO DE CLAVE ---
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setPwdError('');
@@ -310,7 +299,6 @@ export default function App() {
     setDotacionStats({ total, indefinido: ((indefinidos / total) * 100).toFixed(1), edadPromedio: (sumaEdades / total).toFixed(1), edadPromedioF: totalF > 0 ? (sumaF / totalF).toFixed(1) : "0", edadPromedioM: totalM > 0 ? (sumaM / totalM).toFixed(1) : "0" });
   };
 
-  // --- RENDER DE LA PANTALLA DE LOGIN ---
   if (!session) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.fondo, fontFamily: "'Poppins', sans-serif" }}>
@@ -359,7 +347,6 @@ export default function App() {
     );
   }
 
-  // --- RENDER DE SALA DE ESPERA ---
   if (userProfile && userProfile.estado !== 'aprobado') {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.fondo, fontFamily: "'Poppins', sans-serif" }}>
@@ -383,19 +370,18 @@ export default function App() {
     );
   }
 
-  // --- RENDER DEL DASHBOARD PRINCIPAL ---
   const renderHomeMenu = () => {
     const allMenuItems = [
-      { id: 'dotacion', label: 'Dotación', icon: <Users size={38} /> },
-      { id: 'participacion', label: 'Participación Femenina', icon: <Venus size={38} /> },
-      { id: 'sindicatos', label: 'Sindicatos', icon: <Handshake size={38} /> },
-      { id: 'licencias', label: 'Licencias Médicas', icon: <Stethoscope size={38} /> },
-      { id: 'ausentismo', label: 'Ausentismo y Sobretiempo', icon: <Scale size={38} /> },
-      { id: 'discapacidad', label: 'Discapacidad', icon: <Accessibility size={38} /> },
-      { id: 'cumpleanos', label: 'Cumpleaños', icon: <Gift size={38} /> },
-      { id: 'comunas', label: 'Comunas', icon: <MapPin size={38} /> },
-      { id: 'turnos', label: 'Calendario de Turnos', icon: <Clock size={38} /> },
-      { id: 'buscador', label: 'Directorio y Jefaturas', icon: <Search size={38} /> },
+      { id: 'dotacion', label: 'Dotación', icon: <Users size={32} /> },
+      { id: 'participacion', label: 'Participación Femenina', icon: <Venus size={32} /> },
+      { id: 'sindicatos', label: 'Sindicatos', icon: <Handshake size={32} /> },
+      { id: 'licencias', label: 'Licencias Médicas', icon: <Stethoscope size={32} /> },
+      { id: 'ausentismo', label: 'Ausentismo y Sobretiempo', icon: <Scale size={32} /> },
+      { id: 'discapacidad', label: 'Discapacidad', icon: <Accessibility size={32} /> },
+      { id: 'cumpleanos', label: 'Cumpleaños', icon: <Gift size={32} /> },
+      { id: 'comunas', label: 'Comunas', icon: <MapPin size={32} /> },
+      { id: 'turnos', label: 'Calendario de Turnos', icon: <Clock size={32} /> },
+      { id: 'buscador', label: 'Directorio y Jefaturas', icon: <Search size={32} /> },
     ];
 
     const isAdmin = userProfile?.es_admin === true;
@@ -412,11 +398,11 @@ export default function App() {
     }
 
     return (
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(clamp(140px, 30vw, 320px), 1fr))', gap: '20px', marginTop: '30px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '15px', marginTop: '15px' }}>
         {menuItems.map((item: any) => (
           <button key={item.id} onClick={() => handleTabChange(item.id)} style={gridButtonStyle}>
-            <div style={{ color: COLORS.celeste, marginBottom: '12px' }}>{item.icon}</div>
-            <span style={{ fontSize: 'clamp(0.9rem, 2vw, 1.15rem)', fontWeight: 600, color: COLORS.gris, textAlign: 'center' }}>{item.label}</span>
+            <div style={{ color: COLORS.celeste, marginBottom: '8px' }}>{item.icon}</div>
+            <span style={{ fontSize: '0.9rem', fontWeight: 600, color: COLORS.gris, textAlign: 'center', lineHeight: '1.2' }}>{item.label}</span>
           </button>
         ))}
       </div>
@@ -432,7 +418,6 @@ export default function App() {
            👤 {session.user.email} {userProfile?.es_admin && '(Admin)'}
          </span>
          
-         {/* Menú Dropdown de Configuración */}
          <div style={{ position: 'relative' }}>
            <button 
              onClick={() => setIsSettingsDropdownOpen(!isSettingsDropdownOpen)} 
@@ -444,13 +429,11 @@ export default function App() {
 
            {isSettingsDropdownOpen && (
              <>
-               {/* Overlay invisible para detectar clic fuera y cerrar */}
                <div 
                  style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 998 }} 
                  onClick={() => setIsSettingsDropdownOpen(false)} 
                />
                
-               {/* Caja del menú desplegable */}
                <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '8px', backgroundColor: COLORS.blanco, borderRadius: '8px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', padding: '8px 0', zIndex: 999, minWidth: '220px', border: '1px solid #eee' }}>
                  
                  <button 
@@ -483,7 +466,7 @@ export default function App() {
          </button>
       </div>
       
-      <div style={{ maxWidth: '1300px', width: '100%', margin: '0 auto', padding: '30px 20px', flex: 1 }}>
+      <div style={{ maxWidth: '1300px', width: '100%', margin: '0 auto', padding: '20px', flex: 1 }}>
         
         {isLoading && (
           <div style={{ textAlign: 'center', padding: '100px 0', color: COLORS.gris }}>
@@ -494,7 +477,7 @@ export default function App() {
 
         {!isLoading && activeTab === 'home' && (
           <>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'clamp(6px, 1.5vw, 20px)', width: '100%', justifyContent: 'space-between', marginBottom: '25px' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', width: '100%', justifyContent: 'space-between', marginBottom: '15px' }}>
               <div style={summaryCardStyle}>
                 <h3 style={summaryTitleStyle}>Dotación Total</h3>
                 <p style={summaryValueStyle}>{globalSummary.total}</p>
@@ -513,16 +496,16 @@ export default function App() {
               </div>
             </div>
 
-            <div style={{ borderBottom: `2px solid #ddd`, margin: '40px 0 20px 0', display: 'flex', alignItems: 'center' }}>
-              <h2 style={{ color: COLORS.gris, fontSize: 'clamp(1.1rem, 2.5vw, 1.3rem)', fontWeight: 600, margin: 0, paddingBottom: '10px', borderBottom: `4px solid ${COLORS.naranjo}`, marginBottom: '-3px' }}>
+            <div style={{ borderBottom: `2px solid #ddd`, margin: '20px 0 10px 0', display: 'flex', alignItems: 'center' }}>
+              <h2 style={{ color: COLORS.gris, fontSize: '1.2rem', fontWeight: 600, margin: 0, paddingBottom: '8px', borderBottom: `4px solid ${COLORS.naranjo}`, marginBottom: '-3px' }}>
                 Módulos de Análisis
               </h2>
             </div>
 
             {renderHomeMenu()}
             
-            <div style={{ marginTop: '50px', textAlign: 'center' }}>
-              <p style={{ color: 'green', fontSize: '0.85rem', fontWeight: 600 }}>🔒 Conexión segura y cifrada activa (Supabase)</p>
+            <div style={{ marginTop: '30px', textAlign: 'center' }}>
+              <p style={{ color: 'green', fontSize: '0.8rem', fontWeight: 600 }}>🔒 Conexión segura y cifrada activa (Supabase)</p>
             </div>
           </>
         )}
@@ -570,7 +553,6 @@ export default function App() {
         )}
       </div>
 
-      {/* --- MODAL PARA CAMBIAR CLAVE --- */}
       {isSettingsOpen && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, backdropFilter: 'blur(3px)' }}>
           <div style={{ backgroundColor: COLORS.blanco, padding: '30px', borderRadius: '12px', width: '90%', maxWidth: '400px', position: 'relative', boxShadow: '0 10px 25px rgba(0,0,0,0.15)' }}>
@@ -620,8 +602,8 @@ export default function App() {
   );
 }
 
-const summaryCardStyle: React.CSSProperties = { flex: '1 1 0px', minWidth: 'clamp(100px, 20vw, 200px)', backgroundColor: COLORS.blanco, padding: 'clamp(8px, 1.8vw, 20px) 4px', borderRadius: '10px', boxShadow: '0 4px 10px rgba(0,0,0,0.04)', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '110px', borderTop: `5px solid ${COLORS.celeste}` };
-const summaryTitleStyle: React.CSSProperties = { margin: 0, color: '#666', fontSize: 'clamp(0.55rem, 1.3vw, 0.9rem)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' };
-const summaryValueStyle: React.CSSProperties = { fontSize: 'clamp(1.1rem, 3.2vw, 2.8rem)', fontWeight: 600, color: COLORS.celeste, margin: '6px 0 0 0' };
-const gridButtonStyle: React.CSSProperties = { backgroundColor: COLORS.blanco, border: '1px solid #eee', borderRadius: '12px', padding: 'clamp(20px, 4vw, 45px) 10px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.02)', transition: 'transform 0.2s ease, box-shadow 0.2s ease' };
+const summaryCardStyle: React.CSSProperties = { flex: '1 1 0px', minWidth: 'clamp(90px, 15vw, 150px)', backgroundColor: COLORS.blanco, padding: '10px 4px', borderRadius: '8px', boxShadow: '0 4px 10px rgba(0,0,0,0.04)', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '80px', borderTop: `4px solid ${COLORS.celeste}` };
+const summaryTitleStyle: React.CSSProperties = { margin: 0, color: '#666', fontSize: 'clamp(0.55rem, 1.1vw, 0.8rem)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' };
+const summaryValueStyle: React.CSSProperties = { fontSize: 'clamp(1.1rem, 2.5vw, 2rem)', fontWeight: 600, color: COLORS.celeste, margin: '2px 0 0 0' };
+const gridButtonStyle: React.CSSProperties = { backgroundColor: COLORS.blanco, border: '1px solid #eee', borderRadius: '10px', padding: '15px 10px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.02)', transition: 'transform 0.2s ease, box-shadow 0.2s ease' };
 const backButtonStyle: React.CSSProperties = { backgroundColor: 'transparent', border: 'none', color: COLORS.naranjo, fontWeight: 600, fontSize: '1rem', cursor: 'pointer', margin: '0 0 20px 0', padding: 0, display: 'flex', alignItems: 'center', gap: '5px' };
