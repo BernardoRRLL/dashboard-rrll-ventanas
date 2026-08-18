@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const COLORS = {
   gris: '#36424a',
@@ -21,9 +21,37 @@ const GRUPOS_TURNOS = [
 ];
 
 export default function TurnosTab() {
-  const [calendarDate, setCalendarDate] = useState(new Date()); 
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  // --- ESTADOS CON MEMORIA DE SESIÓN ---
+  const [calendarDate, setCalendarDate] = useState(() => {
+    const saved = sessionStorage.getItem('turnos_calendarDate');
+    return saved ? new Date(saved) : new Date();
+  }); 
+  
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const saved = sessionStorage.getItem('turnos_selectedDate');
+    return saved ? new Date(saved) : new Date();
+  });
+  
+  const [activeFilter, setActiveFilter] = useState<string | null>(() => {
+    return sessionStorage.getItem('turnos_activeFilter') || null;
+  });
+
+  // --- SINCRONIZACIÓN DE MEMORIA ---
+  useEffect(() => {
+    sessionStorage.setItem('turnos_calendarDate', calendarDate.toISOString());
+  }, [calendarDate]);
+
+  useEffect(() => {
+    sessionStorage.setItem('turnos_selectedDate', selectedDate.toISOString());
+  }, [selectedDate]);
+
+  useEffect(() => {
+    if (activeFilter) {
+      sessionStorage.setItem('turnos_activeFilter', activeFilter);
+    } else {
+      sessionStorage.removeItem('turnos_activeFilter');
+    }
+  }, [activeFilter]);
 
   // --- MOTOR MATEMÁTICO UNIVERSAL (Día Cero: 1 de Agosto de 2026) ---
   const fechaSemilla = new Date(2026, 7, 1); 
