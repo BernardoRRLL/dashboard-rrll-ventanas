@@ -116,17 +116,17 @@ export default function BuscadorTab({ dotacionData, jefaturaData }: BuscadorTabP
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '25px', fontFamily: "'Poppins', sans-serif" }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', fontFamily: "'Poppins', sans-serif" }}>
       
       {/* 1. BARRA DE BÚSQUEDA */}
-      <div style={{ backgroundColor: COLORS.blanco, padding: 'clamp(20px, 4vw, 40px)', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', position: 'relative', zIndex: 10 }}>
-        <h2 style={{ margin: '0 0 15px 0', color: COLORS.gris, fontSize: 'clamp(1.2rem, 2.5vw, 1.5rem)', fontWeight: 700, textAlign: 'center' }}>
+      <div style={{ backgroundColor: COLORS.blanco, padding: '15px', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)', position: 'relative', zIndex: 10, boxSizing: 'border-box' }}>
+        <h2 style={{ margin: '0 0 10px 0', color: COLORS.gris, fontSize: 'clamp(1rem, 2vw, 1.2rem)', fontWeight: 700, textAlign: 'center' }}>
           Directorio de Dotación y Jefaturas
         </h2>
         
         <div style={{ position: 'relative', maxWidth: '600px', margin: '0 auto' }}>
           <div style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: '#888' }}>
-            <Search size={22} />
+            <Search size={18} />
           </div>
           <input 
             type="text"
@@ -138,15 +138,15 @@ export default function BuscadorTab({ dotacionData, jefaturaData }: BuscadorTabP
             }}
             onFocus={() => setIsDropdownOpen(true)}
             style={{ 
-              width: '100%', padding: '16px 16px 16px 50px', borderRadius: '30px', 
-              border: `2px solid ${COLORS.celeste}`, fontSize: '1rem', outline: 'none',
-              fontFamily: "'Poppins', sans-serif", color: COLORS.gris, boxShadow: '0 4px 10px rgba(0, 152, 170, 0.1)'
+              width: '100%', padding: '12px 12px 12px 42px', borderRadius: '30px', 
+              border: `2px solid ${COLORS.celeste}`, fontSize: '0.9rem', outline: 'none',
+              fontFamily: "'Poppins', sans-serif", color: COLORS.gris, boxShadow: '0 2px 5px rgba(0, 152, 170, 0.1)', boxSizing: 'border-box'
             }}
           />
           
           {/* Resultados Desplegables */}
           {isDropdownOpen && searchTerm && searchResults.length > 0 && (
-            <div style={{ position: 'absolute', top: '110%', left: 0, right: 0, backgroundColor: COLORS.blanco, borderRadius: '12px', boxShadow: '0 8px 25px rgba(0,0,0,0.1)', overflow: 'hidden', border: '1px solid #eee' }}>
+            <div style={{ position: 'absolute', top: '100%', marginTop: '5px', left: 0, right: 0, backgroundColor: COLORS.blanco, borderRadius: '8px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', overflow: 'hidden', border: '1px solid #eee' }}>
               {searchResults.map((emp, idx) => (
                 <div 
                   key={idx}
@@ -155,15 +155,15 @@ export default function BuscadorTab({ dotacionData, jefaturaData }: BuscadorTabP
                     setSearchTerm('');
                     setIsDropdownOpen(false);
                   }}
-                  style={{ padding: '12px 20px', cursor: 'pointer', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'background-color 0.2s' }}
+                  style={{ padding: '10px 15px', cursor: 'pointer', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'background-color 0.2s' }}
                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9f9f9'}
                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                 >
                   <div>
-                    <p style={{ margin: 0, fontWeight: 700, color: COLORS.gris }}>{getNombre(emp)}</p>
-                    <p style={{ margin: 0, fontSize: '0.85rem', color: '#888' }}>{getCargo(emp)}</p>
+                    <p style={{ margin: 0, fontWeight: 700, color: COLORS.gris, fontSize: '0.9rem' }}>{getNombre(emp)}</p>
+                    <p style={{ margin: 0, fontSize: '0.75rem', color: '#888' }}>{getCargo(emp)}</p>
                   </div>
-                  <div style={{ backgroundColor: '#E0F7FA', color: COLORS.celeste, padding: '4px 10px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 700 }}>
+                  <div style={{ backgroundColor: '#E0F7FA', color: COLORS.celeste, padding: '2px 8px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 700 }}>
                     SAP: {getSap(emp)}
                   </div>
                 </div>
@@ -175,45 +175,45 @@ export default function BuscadorTab({ dotacionData, jefaturaData }: BuscadorTabP
 
       {/* 2. CREDENCIAL Y ORGANIGRAMA */}
       {selectedEmployee && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(clamp(300px, 40vw, 500px), 1fr))', gap: '25px', alignItems: 'start' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(clamp(300px, 40vw, 500px), 1fr))', gap: '15px', alignItems: 'start' }}>
           
           {/* Tarjeta del Trabajador */}
-          <div style={{ backgroundColor: COLORS.blanco, borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-            <div style={{ backgroundColor: COLORS.celeste, padding: '25px 20px', color: COLORS.blanco, textAlign: 'center' }}>
-              <div style={{ width: '80px', height: '80px', backgroundColor: COLORS.blanco, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 15px auto', color: COLORS.celeste, boxShadow: '0 4px 10px rgba(0,0,0,0.2)' }}>
-                <User size={40} />
+          <div style={{ backgroundColor: COLORS.blanco, borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)', overflow: 'hidden', boxSizing: 'border-box' }}>
+            <div style={{ backgroundColor: COLORS.celeste, padding: '15px', color: COLORS.blanco, textAlign: 'center' }}>
+              <div style={{ width: '60px', height: '60px', backgroundColor: COLORS.blanco, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px auto', color: COLORS.celeste, boxShadow: '0 2px 5px rgba(0,0,0,0.2)' }}>
+                <User size={30} />
               </div>
-              <h3 style={{ margin: '0 0 5px 0', fontSize: '1.4rem', fontWeight: 700 }}>{getNombre(selectedEmployee)}</h3>
-              <span style={{ display: 'inline-block', backgroundColor: 'rgba(255,255,255,0.2)', padding: '4px 12px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 600 }}>
+              <h3 style={{ margin: '0 0 5px 0', fontSize: '1.2rem', fontWeight: 700, lineHeight: 1.2 }}>{getNombre(selectedEmployee)}</h3>
+              <span style={{ display: 'inline-block', backgroundColor: 'rgba(255,255,255,0.2)', padding: '2px 10px', borderRadius: '15px', fontSize: '0.8rem', fontWeight: 600 }}>
                 SAP: {getSap(selectedEmployee)}
               </span>
             </div>
             
-            <div style={{ padding: '25px 30px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            <div style={{ padding: '15px 20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <div style={infoRowStyle}>
-                <div style={iconBoxStyle}><Briefcase size={18} /></div>
+                <div style={iconBoxStyle}><Briefcase size={16} /></div>
                 <div><p style={labelStyle}>Posición</p><p style={valueStyle}>{getCargo(selectedEmployee)}</p></div>
               </div>
               <div style={infoRowStyle}>
-                <div style={iconBoxStyle}><Building2 size={18} /></div>
+                <div style={iconBoxStyle}><Building2 size={16} /></div>
                 <div><p style={labelStyle}>Área / Gerencia</p><p style={valueStyle}>{getArea(selectedEmployee)}</p></div>
               </div>
               <div style={infoRowStyle}>
-                <div style={iconBoxStyle}><MapPin size={18} /></div>
+                <div style={iconBoxStyle}><MapPin size={16} /></div>
                 <div><p style={labelStyle}>Detalle Operativo</p><p style={valueStyle}>{getDetalleOperativo(selectedEmployee)}</p></div>
               </div>
             </div>
           </div>
 
           {/* Cadena de Mando (Efecto Dominó Clickable) */}
-          <div style={{ backgroundColor: COLORS.blanco, padding: '30px', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
-            <h4 style={{ margin: '0 0 25px 0', color: COLORS.gris, fontSize: '1.2rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '2px solid #eee', paddingBottom: '10px' }}>
-              <ChevronUp size={24} color={COLORS.naranjo} />
+          <div style={{ backgroundColor: COLORS.blanco, padding: '15px 20px', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)', boxSizing: 'border-box' }}>
+            <h4 style={{ margin: '0 0 15px 0', color: COLORS.gris, fontSize: '1.1rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '1px solid #eee', paddingBottom: '8px' }}>
+              <ChevronUp size={20} color={COLORS.naranjo} />
               Línea de Reporte Directo
             </h4>
             
             {chainOfCommand.length === 0 ? (
-              <p style={{ color: '#888', fontStyle: 'italic' }}>No se registran jefaturas hacia arriba para este trabajador.</p>
+              <p style={{ color: '#888', fontStyle: 'italic', fontSize: '0.85rem' }}>No se registran jefaturas hacia arriba para este trabajador.</p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
                 {chainOfCommand.map((boss, idx) => {
@@ -229,32 +229,32 @@ export default function BuscadorTab({ dotacionData, jefaturaData }: BuscadorTabP
                       style={{ 
                         display: 'flex', 
                         position: 'relative',
-                        padding: '10px',
-                        borderRadius: '8px',
-                        marginLeft: '-10px', // Para que el hover no mueva visualmente el contenido
+                        padding: '8px',
+                        borderRadius: '6px',
+                        marginLeft: '-8px', // Para que el hover no mueva visualmente el contenido
                         cursor: isExternal ? 'default' : 'pointer',
                         transition: 'background-color 0.2s ease'
                       }}
                       onMouseEnter={(e) => { if (!isExternal) e.currentTarget.style.backgroundColor = '#f9f9f9'; }}
                       onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
                     >
-                      {/* Línea de conexión visual */}
-                      {!isTop && <div style={{ position: 'absolute', left: '29px', top: '45px', bottom: '-15px', width: '2px', backgroundColor: '#ddd', zIndex: 1 }}></div>}
+                      {/* Línea de conexión visual reducida */}
+                      {!isTop && <div style={{ position: 'absolute', left: '22px', top: '35px', bottom: '-10px', width: '2px', backgroundColor: '#ddd', zIndex: 1 }}></div>}
                       
-                      {/* Nodo (Punto) */}
-                      <div style={{ width: '40px', display: 'flex', justifyContent: 'center', zIndex: 2, paddingTop: '5px' }}>
-                        <div style={{ width: '16px', height: '16px', borderRadius: '50%', backgroundColor: isTop ? COLORS.naranjo : COLORS.celeste, border: '3px solid #fff', boxShadow: '0 0 0 2px #eee' }}></div>
+                      {/* Nodo (Punto) ajustado */}
+                      <div style={{ width: '30px', display: 'flex', justifyContent: 'center', zIndex: 2, paddingTop: '4px' }}>
+                        <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: isTop ? COLORS.naranjo : COLORS.celeste, border: '2px solid #fff', boxShadow: '0 0 0 2px #eee' }}></div>
                       </div>
                       
                       {/* Información del Jefe */}
-                      <div style={{ paddingBottom: '15px', paddingLeft: '10px', flex: 1 }}>
-                        <p style={{ margin: 0, fontSize: '0.8rem', color: '#888', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      <div style={{ paddingBottom: '10px', paddingLeft: '8px', flex: 1 }}>
+                        <p style={{ margin: 0, fontSize: '0.7rem', color: '#888', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                           {idx === 0 ? 'Jefatura Directa' : 'Reporta a'}
                         </p>
-                        <h5 style={{ margin: '2px 0', fontSize: '1.1rem', color: COLORS.gris, fontWeight: 700 }}>
+                        <h5 style={{ margin: '2px 0', fontSize: '0.95rem', color: COLORS.gris, fontWeight: 700, lineHeight: 1.2 }}>
                           {getNombre(boss)}
                         </h5>
-                        <p style={{ margin: 0, fontSize: '0.9rem', color: isTop ? COLORS.naranjo : COLORS.celeste, fontWeight: 600 }}>
+                        <p style={{ margin: 0, fontSize: '0.8rem', color: isTop ? COLORS.naranjo : COLORS.celeste, fontWeight: 600 }}>
                           {getCargo(boss)}
                         </p>
                       </div>
@@ -271,8 +271,8 @@ export default function BuscadorTab({ dotacionData, jefaturaData }: BuscadorTabP
   );
 }
 
-// --- ESTILOS ---
-const infoRowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: '15px' };
-const iconBoxStyle: React.CSSProperties = { width: '36px', height: '36px', borderRadius: '8px', backgroundColor: '#f0f4f8', color: COLORS.celeste, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 };
-const labelStyle: React.CSSProperties = { margin: 0, fontSize: '0.8rem', color: '#888', textTransform: 'uppercase', fontWeight: 600 };
-const valueStyle: React.CSSProperties = { margin: 0, fontSize: '1rem', color: COLORS.gris, fontWeight: 700 };
+// --- ESTILOS REDISEÑADOS Y COMPACTADOS ---
+const infoRowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: '10px' };
+const iconBoxStyle: React.CSSProperties = { width: '32px', height: '32px', borderRadius: '6px', backgroundColor: '#f0f4f8', color: COLORS.celeste, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 };
+const labelStyle: React.CSSProperties = { margin: 0, fontSize: '0.75rem', color: '#888', textTransform: 'uppercase', fontWeight: 600 };
+const valueStyle: React.CSSProperties = { margin: 0, fontSize: '0.9rem', color: COLORS.gris, fontWeight: 700, lineHeight: 1.2 };
