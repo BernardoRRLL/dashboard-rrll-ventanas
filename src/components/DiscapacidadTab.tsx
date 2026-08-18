@@ -5,6 +5,7 @@ const COLORS = {
   naranjo: '#e45302',
   celeste: '#0098aa',
   amarillo: '#f4ab03',
+  rosado: '#C2185B',
   blanco: '#ffffff',
   lineaBg: '#e2e8f0',
   nodoInactivo: '#94a3b8'
@@ -137,13 +138,13 @@ export default function DiscapacidadTab({ rawData }: DiscapacidadTabProps) {
       <h4 style={chartTitleStyle}>{title}</h4>
       <div style={{ 
         position: 'relative', 
-        padding: isMobile ? '10px 0 10px 20px' : '40px 0 20px 0',
-        marginTop: '10px'
+        padding: isMobile ? '10px 0 10px 20px' : '30px 0 10px 0',
+        marginTop: '5px'
       }}>
         {!isMobile && (
           <div style={{
             position: 'absolute',
-            top: '58px',
+            top: '48px',
             left: '6%',
             width: '88%',
             height: '4px',
@@ -171,7 +172,7 @@ export default function DiscapacidadTab({ rawData }: DiscapacidadTabProps) {
           flexDirection: isMobile ? 'column' : 'row', 
           justifyContent: 'space-between',
           alignItems: 'flex-start',
-          gap: isMobile ? '35px' : '15px',
+          gap: isMobile ? '35px' : '10px',
           position: 'relative',
           zIndex: 2
         }}>
@@ -182,14 +183,14 @@ export default function DiscapacidadTab({ rawData }: DiscapacidadTabProps) {
                 display: 'flex', 
                 flexDirection: isMobile ? 'row' : 'column', 
                 alignItems: 'center', 
-                gap: isMobile ? '20px' : '15px',
+                gap: isMobile ? '20px' : '10px',
                 flex: 1,
                 width: '100%',
                 textAlign: isMobile ? 'left' : 'center'
               }}>
                 <div style={{
-                  width: '38px',
-                  height: '38px',
+                  width: '32px',
+                  height: '32px',
                   borderRadius: '50%',
                   backgroundColor: hasWorkers ? COLORS.naranjo : COLORS.blanco,
                   border: `3px solid ${hasWorkers ? COLORS.naranjo : COLORS.nodoInactivo}`,
@@ -198,7 +199,7 @@ export default function DiscapacidadTab({ rawData }: DiscapacidadTabProps) {
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontWeight: 700,
-                  fontSize: '0.95rem',
+                  fontSize: '0.85rem',
                   boxShadow: hasWorkers ? '0 3px 8px rgba(228, 83, 2, 0.3)' : 'none',
                   flexShrink: 0
                 }}>
@@ -208,11 +209,11 @@ export default function DiscapacidadTab({ rawData }: DiscapacidadTabProps) {
                 <div style={{ flex: 1, width: '100%' }}>
                   <p style={{ 
                     margin: 0, 
-                    fontSize: '0.82rem', 
+                    fontSize: '0.75rem', 
                     fontWeight: 600, 
                     color: COLORS.gris,
-                    lineHeight: '1.3',
-                    minHeight: isMobile ? 'auto' : '36px',
+                    lineHeight: '1.2',
+                    minHeight: isMobile ? 'auto' : '30px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: isMobile ? 'flex-start' : 'center'
@@ -222,16 +223,16 @@ export default function DiscapacidadTab({ rawData }: DiscapacidadTabProps) {
                   {hasWorkers && (
                     <span style={{
                       display: 'inline-block',
-                      marginTop: '6px',
-                      padding: '3px 10px',
+                      marginTop: '4px',
+                      padding: '2px 8px',
                       backgroundColor: 'rgba(224, 83, 2, 0.1)',
                       color: COLORS.naranjo,
                       borderRadius: '12px',
-                      fontSize: '0.75rem',
+                      fontSize: '0.7rem',
                       fontWeight: 700,
                       whiteSpace: 'nowrap'
                     }}>
-                      {step.cant === 1 ? '1 Trabajador' : `${step.cant} Trabajadores`}
+                      {step.cant === 1 ? '1 Trab.' : `${step.cant} Trab.`}
                     </span>
                   )}
                 </div>
@@ -244,41 +245,43 @@ export default function DiscapacidadTab({ rawData }: DiscapacidadTabProps) {
   );
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '25px', fontFamily: "'Poppins', sans-serif" }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', fontFamily: "'Poppins', sans-serif" }}>
       
-      {/* CORRECCIÓN RESPONSIVA: flexWrap: 'nowrap' y gap compacto para mantener la línea única perfecta en móvil */}
-      <div style={{ display: 'flex', flexWrap: 'nowrap', gap: 'clamp(6px, 1.5vw, 20px)', width: '100%', justifyContent: 'space-between' }}>
-        <div style={summaryCardStyle}>
+      {/* 1. KPIs */}
+      <div style={{ display: 'flex', flexWrap: 'nowrap', gap: '15px', width: '100%', justifyContent: 'space-between', boxSizing: 'border-box' }}>
+        <div style={{...summaryCardStyle, borderTop: `4px solid ${COLORS.celeste}`}}>
           <h4 style={kpiTitleStyle}>Meta</h4>
           <p style={kpiValueStyle}>{metaVal}</p>
         </div>
-        <div style={summaryCardStyle}>
+        <div style={{...summaryCardStyle, borderTop: `4px solid ${COLORS.naranjo}`}}>
           <h4 style={kpiTitleStyle}>% Actual</h4>
           <p style={kpiValueStyle}>{actualVal}</p>
         </div>
-        <div style={summaryCardStyle}>
+        <div style={{...summaryCardStyle, borderTop: `4px solid ${COLORS.amarillo}`}}>
           <h4 style={kpiTitleStyle}>En Trámite RND</h4>
           <p style={kpiValueStyle}>{tramiteRNDCount}</p>
         </div>
-        <div style={summaryCardStyle}>
+        <div style={{...summaryCardStyle, borderTop: `4px solid ${COLORS.rosado}`}}>
           <h4 style={kpiTitleStyle}>En Trámite Pensión</h4>
           <p style={kpiValueStyle}>{tramitePensionCount}</p>
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '25px' }}>
+      {/* 2. Líneas de Tiempo */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '15px', boxSizing: 'border-box' }}>
         {renderTimeline('Pensión de Invalidez', etapasPension)}
         {renderTimeline('Registro Nacional de Discapacidad (RND)', etapasRND)}
       </div>
 
+      {/* 3. Nota */}
       <div style={{ 
         backgroundColor: '#e8f4f5', 
-        borderLeft: `5px solid ${COLORS.celeste}`, 
-        padding: '15px 20px', 
+        borderLeft: `4px solid ${COLORS.celeste}`, 
+        padding: '10px 15px', 
         borderRadius: '4px',
-        marginTop: '5px'
+        boxSizing: 'border-box'
       }}>
-        <p style={{ margin: 0, color: COLORS.gris, fontSize: '0.88rem', fontWeight: 500, fontStyle: 'italic' }}>
+        <p style={{ margin: 0, color: COLORS.gris, fontSize: '0.8rem', fontWeight: 500, fontStyle: 'italic' }}>
           💡 <strong>Nota:</strong> Los trabajadores pueden participar en ambos procesos de forma simultánea.
         </p>
       </div>
@@ -286,10 +289,9 @@ export default function DiscapacidadTab({ rawData }: DiscapacidadTabProps) {
   );
 }
 
-const cardStyle: React.CSSProperties = { backgroundColor: COLORS.blanco, padding: '25px', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)' };
-
-// Estilos de tarjetas ajustados a flex: '1 1 0px' y padding fluido clamp para bloqueo de desborde móvil
-const summaryCardStyle: React.CSSProperties = { flex: '1 1 0px', minWidth: 0, backgroundColor: COLORS.blanco, padding: 'clamp(8px, 1.8vw, 20px) 4px', borderRadius: '10px', boxShadow: '0 4px 10px rgba(0,0,0,0.04)', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '110px', borderTop: `5px solid ${COLORS.celeste}` };
-const kpiTitleStyle: React.CSSProperties = { margin: 0, color: '#666', fontSize: 'clamp(0.55rem, 1.3vw, 0.9rem)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' };
-const kpiValueStyle: React.CSSProperties = { fontSize: 'clamp(1.1rem, 3.2vw, 2.2rem)', fontWeight: 600, color: COLORS.celeste, margin: '6px 0 0 0' };
-const chartTitleStyle: React.CSSProperties = { margin: '0 0 10px 0', color: COLORS.gris, fontSize: '1.1rem', fontWeight: 600, borderBottom: '1px solid #eee', paddingBottom: '10px' };
+// Estilos rediseñados y compactados
+const cardStyle: React.CSSProperties = { backgroundColor: COLORS.blanco, padding: '15px', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)', boxSizing: 'border-box' };
+const summaryCardStyle: React.CSSProperties = { flex: '1 1 0px', minWidth: 'clamp(90px, 15vw, 150px)', backgroundColor: COLORS.blanco, padding: '10px 4px', borderRadius: '8px', boxShadow: '0 4px 10px rgba(0,0,0,0.04)', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '80px', boxSizing: 'border-box' };
+const kpiTitleStyle: React.CSSProperties = { margin: 0, color: '#666', fontSize: 'clamp(0.55rem, 1.1vw, 0.8rem)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' };
+const kpiValueStyle: React.CSSProperties = { fontSize: 'clamp(1.1rem, 2.5vw, 2rem)', fontWeight: 600, color: COLORS.celeste, margin: '2px 0 0 0' };
+const chartTitleStyle: React.CSSProperties = { margin: '0 0 5px 0', color: COLORS.gris, fontSize: 'clamp(0.85rem, 1.5vw, 1rem)', fontWeight: 600, borderBottom: '1px solid #eee', paddingBottom: '6px' };
