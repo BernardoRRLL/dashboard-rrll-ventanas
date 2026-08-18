@@ -128,60 +128,60 @@ export default function SindicatosTab({ rawData }: SindicatosProps) {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(15px, 3vw, 25px)', fontFamily: "'Poppins', sans-serif" }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', fontFamily: "'Poppins', sans-serif" }}>
       
       {/* 1. Resumen Superior (Inquebrantable en una línea) */}
-      <div style={{ display: 'flex', flexWrap: 'nowrap', gap: 'clamp(8px, 2vw, 25px)', width: '100%', justifyContent: 'space-between' }}>
-        <div style={summaryCardStyle}>
+      <div style={{ display: 'flex', flexWrap: 'nowrap', gap: '15px', width: '100%', justifyContent: 'space-between', boxSizing: 'border-box' }}>
+        <div style={{...summaryCardStyle, borderTop: `4px solid ${COLORS.gris}`}}>
             <h4 style={kpiTitleStyle}>Total Afiliados (Rol B)</h4>
             <p style={kpiValueStyle}>{totalAfiliadosRolB}</p>
         </div>
-        <div style={summaryCardStyle}>
+        <div style={{...summaryCardStyle, borderTop: `4px solid ${COLORS.gris}`}}>
             <h4 style={kpiTitleStyle}>% Afiliación (Rol B)</h4>
             <p style={kpiValueStyle}>{porcentajeAfiliacion}%</p>
         </div>
       </div>
 
-      {/* 2. Resumen por Sindicato (1 fila por Sindicato) */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+      {/* 2. Resumen por Sindicato (Agrupados en 1 sola fila en PC) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: '15px' }}>
         <div style={{ ...unionCardStyle, border: `2px solid ${COLORS.celeste}` }}>
           <div>
-            <h3 style={{ margin: 0, color: COLORS.gris, fontSize: 'clamp(1rem, 3vw, 1.2rem)' }}>{union1}</h3>
-            <p style={{ margin: 0, color: '#888', fontSize: 'clamp(0.7rem, 2vw, 0.9rem)' }}>{pctU1}% de Rol B</p>
+            <h3 style={{ margin: 0, color: COLORS.gris, fontSize: 'clamp(0.9rem, 2vw, 1.1rem)' }}>{union1}</h3>
+            <p style={{ margin: 0, color: '#888', fontSize: 'clamp(0.7rem, 1.5vw, 0.8rem)' }}>{pctU1}% de Rol B</p>
           </div>
-          <div style={{ fontSize: 'clamp(1.5rem, 5vw, 2.5rem)', fontWeight: 700, color: COLORS.celeste }}>{countU1}</div>
+          <div style={{ fontSize: 'clamp(1.2rem, 3vw, 2rem)', fontWeight: 700, color: COLORS.celeste }}>{countU1}</div>
         </div>
         
         <div style={{ ...unionCardStyle, border: `2px solid ${COLORS.naranjo}` }}>
           <div>
-            <h3 style={{ margin: 0, color: COLORS.gris, fontSize: 'clamp(1rem, 3vw, 1.2rem)' }}>{union2}</h3>
-            <p style={{ margin: 0, color: '#888', fontSize: 'clamp(0.7rem, 2vw, 0.9rem)' }}>{pctU2}% de Rol B</p>
+            <h3 style={{ margin: 0, color: COLORS.gris, fontSize: 'clamp(0.9rem, 2vw, 1.1rem)' }}>{union2}</h3>
+            <p style={{ margin: 0, color: '#888', fontSize: 'clamp(0.7rem, 1.5vw, 0.8rem)' }}>{pctU2}% de Rol B</p>
           </div>
-          <div style={{ fontSize: 'clamp(1.5rem, 5vw, 2.5rem)', fontWeight: 700, color: COLORS.naranjo }}>{countU2}</div>
+          <div style={{ fontSize: 'clamp(1.2rem, 3vw, 2rem)', fontWeight: 700, color: COLORS.naranjo }}>{countU2}</div>
         </div>
       </div>
 
-      {/* 3. Composición por Grupos (Estricto: 2 por línea) */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 'clamp(10px, 2vw, 20px)' }}>
+      {/* 3. Composición por Grupos (2 por línea) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px' }}>
         <div style={cardStyle}>
             <h4 style={chartTitleStyle}>Composición por Grupos — {union1}</h4>
-            <div style={{ width: '100%', height: '260px' }}><Bar data={getGrupoData(union1, COLORS.celeste)} options={verticalBarOptions} /></div>
+            <div style={{ width: '100%', height: '220px' }}><Bar data={getGrupoData(union1, COLORS.celeste)} options={verticalBarOptions} /></div>
         </div>
         <div style={cardStyle}>
             <h4 style={chartTitleStyle}>Composición por Grupos — {union2}</h4>
-            <div style={{ width: '100%', height: '260px' }}><Bar data={getGrupoData(union2, COLORS.naranjo)} options={verticalBarOptions} /></div>
+            <div style={{ width: '100%', height: '220px' }}><Bar data={getGrupoData(union2, COLORS.naranjo)} options={verticalBarOptions} /></div>
         </div>
       </div>
 
-      {/* 4. Butterfly Chart (Fila completa, 100% ancho) */}
+      {/* 4. Butterfly Chart (Fila completa, altura reducida) */}
       <div style={cardStyle}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #eee', paddingBottom: '8px', marginBottom: '15px' }}>
-            <h4 style={{ margin: 0, color: COLORS.gris, fontSize: 'clamp(0.85rem, 2vw, 1.1rem)', fontWeight: 600 }}>Distribución por Área de Trabajo</h4>
-            <div style={{ fontSize: 'clamp(0.65rem, 1.5vw, 0.9rem)', color: '#666', marginTop: '5px' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #eee', paddingBottom: '6px', marginBottom: '10px' }}>
+            <h4 style={{ margin: 0, color: COLORS.gris, fontSize: 'clamp(0.85rem, 1.5vw, 1rem)', fontWeight: 600 }}>Distribución por Área de Trabajo</h4>
+            <div style={{ fontSize: 'clamp(0.65rem, 1vw, 0.8rem)', color: '#666', marginTop: '5px' }}>
               <span style={{color: COLORS.celeste, fontWeight: 600}}>■ {union1}</span> &nbsp;&nbsp;|&nbsp;&nbsp; <span style={{color: COLORS.naranjo, fontWeight: 600}}>■ {union2}</span>
             </div>
         </div>
-        <div style={{ width: '100%', height: '350px' }}>
+        <div style={{ width: '100%', height: '280px' }}>
             <Bar data={getAreaButterflyData()} options={butterflyOptions} />
         </div>
       </div>
@@ -190,10 +190,10 @@ export default function SindicatosTab({ rawData }: SindicatosProps) {
   );
 }
 
-// Estilos fluidos y elásticos con minWidth: 0
-const cardStyle: React.CSSProperties = { backgroundColor: COLORS.blanco, padding: 'clamp(10px, 2vw, 20px)', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)', minWidth: 0 };
-const summaryCardStyle: React.CSSProperties = { flex: 1, minWidth: 0, backgroundColor: COLORS.blanco, padding: 'clamp(10px, 2vw, 25px) clamp(5px, 1vw, 15px)', borderRadius: '10px', boxShadow: '0 4px 10px rgba(0,0,0,0.04)', textAlign: 'center' };
-const unionCardStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: COLORS.blanco, padding: 'clamp(10px, 3vw, 15px) clamp(15px, 4vw, 30px)', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.03)', minWidth: 0 };
-const kpiTitleStyle: React.CSSProperties = { margin: 0, color: COLORS.gris, fontSize: 'clamp(0.6rem, 2vw, 1.1rem)', fontWeight: 600, lineHeight: 1.2 };
-const kpiValueStyle: React.CSSProperties = { fontSize: 'clamp(1.5rem, 5vw, 2.8rem)', fontWeight: 600, color: COLORS.gris, margin: '8px 0 0 0' };
-const chartTitleStyle: React.CSSProperties = { margin: '0 0 15px 0', color: COLORS.gris, fontSize: 'clamp(0.75rem, 2vw, 1.1rem)', fontWeight: 600, borderBottom: '1px solid #eee', paddingBottom: '8px', whiteSpace: 'normal', lineHeight: 1.2 };
+// Estilos rediseñados y compactados
+const cardStyle: React.CSSProperties = { backgroundColor: COLORS.blanco, padding: '12px', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)', minWidth: 0, boxSizing: 'border-box' };
+const summaryCardStyle: React.CSSProperties = { flex: '1 1 0px', minWidth: 'clamp(90px, 15vw, 150px)', backgroundColor: COLORS.blanco, padding: '10px 4px', borderRadius: '8px', boxShadow: '0 4px 10px rgba(0,0,0,0.04)', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '80px', boxSizing: 'border-box' };
+const unionCardStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: COLORS.blanco, padding: '12px 20px', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.03)', minWidth: 0, boxSizing: 'border-box' };
+const kpiTitleStyle: React.CSSProperties = { margin: 0, color: '#666', fontSize: 'clamp(0.55rem, 1.1vw, 0.8rem)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' };
+const kpiValueStyle: React.CSSProperties = { fontSize: 'clamp(1.1rem, 2.5vw, 2rem)', fontWeight: 600, color: COLORS.gris, margin: '2px 0 0 0' };
+const chartTitleStyle: React.CSSProperties = { margin: '0 0 10px 0', color: COLORS.gris, fontSize: 'clamp(0.75rem, 1.5vw, 0.9rem)', fontWeight: 600, borderBottom: '1px solid #eee', paddingBottom: '6px', whiteSpace: 'normal', lineHeight: 1.2 };
