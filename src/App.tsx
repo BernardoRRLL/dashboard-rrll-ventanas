@@ -539,7 +539,7 @@ export default function App() {
             ) : activeTab === 'discapacidad' ? (
               <DiscapacidadTab rawData={discapacidadData} /> 
             ) : activeTab === 'cumpleanos' ? (
-              <CumplesTab rawData={rawData} /> 
+              <CumplesTab rawData={rawData} jefaturaData={jefaturaData} /> 
             ) : activeTab === 'comunas' ? (
               <ComunasTab rawData={comunasSheetData} dotacionData={rawData} />
             ) : activeTab === 'turnos' ? (
