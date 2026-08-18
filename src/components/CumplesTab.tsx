@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Gift, Calendar, PartyPopper } from 'lucide-react';
+import { Gift, Calendar, PartyPopper, Send } from 'lucide-react';
 
 const COLORS = {
   gris: '#36424a',
@@ -13,12 +13,20 @@ const COLORS = {
 
 interface CumpleanosProps {
   rawData: any[];
+  jefaturaData?: any[]; // Opcional por ahora para no romper App.tsx
 }
 
-export default function CumplesTab({ rawData }: CumpleanosProps) {
+export default function CumplesTab({ rawData, jefaturaData = [] }: CumpleanosProps) {
   const [mesActual, setMesActual] = useState<any[]>([]);
   const [proximos7Dias, setProximos7Dias] = useState<any[]>([]);
   const [hoy, setHoy] = useState<any[]>([]);
+  
+  // Estados para el Webhook
+  const [isSending, setIsSending] = useState(false);
+  const [sendStatus, setSendStatus] = useState<'idle' | 'success' | 'error'>('idle');
+
+  // URL DE POWER AUTOMATE
+  const WEBHOOK_URL = 'TU_URL_DE_POWER_AUTOMATE_AQUI';
 
   const mesesStr = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
@@ -45,7 +53,7 @@ export default function CumplesTab({ rawData }: CumpleanosProps) {
 
       if (mesIntReal === 0) return; 
 
-      const fn = String(row['Fecha Nacimiento'] || row['Fecha de Nacimiento'] || '').trim().toLowerCase();
+      const fn = String(row['Fecha Nacimiento'] || '').trim().toLowerCase();
       let diaInt = 0;
 
       const fnClean = fn.replace(/\//g, '-').trim();
@@ -61,7 +69,7 @@ export default function CumplesTab({ rawData }: CumpleanosProps) {
       if (diaInt === 0 || diaInt > 31) return;
 
       const empleado = {
-        nombre: row['Nombre'] || row['Nombre trabajador/a'] || 'Sin nombre',
+        nombre: row['Nombre'] || 'Sin nombre',
         cargo: row['Posición'] || row['Cargo'] || 'Sin cargo',
         area: row['Unidad Organizativa'] || row['Superintendencia / Dirección / Gerencia'] || 'Sin área',
         mmddKey: `${mesIntReal}-${diaInt}`,
@@ -92,6 +100,98 @@ export default function CumplesTab({ rawData }: CumpleanosProps) {
   }, [rawData]);
 
   const currentMonthName = mesesStr[new Date().getMonth()];
+
+  const enviarAvisosPowerAutomate = async () => {
+    // 1. Calcular las fechas de la PRÓXIMA SEMANA (Lunes a Domingo)
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0 es Domingo, 1 es Lunes
+    
+    // Cuántos días faltan para el próximo lunes
+    const daysToNextMonday = dayOfWeek === 0 ? 1 : 8 - dayOfWeek;
+    
+    const nextMonday = new Date(today);
+    nextMonday.setDate(today.getDate() + daysToNextMonday);
+
+    const proximosDiasTarget = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(nextMonday);
+      d.setDate(nextMonday.getDate() + i);
+      proximosDiasTarget.push(`${d.getMonth() + 1}-${d.getDate()}`);
+    }
+
+    const payloadCumpleaneros: any[] = [];
+
+    // 2. Filtrar cumpleaños de la próxima semana y cruzar datos
+    rawData.forEach((row: any) => {
+      const mesExcel = String(row['Mes Cumpleaños'] || row['Mes'] || '').toLowerCase().trim();
+      const mesIntReal = mesesStr.findIndex((m: string) => m.toLowerCase() === mesExcel) + 1;
+      if (mesIntReal === 0) return; 
+
+      const fn = String(row['Fecha Nacimiento'] || '').trim().toLowerCase();
+      let diaInt = 0;
+      const fnClean = fn.replace(/\//g, '-').trim();
+      const matchIso = fnClean.match(/^\d{4}-(\d{1,2})-(\d{1,2})/);
+      const matchLatam = fnClean.match(/^(\d{1,2})-[a-z0-9]+/);
+
+      if (matchIso) diaInt = parseInt(matchIso[2], 10); 
+      else if (matchLatam) diaInt = parseInt(matchLatam[1], 10); 
+
+      if (diaInt === 0 || diaInt > 31) return;
+
+      const empleadoMMDD = `${mesIntReal}-${diaInt}`;
+
+      if (proximosDiasTarget.includes(empleadoMMDD)) {
+        const miSAP = row['SAP'];
+        if (!miSAP) return; // Si el trabajador no tiene SAP, no podemos buscar jefe
+
+        // Buscar relación en hoja Jefatura
+        const relacion = jefaturaData.find(j => String(j['SAP Trabajador']).trim() === String(miSAP).trim());
+        if (!relacion || !relacion['SAP Jefatura']) return; // Huérfano: sin jefatura asignada
+
+        const sapJefe = relacion['SAP Jefatura'];
+
+        // Buscar datos del jefe en hoja Dotación
+        const datosJefe = rawData.find(r => String(r['SAP']).trim() === String(sapJefe).trim());
+        if (!datosJefe || !datosJefe['Correo']) return; // Huérfano: Jefe no está en dotación o no tiene correo
+
+        payloadCumpleaneros.push({
+          sap: miSAP,
+          nombre: row['Nombre'],
+          cargo: row['Posición'] || row['Cargo'] || 'Sin cargo',
+          fecha_cumpleanos: `${diaInt} de ${mesesStr[mesIntReal - 1]}`,
+          jefe_nombre: datosJefe['Nombre'],
+          jefe_email: datosJefe['Correo']
+        });
+      }
+    });
+
+    if (payloadCumpleaneros.length === 0) {
+      alert("No hay cumpleaños con jefatura registrada para la próxima semana.");
+      return;
+    }
+
+    setIsSending(true);
+    setSendStatus('idle');
+
+    try {
+      const response = await fetch(WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cumpleaneros: payloadCumpleaneros }),
+      });
+
+      if (!response.ok) throw new Error('Error al conectar con Power Automate');
+      
+      setSendStatus('success');
+      setTimeout(() => setSendStatus('idle'), 3000);
+    } catch (error) {
+      console.error(error);
+      setSendStatus('error');
+      setTimeout(() => setSendStatus('idle'), 3000);
+    } finally {
+      setIsSending(false);
+    }
+  };
 
   const renderList = (titulo: string, lista: any[], icon: React.ReactNode, isDestacado: boolean = false) => (
     <div style={{ ...cardStyle, borderTop: isDestacado ? `4px solid ${COLORS.rosado}` : 'none' }}>
@@ -138,6 +238,33 @@ export default function CumplesTab({ rawData }: CumpleanosProps) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', fontFamily: "'Poppins', sans-serif" }}>
       
+      {/* SECCIÓN DE CONTROLES */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <button 
+          onClick={enviarAvisosPowerAutomate}
+          disabled={isSending}
+          title="Extrae los cumpleaños de la próxima semana (Lunes a Domingo) y los envía a Power Automate"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            backgroundColor: sendStatus === 'error' ? COLORS.rosado : (sendStatus === 'success' ? '#43A047' : COLORS.celeste),
+            color: COLORS.blanco,
+            border: 'none',
+            padding: '10px 16px',
+            borderRadius: '8px',
+            fontWeight: 600,
+            fontSize: '0.85rem',
+            cursor: isSending ? 'not-allowed' : 'pointer',
+            opacity: isSending ? 0.7 : 1,
+            transition: 'background-color 0.2s ease'
+          }}
+        >
+          <Send size={16} />
+          {isSending ? 'Sincronizando...' : (sendStatus === 'success' ? '¡Enviado con éxito!' : (sendStatus === 'error' ? 'Error de conexión' : 'Sincronizar Avisos Próxima Semana'))}
+        </button>
+      </div>
+
       {/* FILA 1: Resumen */}
       <div style={{ display: 'flex', flexWrap: 'nowrap', gap: '15px', width: '100%', justifyContent: 'space-between', boxSizing: 'border-box' }}>
         <div style={{...summaryCardStyle, borderTop: `4px solid ${COLORS.rosado}`}}>
@@ -154,12 +281,12 @@ export default function CumplesTab({ rawData }: CumpleanosProps) {
         </div>
       </div>
 
-      {/* FILA 2: Cumpleaños de Hoy (Ocupa todo el ancho) */}
+      {/* FILA 2: Cumpleaños de Hoy */}
       <div style={{ width: '100%', boxSizing: 'border-box' }}>
         {renderList('Cumpleaños de Hoy', hoy, <PartyPopper size={20} />, true)}
       </div>
 
-      {/* FILA 3: Dos columnas (Próximos 7 días y Mes) */}
+      {/* FILA 3: Dos columnas */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '15px', boxSizing: 'border-box' }}>
         {renderList('Próximos 7 Días', proximos7Dias, <Gift size={20} />)}
         {renderList(`Cumpleaños de ${currentMonthName}`, mesActual, <Calendar size={20} />)}
@@ -169,7 +296,6 @@ export default function CumplesTab({ rawData }: CumpleanosProps) {
   );
 }
 
-// Estilos rediseñados y compactados
 const cardStyle: React.CSSProperties = { backgroundColor: COLORS.blanco, padding: '15px', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)', minWidth: 0, boxSizing: 'border-box' };
 const summaryCardStyle: React.CSSProperties = { flex: '1 1 0px', minWidth: 'clamp(90px, 15vw, 150px)', backgroundColor: COLORS.blanco, padding: '10px 4px', borderRadius: '8px', boxShadow: '0 4px 10px rgba(0,0,0,0.04)', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '80px', boxSizing: 'border-box' };
 const kpiTitleStyle: React.CSSProperties = { margin: 0, color: '#666', fontSize: 'clamp(0.55rem, 1.1vw, 0.8rem)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' };
