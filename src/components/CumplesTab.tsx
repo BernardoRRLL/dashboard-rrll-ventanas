@@ -14,9 +14,10 @@ const COLORS = {
 interface CumpleanosProps {
   rawData: any[];
   jefaturaData?: any[]; // Opcional por ahora para no romper App.tsx
+  isAdmin?: boolean; // Prop opcional para controlar la visibilidad del botón de sincronización
 }
 
-export default function CumplesTab({ rawData, jefaturaData = [] }: CumpleanosProps) {
+export default function CumplesTab({ rawData, jefaturaData = [], isAdmin = false }: CumpleanosProps) {
   const [mesActual, setMesActual] = useState<any[]>([]);
   const [proximos7Dias, setProximos7Dias] = useState<any[]>([]);
   const [hoy, setHoy] = useState<any[]>([]);
@@ -239,32 +240,34 @@ export default function CumplesTab({ rawData, jefaturaData = [] }: CumpleanosPro
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', fontFamily: "'Poppins', sans-serif" }}>
       
-      {/* SECCIÓN DE CONTROLES */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-        <button 
-          onClick={enviarAvisosPowerAutomate}
-          disabled={isSending}
-          title="Extrae los cumpleaños de la próxima semana (Lunes a Domingo) y los envía a Power Automate"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            backgroundColor: sendStatus === 'error' ? COLORS.rosado : (sendStatus === 'success' ? '#43A047' : COLORS.celeste),
-            color: COLORS.blanco,
-            border: 'none',
-            padding: '10px 16px',
-            borderRadius: '8px',
-            fontWeight: 600,
-            fontSize: '0.85rem',
-            cursor: isSending ? 'not-allowed' : 'pointer',
-            opacity: isSending ? 0.7 : 1,
-            transition: 'background-color 0.2s ease'
-          }}
-        >
-          <Send size={16} />
-          {isSending ? 'Sincronizando...' : (sendStatus === 'success' ? '¡Enviado con éxito!' : (sendStatus === 'error' ? 'Error de conexión' : 'Sincronizar Avisos Próxima Semana'))}
-        </button>
-      </div>
+      {/* SECCIÓN DE CONTROLES: Solo visible si isAdmin es true */}
+      {isAdmin && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <button 
+            onClick={enviarAvisosPowerAutomate}
+            disabled={isSending}
+            title="Extrae los cumpleaños de la próxima semana (Lunes a Domingo) y los envía a Power Automate"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              backgroundColor: sendStatus === 'error' ? COLORS.rosado : (sendStatus === 'success' ? '#43A047' : COLORS.celeste),
+              color: COLORS.blanco,
+              border: 'none',
+              padding: '10px 16px',
+              borderRadius: '8px',
+              fontWeight: 600,
+              fontSize: '0.85rem',
+              cursor: isSending ? 'not-allowed' : 'pointer',
+              opacity: isSending ? 0.7 : 1,
+              transition: 'background-color 0.2s ease'
+            }}
+          >
+            <Send size={16} />
+            {isSending ? 'Sincronizando...' : (sendStatus === 'success' ? '¡Enviado con éxito!' : (sendStatus === 'error' ? 'Error de conexión' : 'Sincronizar Avisos Próxima Semana'))}
+          </button>
+        </div>
+      )}
 
       {/* FILA 1: Resumen */}
       <div style={{ display: 'flex', flexWrap: 'nowrap', gap: '15px', width: '100%', justifyContent: 'space-between', boxSizing: 'border-box' }}>
