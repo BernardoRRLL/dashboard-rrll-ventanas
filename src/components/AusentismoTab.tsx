@@ -95,7 +95,7 @@ export default function AusentismoTab({ rawData }: { rawData: any[][] }) {
   const doughnutOptions: any = { ...optionsBase, cutout: '65%', plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 9, family: "'Poppins', sans-serif" } } }, datalabels: { color: COLORS.blanco, font: { weight: 600, size: 9, family: "'Poppins', sans-serif" }, formatter: formatLabel } } };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(15px, 3vw, 25px)', fontFamily: "'Poppins', sans-serif" }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', fontFamily: "'Poppins', sans-serif" }}>
       
       {/* MAGIA CSS: Media query inyectado para controlar la cuadrícula inferior sin afectar escritorio */}
       <style>
@@ -103,7 +103,7 @@ export default function AusentismoTab({ rawData }: { rawData: any[][] }) {
           .ausentismo-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: clamp(10px, 1.5vw, 20px);
+            gap: 15px;
           }
           @media (max-width: 850px) {
             .ausentismo-grid {
@@ -117,31 +117,40 @@ export default function AusentismoTab({ rawData }: { rawData: any[][] }) {
       </style>
 
       {/* 1. KPIs (Resumen inquebrantable en la primera línea) */}
-      <div style={{ display: 'flex', flexWrap: 'nowrap', gap: 'clamp(8px, 1.5vw, 20px)', width: '100%', justifyContent: 'space-between' }}>
-        <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>Licencias</h4><p style={{...kpiValueStyle, color: COLORS.celeste}}>{totalLicencias.toFixed(2)}%</p></div>
-        <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>Permisos</h4><p style={{...kpiValueStyle, color: COLORS.amarillo}}>{totalPermisos.toFixed(2)}%</p></div>
-        <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>Sobretiempo</h4><p style={{...kpiValueStyle, color: COLORS.rosado}}>{totalSobretiempoArea.toFixed(2)}%</p></div>
+      <div style={{ display: 'flex', flexWrap: 'nowrap', gap: '15px', width: '100%', justifyContent: 'space-between', boxSizing: 'border-box' }}>
+        <div style={{...summaryCardStyle, borderTop: `4px solid ${COLORS.celeste}`}}>
+          <h4 style={kpiTitleStyle}>Licencias</h4>
+          <p style={{...kpiValueStyle, color: COLORS.celeste}}>{totalLicencias.toFixed(2)}%</p>
+        </div>
+        <div style={{...summaryCardStyle, borderTop: `4px solid ${COLORS.amarillo}`}}>
+          <h4 style={kpiTitleStyle}>Permisos</h4>
+          <p style={{...kpiValueStyle, color: COLORS.amarillo}}>{totalPermisos.toFixed(2)}%</p>
+        </div>
+        <div style={{...summaryCardStyle, borderTop: `4px solid ${COLORS.rosado}`}}>
+          <h4 style={kpiTitleStyle}>Sobretiempo</h4>
+          <p style={{...kpiValueStyle, color: COLORS.rosado}}>{totalSobretiempoArea.toFixed(2)}%</p>
+        </div>
       </div>
 
       {/* 2. Evolución (Gráfico gigante en una sola línea) */}
-      <div style={{...cardStyle, padding: 'clamp(15px, 3vw, 20px)'}}>
-        <h4 style={{...chartTitleStyle, fontSize: 'clamp(0.9rem, 2vw, 1.1rem)'}}>Evolución 2026: Ausentismo Proyectado vs Real</h4>
-        <div style={{ width: '100%', height: '320px' }}><Line data={getEvolucionData()} options={lineOptions} /></div>
+      <div style={cardStyle}>
+        <h4 style={{...chartTitleStyle, fontSize: 'clamp(0.85rem, 1.5vw, 1rem)'}}>Evolución 2026: Ausentismo Proyectado vs Real</h4>
+        <div style={{ width: '100%', height: '240px' }}><Line data={getEvolucionData()} options={lineOptions} /></div>
       </div>
 
       {/* 3. Fila Inferior (Controlada por el @media query inyectado arriba) */}
       <div className="ausentismo-grid">
         <div style={cardStyle} className="ausentismo-grafico-principal">
           <h4 style={chartTitleStyle}>Ausentismo Actual por Área</h4>
-          <div style={{ width: '100%', height: '260px' }}><Bar data={getAusentismoArea()} options={stackedBarOptions} /></div>
+          <div style={{ width: '100%', height: '220px' }}><Bar data={getAusentismoArea()} options={stackedBarOptions} /></div>
         </div>
         <div style={cardStyle}>
           <h4 style={chartTitleStyle}>Sobretiempo por Área</h4>
-          <div style={{ width: '100%', height: '260px' }}><Bar data={getSobretiempoArea()} options={barOptions} /></div>
+          <div style={{ width: '100%', height: '220px' }}><Bar data={getSobretiempoArea()} options={barOptions} /></div>
         </div>
         <div style={cardStyle}>
           <h4 style={chartTitleStyle}>Tipo de Sobretiempo</h4>
-          <div style={{ width: '100%', height: '260px' }}><Doughnut data={getTipoSobretiempo()} options={doughnutOptions} /></div>
+          <div style={{ width: '100%', height: '220px' }}><Doughnut data={getTipoSobretiempo()} options={doughnutOptions} /></div>
         </div>
       </div>
 
@@ -149,9 +158,9 @@ export default function AusentismoTab({ rawData }: { rawData: any[][] }) {
   );
 }
 
-// Estilos fluidos
-const cardStyle: React.CSSProperties = { backgroundColor: COLORS.blanco, padding: 'clamp(10px, 1vw, 20px)', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)', minWidth: 0 };
-const summaryCardStyle: React.CSSProperties = { flex: 1, minWidth: 0, backgroundColor: COLORS.blanco, padding: 'clamp(8px, 1.5vw, 25px) clamp(4px, 1vw, 15px)', borderRadius: '10px', boxShadow: '0 4px 10px rgba(0,0,0,0.04)', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '90px' };
-const kpiTitleStyle: React.CSSProperties = { margin: 0, color: COLORS.gris, fontSize: 'clamp(0.6rem, 1.5vw, 1.1rem)', fontWeight: 600, lineHeight: 1.2 };
-const kpiValueStyle: React.CSSProperties = { fontSize: 'clamp(1.2rem, 4vw, 2.5rem)', fontWeight: 600, margin: '5px 0 0 0' };
-const chartTitleStyle: React.CSSProperties = { margin: '0 0 10px 0', color: COLORS.gris, fontSize: 'clamp(0.65rem, 1.5vw, 1.1rem)', fontWeight: 600, borderBottom: '1px solid #eee', paddingBottom: '6px', whiteSpace: 'normal', lineHeight: 1.2, textAlign: 'center' };
+// Estilos fluidos rediseñados y compactados
+const cardStyle: React.CSSProperties = { backgroundColor: COLORS.blanco, padding: '12px', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)', minWidth: 0, boxSizing: 'border-box' };
+const summaryCardStyle: React.CSSProperties = { flex: '1 1 0px', minWidth: 'clamp(90px, 15vw, 150px)', backgroundColor: COLORS.blanco, padding: '10px 4px', borderRadius: '8px', boxShadow: '0 4px 10px rgba(0,0,0,0.04)', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '80px', boxSizing: 'border-box' };
+const kpiTitleStyle: React.CSSProperties = { margin: 0, color: '#666', fontSize: 'clamp(0.55rem, 1.1vw, 0.8rem)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' };
+const kpiValueStyle: React.CSSProperties = { fontSize: 'clamp(1.1rem, 2.5vw, 2rem)', fontWeight: 600, margin: '2px 0 0 0' };
+const chartTitleStyle: React.CSSProperties = { margin: '0 0 10px 0', color: COLORS.gris, fontSize: 'clamp(0.75rem, 1.5vw, 0.9rem)', fontWeight: 600, borderBottom: '1px solid #eee', paddingBottom: '6px', whiteSpace: 'normal', lineHeight: 1.2, textAlign: 'center' };
