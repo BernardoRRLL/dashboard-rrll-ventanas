@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { MapPin, Users, X } from 'lucide-react';
 // @ts-ignore
 import { ComposableMap, Geographies, Geography, ZoomableGroup } from 'react-simple-maps';
@@ -135,7 +135,7 @@ export default function ComunasTab({ rawData }: ComunasProps) {
     return ''; 
   };
 
-  // Función para procesar los datos de los trabajadores al hacer click en la comuna
+  // Función para procesar y enriquecer los datos de los trabajadores cruzando con la sábana maestra
   const handleComunaClick = (comunaName: string) => {
     if (!rawData || rawData.length === 0) return;
 
@@ -144,13 +144,23 @@ export default function ComunasTab({ rawData }: ComunasProps) {
       if (!llaveEncontrada) return false;
       const cleaned = normalizarComuna(String(row[llaveEncontrada]));
       return cleaned === comunaName;
-    }).map(row => ({
-      sap: row['SAP'] || row['Número de personal'] || '-',
-      nombre: row['Nombre'] || row['Nombre trabajador/a'] || '-',
-      cargo: row['Posición'] || row['Cargo'] || '-',
-      turno: row['Turno'] || '-',
-      grupo: row['Grupo'] || '-'
-    }));
+    }).map(row => {
+      const sapVal = row['SAP'] || row['Número de personal'] || '-';
+      const nombreVal = row['Nombre'] || row['Nombre trabajador/a'] || '-';
+      
+      // Extracción robusta de Cargo, Turno y Grupo desde la fila maestra
+      const cargoVal = row['Posición'] || row['Cargo'] || '-';
+      const turnoVal = row['Turno'] || '-';
+      const grupoVal = row['Grupo'] || '-';
+
+      return {
+        sap: sapVal,
+        nombre: nombreVal,
+        cargo: cargoVal,
+        turno: turnoVal,
+        grupo: grupoVal
+      };
+    });
 
     // Ordenar alfabéticamente por nombre
     workersList.sort((a, b) => a.nombre.localeCompare(b.nombre));
@@ -306,7 +316,14 @@ export default function ComunasTab({ rawData }: ComunasProps) {
               <p style={{ color: '#888', fontStyle: 'italic', fontSize: '0.85rem', textAlign: 'center', padding: '15px 0' }}>Esperando datos del Excel maestro...</p>
             ) : (
               ranking.map((item, idx) => (
-                <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px', backgroundColor: COLORS.fondo, borderRadius: '6px', boxSizing: 'border-box' }}>
+                <div 
+                  key={idx} 
+                  onClick={() => handleComunaClick(item.comuna)}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px', backgroundColor: COLORS.fondo, borderRadius: '6px', boxSizing: 'border-box', cursor: 'pointer', transition: 'background-color 0.2s' }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e8f4f5'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = COLORS.fondo}
+                  title="Haz clic para ver el detalle de trabajadores"
+                >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <div style={{ width: '20px', height: '20px', borderRadius: '50%', backgroundColor: idx < 3 ? COLORS.naranjo : COLORS.celeste, color: COLORS.blanco, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', fontWeight: 700, flexShrink: 0 }}>
                       {idx + 1}
@@ -344,7 +361,7 @@ export default function ComunasTab({ rawData }: ComunasProps) {
             
             {/* Body del Modal con Tabla */}
             <div style={{ padding: '0', overflowY: 'auto', flex: 1 }}>
-              <div style={{ minWidth: '600px' /* Asegura que la tabla no se rompa en móviles */ }}>
+              <div style={{ minWidth: '600px' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>
                   <thead style={{ position: 'sticky', top: 0, backgroundColor: COLORS.blanco, boxShadow: '0 2px 4px rgba(0,0,0,0.05)', zIndex: 2 }}>
                     <tr>
@@ -364,7 +381,7 @@ export default function ComunasTab({ rawData }: ComunasProps) {
                         <td style={{ padding: '10px 15px', color: '#666' }}>
                           {w.turno && w.turno !== '-' ? <span style={{ backgroundColor: '#e2e8f0', padding: '2px 6px', borderRadius: '4px' }}>{w.turno}</span> : '-'}
                         </td>
-                        <td style={{ padding: '10px 15px', color: '#666' }}>{w.grupo}</td>
+                        <td style={{ padding: '10px 15px', color: '#666' }}>{w.grupo && w.grupo !== '-' ? w.grupo : '-'}</td>
                       </tr>
                     )) : (
                       <tr><td colSpan={5} style={{ padding: '20px', textAlign: 'center', color: '#888' }}>No hay datos disponibles.</td></tr>
