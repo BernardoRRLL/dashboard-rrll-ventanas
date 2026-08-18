@@ -8,7 +8,7 @@ import { supabase } from './supabase';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import DotacionTab from './components/DotacionTab';
-import ParticipacionFemeninaTab from './components/ParticipacionFemeninaTab';: activeTab === 'comunas' ? (
+import ParticipacionFemeninaTab from './components/ParticipacionFemeninaTab';
 import SindicatosTab from './components/SindicatosTab';
 import LicenciasTab from './components/LicenciasTab';
 import AusentismoTab from './components/AusentismoTab';
