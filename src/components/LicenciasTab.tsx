@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Bar, Doughnut } from 'react-chartjs-2';
 import { 
   Chart as ChartJS, 
@@ -105,10 +105,42 @@ const formatDateStr = (d: Date | null) => {
 };
 
 export default function LicenciasTab({ rawData, dotacionData }: LicenciasProps) {
-  const [view, setView] = useState<'tablero' | 'calendario'>('tablero');
+  // --- ESTADOS CON MEMORIA DE SESIÓN ---
+  const [view, setView] = useState<'tablero' | 'calendario'>(() => {
+    return (sessionStorage.getItem('licencias_view') as 'tablero' | 'calendario') || 'tablero';
+  });
+  
   const [calendarDate, setCalendarDate] = useState(new Date());
   
-  const [selectedLicense, setSelectedLicense] = useState<any | null>(null);
+  const [selectedLicense, setSelectedLicense] = useState<any | null>(() => {
+    const saved = sessionStorage.getItem('licencias_selected');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        // Necesitamos reconstruir los objetos Date que el JSON convierte en strings
+        if (parsed.fechaInicio) parsed.fechaInicio = new Date(parsed.fechaInicio);
+        if (parsed.fechaTermino) parsed.fechaTermino = new Date(parsed.fechaTermino);
+        if (parsed.fechaRetorno) parsed.fechaRetorno = new Date(parsed.fechaRetorno);
+        return parsed;
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  });
+
+  // --- SINCRONIZACIÓN DE MEMORIA ---
+  useEffect(() => {
+    sessionStorage.setItem('licencias_view', view);
+  }, [view]);
+
+  useEffect(() => {
+    if (selectedLicense) {
+      sessionStorage.setItem('licencias_selected', JSON.stringify(selectedLicense));
+    } else {
+      sessionStorage.removeItem('licencias_selected');
+    }
+  }, [selectedLicense]);
   
   const licenciasData = useMemo(() => rawData.filter(row => row['Rut'] && String(row['Rut']).trim() !== ''), [rawData]);
 
