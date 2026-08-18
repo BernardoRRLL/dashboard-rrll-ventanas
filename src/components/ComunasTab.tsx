@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Users } from 'lucide-react';
+import { MapPin, Users, X } from 'lucide-react';
 // @ts-ignore
 import { ComposableMap, Geographies, Geography, ZoomableGroup } from 'react-simple-maps';
 // @ts-ignore
@@ -38,6 +38,9 @@ export default function ComunasTab({ rawData }: ComunasProps) {
   const [ranking, setRanking] = useState<any[]>([]);
   const [maxCount, setMaxCount] = useState(0);
   const [tooltip, setTooltip] = useState("");
+  
+  // Estado para la ventana Modal
+  const [selectedComunaData, setSelectedComunaData] = useState<{nombre: string, workers: any[]} | null>(null);
   
   const [geoData, setGeoData] = useState<any>(null);
   const [mapStatus, setMapStatus] = useState<string>("Cargando archivo del mapa...");
@@ -132,6 +135,29 @@ export default function ComunasTab({ rawData }: ComunasProps) {
     return ''; 
   };
 
+  // Función para procesar los datos de los trabajadores al hacer click en la comuna
+  const handleComunaClick = (comunaName: string) => {
+    if (!rawData || rawData.length === 0) return;
+
+    const workersList = rawData.filter((row: any) => {
+      const llaveEncontrada = Object.keys(row).find(k => k.toLowerCase().includes('comuna'));
+      if (!llaveEncontrada) return false;
+      const cleaned = normalizarComuna(String(row[llaveEncontrada]));
+      return cleaned === comunaName;
+    }).map(row => ({
+      sap: row['SAP'] || row['Número de personal'] || '-',
+      nombre: row['Nombre'] || row['Nombre trabajador/a'] || '-',
+      cargo: row['Posición'] || row['Cargo'] || '-',
+      turno: row['Turno'] || '-',
+      grupo: row['Grupo'] || '-'
+    }));
+
+    // Ordenar alfabéticamente por nombre
+    workersList.sort((a, b) => a.nombre.localeCompare(b.nombre));
+
+    setSelectedComunaData({ nombre: comunaName, workers: workersList });
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', fontFamily: "'Poppins', sans-serif" }}>
       
@@ -222,6 +248,9 @@ export default function ComunasTab({ rawData }: ComunasProps) {
                             <Geography
                               key={geo.rsmKey}
                               geography={geo}
+                              onClick={() => {
+                                if (count > 0) handleComunaClick(nombreCartografia);
+                              }}
                               onMouseEnter={() => setTooltip(`${nombreCartografia}: ${count} trabajadores`)}
                               onMouseLeave={() => setTooltip("")}
                               style={{
@@ -232,7 +261,7 @@ export default function ComunasTab({ rawData }: ComunasProps) {
                                   outline: "none",
                                   transition: "all 250ms"
                                 },
-                                hover: { fill: count > 0 ? '#C2185B' : '#d1d5db', cursor: "pointer", outline: "none", strokeWidth: 1.5 },
+                                hover: { fill: count > 0 ? '#C2185B' : '#d1d5db', cursor: count > 0 ? "pointer" : "default", outline: "none", strokeWidth: 1.5 },
                                 pressed: { outline: "none" }
                               }}
                             />
@@ -292,8 +321,63 @@ export default function ComunasTab({ rawData }: ComunasProps) {
             )}
           </div>
         </div>
-
       </div>
+
+      {/* 3. VENTANA MODAL (POP-UP) PARA TRABAJADORES */}
+      {selectedComunaData && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 9999, display: 'flex', justifyContent: 'center', alignItems: 'center', backdropFilter: 'blur(3px)' }}>
+          
+          <div style={{ backgroundColor: COLORS.blanco, borderRadius: '12px', width: '90%', maxWidth: '850px', maxHeight: '85vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 10px 25px rgba(0,0,0,0.2)' }}>
+            
+            {/* Header del Modal */}
+            <div style={{ padding: '15px 20px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: COLORS.fondo }}>
+              <h3 style={{ margin: 0, color: COLORS.gris, fontSize: '1.1rem', textTransform: 'capitalize', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                Trabajadores en {selectedComunaData.nombre}
+                <span style={{ fontSize: '0.75rem', backgroundColor: COLORS.naranjo, color: COLORS.blanco, padding: '2px 8px', borderRadius: '12px' }}>
+                  {selectedComunaData.workers.length}
+                </span>
+              </h3>
+              <button onClick={() => setSelectedComunaData(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#888', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <X size={24} />
+              </button>
+            </div>
+            
+            {/* Body del Modal con Tabla */}
+            <div style={{ padding: '0', overflowY: 'auto', flex: 1 }}>
+              <div style={{ minWidth: '600px' /* Asegura que la tabla no se rompa en móviles */ }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>
+                  <thead style={{ position: 'sticky', top: 0, backgroundColor: COLORS.blanco, boxShadow: '0 2px 4px rgba(0,0,0,0.05)', zIndex: 2 }}>
+                    <tr>
+                      <th style={{ padding: '12px 15px', color: COLORS.gris, borderBottom: '2px solid #eee', width: '12%' }}>SAP</th>
+                      <th style={{ padding: '12px 15px', color: COLORS.gris, borderBottom: '2px solid #eee', width: '30%' }}>Nombre</th>
+                      <th style={{ padding: '12px 15px', color: COLORS.gris, borderBottom: '2px solid #eee', width: '30%' }}>Cargo</th>
+                      <th style={{ padding: '12px 15px', color: COLORS.gris, borderBottom: '2px solid #eee', width: '14%' }}>Turno</th>
+                      <th style={{ padding: '12px 15px', color: COLORS.gris, borderBottom: '2px solid #eee', width: '14%' }}>Grupo</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedComunaData.workers.length > 0 ? selectedComunaData.workers.map((w, i) => (
+                      <tr key={i} style={{ borderBottom: '1px solid #eee', backgroundColor: i % 2 === 0 ? 'transparent' : '#fcfcfc' }}>
+                        <td style={{ padding: '10px 15px', fontWeight: 600, color: COLORS.celeste }}>{w.sap}</td>
+                        <td style={{ padding: '10px 15px', fontWeight: 700, color: COLORS.gris }}>{w.nombre}</td>
+                        <td style={{ padding: '10px 15px', color: '#666' }}>{w.cargo}</td>
+                        <td style={{ padding: '10px 15px', color: '#666' }}>
+                          {w.turno && w.turno !== '-' ? <span style={{ backgroundColor: '#e2e8f0', padding: '2px 6px', borderRadius: '4px' }}>{w.turno}</span> : '-'}
+                        </td>
+                        <td style={{ padding: '10px 15px', color: '#666' }}>{w.grupo}</td>
+                      </tr>
+                    )) : (
+                      <tr><td colSpan={5} style={{ padding: '20px', textAlign: 'center', color: '#888' }}>No hay datos disponibles.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
