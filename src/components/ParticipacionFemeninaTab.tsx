@@ -162,7 +162,7 @@ export default function ParticipacionFemeninaTab({ rawData }: ParticipacionFemen
     };
   };
 
-  // --- Opciones de Gráficos (Optimizadas con fuentes fluidas) ---
+  // --- Opciones de Gráficos ---
   const datalabelConfig = { color: COLORS.blanco, font: { weight: 600, size: 10, family: "'Poppins', sans-serif" } };
   
   const verticalBarOptions: any = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { ...datalabelConfig, anchor: 'end', align: 'start' } } };
@@ -171,46 +171,46 @@ export default function ParticipacionFemeninaTab({ rawData }: ParticipacionFemen
   const doughnutOptions: any = { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 9, family: "'Poppins', sans-serif" } } }, datalabels: datalabelConfig } };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(15px, 3vw, 25px)', fontFamily: "'Poppins', sans-serif" }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', fontFamily: "'Poppins', sans-serif" }}>
       
-      {/* 1. Resumen Superior (Una línea inquebrantable) */}
-      <div style={{ display: 'flex', flexWrap: 'nowrap', gap: 'clamp(8px, 2vw, 25px)', width: '100%', justifyContent: 'space-between' }}>
+      {/* 1. Resumen Superior */}
+      <div style={{ display: 'flex', flexWrap: 'nowrap', gap: '15px', width: '100%', justifyContent: 'space-between', boxSizing: 'border-box' }}>
         <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>Mujeres en la Dotación</h4><p style={kpiValueStyle}>{totalMujeres}</p></div>
         <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>% de Representación</h4><p style={kpiValueStyle}>{porcentajeRep}%</p></div>
         <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>Edad Promedio</h4><p style={kpiValueStyle}>{edadPromedio}</p></div>
       </div>
 
-      {/* 2. Fila 1: Distribución Etaria y Turno (Compartido: 2 por línea) */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 'clamp(10px, 2vw, 20px)' }}>
-        <div style={cardStyle}><h4 style={chartTitleStyle}>Distribución Etaria</h4><div style={{ width: '100%', height: '260px' }}><Bar data={getDistribucionEtaria()} options={verticalBarOptions} /></div></div>
-        <div style={cardStyle}><h4 style={chartTitleStyle}>Distribución por Turno</h4><div style={{ width: '100%', height: '260px' }}><Doughnut data={getDistribucionTurno()} options={doughnutOptions} /></div></div>
+      {/* 2. Fila 1: Distribución Etaria y Turno (Compartido) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: '15px' }}>
+        <div style={cardStyle}><h4 style={chartTitleStyle}>Distribución Etaria</h4><div style={{ width: '100%', height: '240px' }}><Bar data={getDistribucionEtaria()} options={verticalBarOptions} /></div></div>
+        <div style={cardStyle}><h4 style={chartTitleStyle}>Distribución por Turno</h4><div style={{ width: '100%', height: '240px' }}><Doughnut data={getDistribucionTurno()} options={doughnutOptions} /></div></div>
       </div>
 
-      {/* 3. Fila 2: Distribución por Rol (100% del ancho) */}
-      <div style={cardStyle}>
-        <h4 style={chartTitleStyle}>Distribución por Rol</h4>
-        <div style={{ width: '100%', height: '280px' }}><Bar data={getDistribucionRol()} options={horizontalBarOptions} /></div>
+      {/* 3. Fila 2: Distribución por Rol y Área (Agrupados para ahorrar espacio vertical) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 400px), 1fr))', gap: '15px' }}>
+        <div style={cardStyle}>
+          <h4 style={chartTitleStyle}>Distribución por Rol</h4>
+          <div style={{ width: '100%', height: '260px' }}><Bar data={getDistribucionRol()} options={horizontalBarOptions} /></div>
+        </div>
+        <div style={cardStyle}>
+          <h4 style={chartTitleStyle}>Distribución por Área</h4>
+          <div style={{ width: '100%', height: '260px' }}><Bar data={getDistribucionArea()} options={horizontalBarOptions} /></div>
+        </div>
       </div>
 
-      {/* 4. Fila 3: Evolución Histórica (100% del ancho) */}
+      {/* 4. Fila 3: Evolución Histórica (100% del ancho pero altura reducida) */}
       <div style={cardStyle}>
         <h4 style={chartTitleStyle}>Evolución Histórica de Ingresos Femeninos</h4>
-        <div style={{ width: '100%', height: '300px' }}><Line data={getEvolucionHistorica()} options={lineOptions} /></div>
-      </div>
-
-      {/* 5. Fila 4: Distribución por Área (100% del ancho) */}
-      <div style={cardStyle}>
-        <h4 style={chartTitleStyle}>Distribución por Área</h4>
-        <div style={{ width: '100%', height: '320px' }}><Bar data={getDistribucionArea()} options={horizontalBarOptions} /></div>
+        <div style={{ width: '100%', height: '240px' }}><Line data={getEvolucionHistorica()} options={lineOptions} /></div>
       </div>
 
     </div>
   );
 }
 
-// Estilos fluidos y elásticos con minWidth: 0
-const cardStyle: React.CSSProperties = { backgroundColor: COLORS.blanco, padding: 'clamp(10px, 2vw, 18px)', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)', minWidth: 0 };
-const summaryCardStyle: React.CSSProperties = { flex: 1, minWidth: 0, backgroundColor: COLORS.blanco, padding: 'clamp(10px, 2vw, 25px) clamp(5px, 1vw, 15px)', borderRadius: '10px', boxShadow: '0 4px 10px rgba(0,0,0,0.04)', textAlign: 'center' };
-const kpiTitleStyle: React.CSSProperties = { margin: 0, color: COLORS.gris, fontSize: 'clamp(0.6rem, 2vw, 1rem)', fontWeight: 600, lineHeight: 1.2 };
-const kpiValueStyle: React.CSSProperties = { fontSize: 'clamp(1.2rem, 5vw, 2.5rem)', fontWeight: 600, color: COLORS.naranjo, margin: '8px 0 0 0' };
-const chartTitleStyle: React.CSSProperties = { margin: '0 0 15px 0', color: COLORS.gris, fontSize: 'clamp(0.75rem, 2vw, 1rem)', fontWeight: 600, borderBottom: '1px solid #eee', paddingBottom: '8px', whiteSpace: 'normal', lineHeight: 1.2 };
+// Estilos rediseñados y compactados (Idénticos a DotacionTab)
+const cardStyle: React.CSSProperties = { backgroundColor: COLORS.blanco, padding: '12px', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)', minWidth: 0, boxSizing: 'border-box' };
+const summaryCardStyle: React.CSSProperties = { flex: '1 1 0px', minWidth: 'clamp(90px, 15vw, 150px)', backgroundColor: COLORS.blanco, padding: '10px 4px', borderRadius: '8px', boxShadow: '0 4px 10px rgba(0,0,0,0.04)', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '80px', borderTop: `4px solid ${COLORS.magenta}`, boxSizing: 'border-box' };
+const kpiTitleStyle: React.CSSProperties = { margin: 0, color: '#666', fontSize: 'clamp(0.55rem, 1.1vw, 0.8rem)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' };
+const kpiValueStyle: React.CSSProperties = { fontSize: 'clamp(1.1rem, 2.5vw, 2rem)', fontWeight: 600, color: COLORS.naranjo, margin: '2px 0 0 0' };
+const chartTitleStyle: React.CSSProperties = { margin: '0 0 10px 0', color: COLORS.gris, fontSize: 'clamp(0.75rem, 1.5vw, 0.9rem)', fontWeight: 600, borderBottom: '1px solid #eee', paddingBottom: '6px', whiteSpace: 'normal', lineHeight: 1.2 };
