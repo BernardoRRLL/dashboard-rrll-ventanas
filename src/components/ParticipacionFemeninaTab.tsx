@@ -99,21 +99,22 @@ export default function ParticipacionFemeninaTab({ rawData }: ParticipacionFemen
     const years: { [key: string]: number } = {};
     
     womenData.forEach(row => {
-      const fechaRaw = row['Fecha Ingreso'] || row['Fecha de Ingreso'] || row['Fecha Ingreso DVEN'] || row['Fecha de Ingeso a la Empresa'] || '';
+      // PRIORIDAD ABSOLUTA: "Fecha Ingreso DVEN" por sobre las demás.
+      const fechaRaw = row['Fecha Ingreso DVEN'] || row['Fecha Ingreso'] || row['Fecha de Ingreso'] || '';
       const fecha = String(fechaRaw).trim();
-      if (!fecha) return;
+      if (!fecha || fecha === 'undefined') return;
 
       let year: string | null = null;
 
-      if (/^\d{5}$/.test(fecha)) {
-        const serial = parseInt(fecha, 10);
-        try {
-          const jsDate = new Date((serial - 25569) * 86400 * 1000);
-          const fullYear = jsDate.getFullYear();
-          if (fullYear >= 1950 && fullYear <= 2050) year = String(fullYear);
-        } catch (e) {}
+      // Detector robusto de fechas Excel (Soporta enteros y decimales)
+      const serialNum = Number(fecha.replace(',', '.')); 
+      if (!isNaN(serialNum) && serialNum > 10000) {
+        const jsDate = new Date(Math.round((serialNum - 25569) * 86400 * 1000));
+        const fullYear = jsDate.getUTCFullYear();
+        if (fullYear >= 1950 && fullYear <= 2050) year = String(fullYear);
       }
 
+      // Fallback para fechas de texto estándar
       if (!year) {
         const match4 = fecha.match(/(19|20)\d{2}/);
         if (match4) {
@@ -208,7 +209,7 @@ export default function ParticipacionFemeninaTab({ rawData }: ParticipacionFemen
   );
 }
 
-// Estilos rediseñados y compactados (Idénticos a DotacionTab)
+// Estilos rediseñados y compactados
 const cardStyle: React.CSSProperties = { backgroundColor: COLORS.blanco, padding: '12px', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)', minWidth: 0, boxSizing: 'border-box' };
 const summaryCardStyle: React.CSSProperties = { flex: '1 1 0px', minWidth: 'clamp(90px, 15vw, 150px)', backgroundColor: COLORS.blanco, padding: '10px 4px', borderRadius: '8px', boxShadow: '0 4px 10px rgba(0,0,0,0.04)', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '80px', borderTop: `4px solid ${COLORS.magenta}`, boxSizing: 'border-box' };
 const kpiTitleStyle: React.CSSProperties = { margin: 0, color: '#666', fontSize: 'clamp(0.55rem, 1.1vw, 0.8rem)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' };
