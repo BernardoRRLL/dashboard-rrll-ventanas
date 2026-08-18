@@ -347,16 +347,15 @@ export default function LicenciasTab({ rawData, dotacionData }: LicenciasProps) 
       <div className="licencias-calendar-layout">
         
         <div style={cardStyle}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
             <button style={navButton} onClick={() => setCalendarDate(new Date(year, month - 1, 1))}>◀ Anterior</button>
             <h3 style={{ margin: 0, color: COLORS.gris, fontWeight: 600 }}>{monthNames[month]} {year}</h3>
             <button style={navButton} onClick={() => setCalendarDate(new Date(year, month + 1, 1))}>Siguiente ▶</button>
           </div>
           
-          <div style={{ display: 'flex', gap: '15px', marginBottom: '15px', justifyContent: 'center', fontSize: '0.85rem', color: COLORS.gris }}>
+          <div style={{ display: 'flex', gap: '15px', marginBottom: '10px', justifyContent: 'center', fontSize: '0.8rem', color: COLORS.gris }}>
             {!selectedLicense ? (
               <>
-                {/* CORRECCIÓN DE LA LEYENDA GENERAL: Rojo (Inicio) y Verde (Retorno) */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                   <div style={{...dotStyle, backgroundColor: COLORS.rojoInicio, position: 'relative', transform: 'none'}}></div> Inicio
                 </div>
@@ -367,7 +366,7 @@ export default function LicenciasTab({ rawData, dotacionData }: LicenciasProps) 
             ) : (
               <>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                  <div style={{ width: '20px', height: '10px', backgroundColor: 'rgba(229, 57, 53, 0.2)', border: '1px solid rgba(229, 57, 53, 0.4)', borderRadius: '2px' }}></div> Periodo Ausente
+                  <div style={{ width: '16px', height: '8px', backgroundColor: 'rgba(229, 57, 53, 0.2)', border: '1px solid rgba(229, 57, 53, 0.4)', borderRadius: '2px' }}></div> Periodo Ausente
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                   <div style={{...dotStyle, backgroundColor: COLORS.verdeFin, position: 'relative', transform: 'none', borderRadius: '4px'}}>✓</div> Día de Retorno
@@ -390,39 +389,39 @@ export default function LicenciasTab({ rawData, dotacionData }: LicenciasProps) 
           
           {selectedLicense ? (
             // VISTA DE DETALLE DEL TRABAJADOR
-            <div style={{ backgroundColor: COLORS.blanco, padding: '25px', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
+            <div style={{ backgroundColor: COLORS.blanco, padding: '20px', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)', boxSizing: 'border-box' }}>
               <button 
                 onClick={() => setSelectedLicense(null)}
-                style={{ background: 'none', border: 'none', color: COLORS.naranjo, fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '20px', padding: 0 }}
+                style={{ background: 'none', border: 'none', color: COLORS.naranjo, fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '15px', padding: 0 }}
               >
                 ← Volver a los retornos
               </button>
               
-              <div style={{ borderBottom: '2px solid #eee', paddingBottom: '15px', marginBottom: '20px' }}>
-                <h4 style={{ margin: '0 0 5px 0', fontSize: '1.2rem', color: COLORS.gris, fontWeight: 700, lineHeight: 1.2 }}>{selectedLicense.nombre}</h4>
-                <p style={{ margin: '0 0 5px 0', fontSize: '0.9rem', color: '#666', fontWeight: 500 }}>{selectedLicense.cargo}</p>
+              <div style={{ borderBottom: '1px solid #eee', paddingBottom: '15px', marginBottom: '15px' }}>
+                <h4 style={{ margin: '0 0 5px 0', fontSize: '1rem', color: COLORS.gris, fontWeight: 700, lineHeight: 1.2 }}>{selectedLicense.nombre}</h4>
+                <p style={{ margin: '0 0 5px 0', fontSize: '0.85rem', color: '#666', fontWeight: 500 }}>{selectedLicense.cargo}</p>
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: '0.85rem', color: COLORS.celeste, fontWeight: 600 }}>{selectedLicense.area}</span>
-                  <span style={{ backgroundColor: '#f0f4f8', color: COLORS.gris, padding: '2px 8px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700 }}>{selectedLicense.grupo}</span>
+                  <span style={{ fontSize: '0.8rem', color: COLORS.celeste, fontWeight: 600 }}>{selectedLicense.area}</span>
+                  <span style={{ backgroundColor: '#f0f4f8', color: COLORS.gris, padding: '2px 8px', borderRadius: '6px', fontSize: '0.7rem', fontWeight: 700 }}>{selectedLicense.grupo}</span>
                 </div>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                 <div>
-                  <p style={{ margin: 0, fontSize: '0.8rem', color: '#888', textTransform: 'uppercase', fontWeight: 600 }}>Fecha de Inicio</p>
-                  <p style={{ margin: 0, fontSize: '1rem', color: COLORS.gris, fontWeight: 500 }}>{formatDateStr(selectedLicense.fechaInicio)}</p>
+                  <p style={{ margin: 0, fontSize: '0.75rem', color: '#888', textTransform: 'uppercase', fontWeight: 600 }}>Fecha de Inicio</p>
+                  <p style={{ margin: 0, fontSize: '0.9rem', color: COLORS.gris, fontWeight: 500 }}>{formatDateStr(selectedLicense.fechaInicio)}</p>
                 </div>
                 <div>
-                  <p style={{ margin: 0, fontSize: '0.8rem', color: '#888', textTransform: 'uppercase', fontWeight: 600 }}>Fecha de Término</p>
-                  <p style={{ margin: 0, fontSize: '1rem', color: COLORS.gris, fontWeight: 500 }}>{formatDateStr(selectedLicense.fechaTermino)}</p>
+                  <p style={{ margin: 0, fontSize: '0.75rem', color: '#888', textTransform: 'uppercase', fontWeight: 600 }}>Fecha de Término</p>
+                  <p style={{ margin: 0, fontSize: '0.9rem', color: COLORS.gris, fontWeight: 500 }}>{formatDateStr(selectedLicense.fechaTermino)}</p>
                 </div>
-                <div style={{ backgroundColor: '#E8F5E9', padding: '12px', borderRadius: '8px', borderLeft: `4px solid ${COLORS.verdeFin}` }}>
-                  <p style={{ margin: 0, fontSize: '0.85rem', color: COLORS.verdeFin, textTransform: 'uppercase', fontWeight: 700 }}>Día de Retorno al Trabajo</p>
-                  <p style={{ margin: 0, fontSize: '1.1rem', color: COLORS.gris, fontWeight: 700 }}>{formatDateStr(selectedLicense.fechaRetorno)}</p>
+                <div style={{ backgroundColor: '#E8F5E9', padding: '10px', borderRadius: '6px', borderLeft: `4px solid ${COLORS.verdeFin}` }}>
+                  <p style={{ margin: 0, fontSize: '0.75rem', color: COLORS.verdeFin, textTransform: 'uppercase', fontWeight: 700 }}>Día de Retorno</p>
+                  <p style={{ margin: 0, fontSize: '1rem', color: COLORS.gris, fontWeight: 700 }}>{formatDateStr(selectedLicense.fechaRetorno)}</p>
                 </div>
-                <div style={{ marginTop: '10px', paddingTop: '15px', borderTop: '1px dashed #eee' }}>
-                  <p style={{ margin: 0, fontSize: '0.8rem', color: '#888', textTransform: 'uppercase', fontWeight: 600 }}>Días Acumulados (Histórico)</p>
-                  <p style={{ margin: 0, fontSize: '1.2rem', color: selectedLicense.diasAcumulados >= 100 ? COLORS.rosado : COLORS.naranjo, fontWeight: 700 }}>
+                <div style={{ marginTop: '5px', paddingTop: '10px', borderTop: '1px dashed #eee' }}>
+                  <p style={{ margin: 0, fontSize: '0.75rem', color: '#888', textTransform: 'uppercase', fontWeight: 600 }}>Días Acum. (Histórico)</p>
+                  <p style={{ margin: 0, fontSize: '1.1rem', color: selectedLicense.diasAcumulados >= 100 ? COLORS.rosado : COLORS.naranjo, fontWeight: 700 }}>
                     {selectedLicense.diasAcumulados} días
                   </p>
                 </div>
@@ -431,20 +430,20 @@ export default function LicenciasTab({ rawData, dotacionData }: LicenciasProps) 
           ) : (
             // VISTA DE LISTA DE RETORNOS
             <>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
                 <div style={{ color: COLORS.verdeFin }}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                 </div>
-                <h4 style={{ margin: 0, color: COLORS.gris, fontSize: '1.1rem', fontWeight: 600, lineHeight: 1.2 }}>
-                  Retorno en los Próximos 7 Días
+                <h4 style={{ margin: 0, color: COLORS.gris, fontSize: '0.95rem', fontWeight: 600, lineHeight: 1.2 }}>
+                  Próximos 7 Días
                 </h4>
-                <span style={{ marginLeft: 'auto', backgroundColor: '#E8F5E9', color: COLORS.verdeFin, padding: '2px 8px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 700 }}>
+                <span style={{ marginLeft: 'auto', backgroundColor: '#E8F5E9', color: COLORS.verdeFin, padding: '2px 8px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 700 }}>
                   {upcomingReturns.length}
                 </span>
               </div>
               
               {upcomingReturns.length > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', maxHeight: '550px', overflowY: 'auto', paddingRight: '5px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '420px', overflowY: 'auto', paddingRight: '5px' }}>
                   {upcomingReturns.map((ret) => {
                     const isToday = ret.fechaRetorno.getTime() === today.getTime();
                     const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
@@ -459,40 +458,41 @@ export default function LicenciasTab({ rawData, dotacionData }: LicenciasProps) 
                           borderRadius: '8px', 
                           overflow: 'hidden', 
                           border: isToday ? `2px solid ${COLORS.verdeFin}` : '1px solid #eee', 
-                          boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
-                          minHeight: '110px',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.03)',
+                          minHeight: '80px',
                           cursor: 'pointer',
-                          transition: 'transform 0.2s, box-shadow 0.2s'
+                          transition: 'transform 0.2s, box-shadow 0.2s',
+                          boxSizing: 'border-box'
                         }}
-                        onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 12px rgba(0,0,0,0.1)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 2px 5px rgba(0,0,0,0.05)'; }}
+                        onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.08)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.03)'; }}
                       >
                         <div style={{ 
                           backgroundColor: isToday ? COLORS.verdeFin : COLORS.celeste, 
                           color: COLORS.blanco, 
-                          padding: '15px 10px', 
+                          padding: '10px 8px', 
                           display: 'flex', 
                           flexDirection: 'column', 
                           alignItems: 'center', 
                           justifyContent: 'center', 
-                          minWidth: '85px' 
+                          minWidth: '60px' 
                         }}>
-                          <span style={{ fontSize: '1.8rem', fontWeight: 700, lineHeight: 1 }}>{ret.fechaRetorno.getDate()}</span>
-                          <span style={{ fontSize: '0.90rem', textTransform: 'uppercase', fontWeight: 600, marginTop: '2px' }}>{months[ret.fechaRetorno.getMonth()]}</span>
+                          <span style={{ fontSize: '1.4rem', fontWeight: 700, lineHeight: 1 }}>{ret.fechaRetorno.getDate()}</span>
+                          <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 600, marginTop: '2px' }}>{months[ret.fechaRetorno.getMonth()]}</span>
                         </div>
                         
-                        <div style={{ padding: '15px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                          <h5 style={{ margin: '0 0 4px 0', fontSize: '1rem', color: COLORS.gris, fontWeight: 700, lineHeight: 1.2 }}>{ret.nombre}</h5>
-                          <p style={{ margin: '0 0 2px 0', fontSize: '0.85rem', color: '#666', fontWeight: 500 }}>{ret.cargo}</p>
-                          <p style={{ margin: '0 0 10px 0', fontSize: '0.85rem', color: COLORS.naranjo, fontWeight: 600 }}>{ret.area}</p>
+                        <div style={{ padding: '10px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                          <h5 style={{ margin: '0 0 2px 0', fontSize: '0.85rem', color: COLORS.gris, fontWeight: 700, lineHeight: 1.2 }}>{ret.nombre}</h5>
+                          <p style={{ margin: '0 0 2px 0', fontSize: '0.75rem', color: '#666', fontWeight: 500 }}>{ret.cargo}</p>
+                          <p style={{ margin: '0 0 6px 0', fontSize: '0.75rem', color: COLORS.naranjo, fontWeight: 600 }}>{ret.area}</p>
                           
                           <div style={{ marginTop: 'auto' }}>
                             <span style={{ 
                               display: 'inline-block', 
-                              padding: '3px 10px', 
+                              padding: '2px 8px', 
                               backgroundColor: isToday ? '#E8F5E9' : '#f0f4f8', 
                               borderRadius: '6px', 
-                              fontSize: '0.75rem', 
+                              fontSize: '0.7rem', 
                               fontWeight: 700, 
                               color: isToday ? COLORS.verdeFin : COLORS.celeste 
                             }}>
@@ -505,7 +505,7 @@ export default function LicenciasTab({ rawData, dotacionData }: LicenciasProps) 
                   })}
                 </div>
               ) : (
-                <div style={{ ...cardStyle, textAlign: 'center', color: '#888', fontStyle: 'italic', padding: '30px 20px' }}>
+                <div style={{ ...cardStyle, textAlign: 'center', color: '#888', fontStyle: 'italic', padding: '20px 10px' }}>
                   No hay retornos programados para los próximos días.
                 </div>
               )}
@@ -518,13 +518,13 @@ export default function LicenciasTab({ rawData, dotacionData }: LicenciasProps) 
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(15px, 3vw, 25px)', fontFamily: "'Poppins', sans-serif" }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', fontFamily: "'Poppins', sans-serif" }}>
       
       <style>{`
         .licencias-calendar-layout {
           display: grid;
           grid-template-columns: 2fr 1.2fr;
-          gap: 25px;
+          gap: 15px;
           align-items: start;
         }
         @media (max-width: 900px) {
@@ -535,7 +535,8 @@ export default function LicenciasTab({ rawData, dotacionData }: LicenciasProps) 
         }
       `}</style>
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: 'clamp(-10px, -4vw, -45px)', position: 'relative', zIndex: 10 }}>
+      {/* Toggle alineado a la derecha, sin márgenes negativos destructivos */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
         <button 
           onClick={() => { setView('tablero'); setSelectedLicense(null); }}
           style={{...tabButton, backgroundColor: view === 'tablero' ? COLORS.celeste : COLORS.blanco, color: view === 'tablero' ? COLORS.blanco : COLORS.gris}}
@@ -550,19 +551,19 @@ export default function LicenciasTab({ rawData, dotacionData }: LicenciasProps) 
         </button>
       </div>
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'clamp(10px, 1.5vw, 20px)', width: '100%', justifyContent: 'space-between' }}>
-        <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>Licencias</h4><p style={kpiValueStyle}>{totalLicencias}</p></div>
-        <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>Días Acum.<br/>(Últimos 12)</h4><p style={{...kpiValueStyle, color: COLORS.naranjo}}>{totalDias12Meses}</p></div>
-        <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>LM Mayores<br/>a 100 Días</h4><p style={{...kpiValueStyle, color: COLORS.rosado}}>{licenciasMayoresA100}</p></div>
-        <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>Promedio<br/>Días / Licencia</h4><p style={kpiValueStyle}>{promedioDias}</p></div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', width: '100%', justifyContent: 'space-between', boxSizing: 'border-box' }}>
+        <div style={{...summaryCardStyle, borderTop: `4px solid ${COLORS.rojoInicio}`}}><h4 style={kpiTitleStyle}>Licencias</h4><p style={kpiValueStyle}>{totalLicencias}</p></div>
+        <div style={{...summaryCardStyle, borderTop: `4px solid ${COLORS.naranjo}`}}><h4 style={kpiTitleStyle}>Días Acum.<br/>(Últimos 12)</h4><p style={{...kpiValueStyle, color: COLORS.naranjo}}>{totalDias12Meses}</p></div>
+        <div style={{...summaryCardStyle, borderTop: `4px solid ${COLORS.rosado}`}}><h4 style={kpiTitleStyle}>LM Mayores<br/>a 100 Días</h4><p style={{...kpiValueStyle, color: COLORS.rosado}}>{licenciasMayoresA100}</p></div>
+        <div style={{...summaryCardStyle, borderTop: `4px solid ${COLORS.celeste}`}}><h4 style={kpiTitleStyle}>Promedio<br/>Días / Licencia</h4><p style={kpiValueStyle}>{promedioDias}</p></div>
       </div>
 
       {view === 'tablero' ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: 'clamp(10px, 2vw, 20px)' }}>
-          <div style={cardStyle}><h4 style={chartTitleStyle}>Cantidad de Licencias por Gerencia</h4><div style={{ width: '100%', height: '260px' }}><Bar data={getLicenciasPorGerencia()} options={horizontalBarOptions} /></div></div>
-          <div style={cardStyle}><h4 style={chartTitleStyle}>Distribución por Especialidad Médica</h4><div style={{ width: '100%', height: '260px' }}><Doughnut data={getEspecialidadData()} options={doughnutOptions} /></div></div>
-          <div style={cardStyle}><h4 style={chartTitleStyle}>Distribución por Grupo de Trabajo</h4><div style={{ width: '100%', height: '260px' }}><Bar data={getGrupoData()} options={verticalBarOptions} /></div></div>
-          <div style={cardStyle}><h4 style={chartTitleStyle}>Análisis de Extensión (Nuevas vs Continuación)</h4><div style={{ width: '100%', height: '260px' }}><Bar data={getContinuacionData()} options={verticalBarOptions} /></div></div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: '15px' }}>
+          <div style={cardStyle}><h4 style={chartTitleStyle}>Cantidad de Licencias por Gerencia</h4><div style={{ width: '100%', height: '220px' }}><Bar data={getLicenciasPorGerencia()} options={horizontalBarOptions} /></div></div>
+          <div style={cardStyle}><h4 style={chartTitleStyle}>Distribución por Especialidad Médica</h4><div style={{ width: '100%', height: '220px' }}><Doughnut data={getEspecialidadData()} options={doughnutOptions} /></div></div>
+          <div style={cardStyle}><h4 style={chartTitleStyle}>Distribución por Grupo de Trabajo</h4><div style={{ width: '100%', height: '220px' }}><Bar data={getGrupoData()} options={verticalBarOptions} /></div></div>
+          <div style={cardStyle}><h4 style={chartTitleStyle}>Análisis de Extensión</h4><div style={{ width: '100%', height: '220px' }}><Bar data={getContinuacionData()} options={verticalBarOptions} /></div></div>
         </div>
       ) : (
         renderCalendar()
@@ -572,19 +573,20 @@ export default function LicenciasTab({ rawData, dotacionData }: LicenciasProps) 
   );
 }
 
-const cardStyle: React.CSSProperties = { backgroundColor: COLORS.blanco, padding: 'clamp(10px, 2vw, 20px)', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)', minWidth: 0 };
-const summaryCardStyle: React.CSSProperties = { flex: 1, minWidth: 0, backgroundColor: COLORS.blanco, padding: 'clamp(8px, 1.5vw, 20px) clamp(2px, 0.5vw, 10px)', borderRadius: '10px', boxShadow: '0 4px 10px rgba(0,0,0,0.04)', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '100px' };
-const kpiTitleStyle: React.CSSProperties = { margin: 0, color: COLORS.gris, fontSize: 'clamp(0.50rem, 1.3vw, 0.9rem)', fontWeight: 600, lineHeight: 1.2 };
-const kpiValueStyle: React.CSSProperties = { fontSize: 'clamp(1rem, 3.5vw, 2.2rem)', fontWeight: 600, color: COLORS.celeste, margin: '5px 0 0 0' };
-const chartTitleStyle: React.CSSProperties = { margin: '0 0 15px 0', color: COLORS.gris, fontSize: 'clamp(0.70rem, 1.8vw, 1.1rem)', fontWeight: 600, borderBottom: '1px solid #eee', paddingBottom: '8px', whiteSpace: 'normal', lineHeight: 1.2 };
-const tabButton: React.CSSProperties = { padding: '6px 18px', borderRadius: '8px', border: `1px solid ${COLORS.celeste}`, fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer', transition: 'all 0.3s ease', fontFamily: "'Poppins', sans-serif" };
+// Estilos rediseñados y compactados
+const cardStyle: React.CSSProperties = { backgroundColor: COLORS.blanco, padding: '12px', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)', minWidth: 0, boxSizing: 'border-box' };
+const summaryCardStyle: React.CSSProperties = { flex: '1 1 0px', minWidth: 'clamp(90px, 15vw, 150px)', backgroundColor: COLORS.blanco, padding: '10px 4px', borderRadius: '8px', boxShadow: '0 4px 10px rgba(0,0,0,0.04)', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '80px', boxSizing: 'border-box' };
+const kpiTitleStyle: React.CSSProperties = { margin: 0, color: '#666', fontSize: 'clamp(0.55rem, 1.1vw, 0.8rem)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' };
+const kpiValueStyle: React.CSSProperties = { fontSize: 'clamp(1.1rem, 2.5vw, 2rem)', fontWeight: 600, color: COLORS.celeste, margin: '2px 0 0 0' };
+const chartTitleStyle: React.CSSProperties = { margin: '0 0 10px 0', color: COLORS.gris, fontSize: 'clamp(0.75rem, 1.5vw, 0.9rem)', fontWeight: 600, borderBottom: '1px solid #eee', paddingBottom: '6px', whiteSpace: 'normal', lineHeight: 1.2 };
+const tabButton: React.CSSProperties = { padding: '4px 12px', borderRadius: '6px', border: `1px solid ${COLORS.celeste}`, fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: "'Poppins', sans-serif" };
 
-const navButton: React.CSSProperties = { padding: '5px 15px', backgroundColor: 'transparent', border: `1px solid #ddd`, borderRadius: '4px', cursor: 'pointer', color: COLORS.gris, fontWeight: 600, fontFamily: "'Poppins', sans-serif" };
-const calendarGrid: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '5px' };
-const calendarHeaderDay: React.CSSProperties = { textAlign: 'center', fontWeight: 600, color: COLORS.gris, padding: '10px 0', borderBottom: '2px solid #eee', fontSize: '0.9rem' };
-const calendarCell: React.CSSProperties = { minHeight: '75px', padding: '5px', border: '1px solid #eee', borderRadius: '4px', backgroundColor: '#fafafa', display: 'flex', flexDirection: 'column', transition: 'background-color 0.2s', cursor: 'default' };
-const calendarCellEmpty: React.CSSProperties = { minHeight: '75px', backgroundColor: 'transparent' };
-const calendarDayNumber: React.CSSProperties = { fontSize: '0.85rem', fontWeight: 600, color: '#888', alignSelf: 'flex-end', marginBottom: 'auto', zIndex: 2 };
-const dotsContainer: React.CSSProperties = { display: 'flex', justifyContent: 'space-around', alignItems: 'center', marginTop: '10px', gap: '5px' };
-const dotStyle: React.CSSProperties = { width: '14px', height: '14px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'transform 0.2s' };
-const dotCount: React.CSSProperties = { color: 'white', fontSize: '9px', fontWeight: 'bold' };
+const navButton: React.CSSProperties = { padding: '4px 10px', backgroundColor: 'transparent', border: `1px solid #ddd`, borderRadius: '4px', cursor: 'pointer', color: COLORS.gris, fontWeight: 600, fontSize: '0.8rem', fontFamily: "'Poppins', sans-serif" };
+const calendarGrid: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' };
+const calendarHeaderDay: React.CSSProperties = { textAlign: 'center', fontWeight: 600, color: COLORS.gris, padding: '5px 0', borderBottom: '1px solid #eee', fontSize: '0.8rem' };
+const calendarCell: React.CSSProperties = { minHeight: '60px', padding: '4px', border: '1px solid #eee', borderRadius: '4px', backgroundColor: '#fafafa', display: 'flex', flexDirection: 'column', transition: 'background-color 0.2s', cursor: 'default', boxSizing: 'border-box' };
+const calendarCellEmpty: React.CSSProperties = { minHeight: '60px', backgroundColor: 'transparent' };
+const calendarDayNumber: React.CSSProperties = { fontSize: '0.75rem', fontWeight: 600, color: '#888', alignSelf: 'flex-end', marginBottom: 'auto', zIndex: 2 };
+const dotsContainer: React.CSSProperties = { display: 'flex', justifyContent: 'space-around', alignItems: 'center', marginTop: '5px', gap: '3px' };
+const dotStyle: React.CSSProperties = { width: '12px', height: '12px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'transform 0.2s' };
+const dotCount: React.CSSProperties = { color: 'white', fontSize: '8px', fontWeight: 'bold' };
