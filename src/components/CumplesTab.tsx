@@ -112,7 +112,8 @@ export default function CumplesTab({ rawData, jefaturaData = [] }: CumpleanosPro
     const nextMonday = new Date(today);
     nextMonday.setDate(today.getDate() + daysToNextMonday);
 
-    const proximosDiasTarget = [];
+    // CORRECCIÓN: Se define explícitamente como arreglo de strings para TypeScript
+    const proximosDiasTarget: string[] = [];
     for (let i = 0; i < 7; i++) {
       const d = new Date(nextMonday);
       d.setDate(nextMonday.getDate() + i);
