@@ -93,51 +93,63 @@ export default function DotacionTab({ rawData, stats }: DotacionTabProps) {
 
   const pieOptions: any = {
     responsive: true, maintainAspectRatio: false,
-    // La leyenda se mueve abajo para que no aplaste la torta en móviles al forzar 2 por línea
     plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 9, family: "'Poppins', sans-serif" } } }, datalabels: { color: '#ffffff', font: { weight: 600, size: 10, family: "'Poppins', sans-serif" } } }
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(15px, 3vw, 25px)', fontFamily: "'Poppins', sans-serif" }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', fontFamily: "'Poppins', sans-serif" }}>
       
-      {/* 1. Resumen Superior (Una sola línea inquebrantable) */}
-      <div style={{ display: 'flex', flexWrap: 'nowrap', gap: 'clamp(8px, 2vw, 25px)', width: '100%', justifyContent: 'space-between' }}>
+      {/* 1. Resumen Superior (Estilos importados idénticos a App.tsx) */}
+      <div style={{ display: 'flex', flexWrap: 'nowrap', gap: '15px', width: '100%', justifyContent: 'space-between', boxSizing: 'border-box' }}>
         <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>Dotación</h4><p style={kpiValueStyle}>{stats.total}</p></div>
         <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>Contratos Indefinidos</h4><p style={kpiValueStyle}>{stats.indefinido}%</p></div>
         <div style={summaryCardStyle}><h4 style={kpiTitleStyle}>Edad Promedio</h4><p style={kpiValueStyle}>{stats.edadPromedio}</p></div>
       </div>
 
-      {/* 2. Gráficos Principales (1 por línea en móvil al ser divs bloque normales) */}
-      <div style={cardStyle}><h4 style={chartTitleStyle}>Dotación por Gerencia / Superintendencia</h4><div style={{ width: '100%', height: '350px' }}><Bar data={getGerenciaData()} options={commonBarOptions} /></div></div>
-      <div style={cardStyle}><h4 style={chartTitleStyle}>Edad Promedio por Gerencia / Superintendencia</h4><div style={{ width: '100%', height: '350px' }}><Bar data={getEdadPromedioPorGerencia()} options={commonBarOptions} /></div></div>
-
-      {/* Gráficos de Rango Etario (Bajan a 1 por línea solos en móvil gracias al minmax 320px) */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: 'clamp(15px, 3vw, 20px)' }}>
-        <div style={cardStyle}><h4 style={chartTitleStyle}>Distribución por Rango Etario</h4><div style={{ width: '100%', height: '300px' }}><Bar data={getRangoEtarioData()} options={commonBarOptions} /></div></div>
+      {/* 2. Gráficos Principales (Ahora comparten línea en PC y bajan su altura) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 400px), 1fr))', gap: '15px' }}>
         <div style={cardStyle}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #eee', paddingBottom: '8px', marginBottom: '15px' }}>
-            <h4 style={{ margin: 0, color: COLORS.gris, fontSize: 'clamp(0.85rem, 2vw, 1rem)', fontWeight: 600 }}>Rango Etario por Sexo</h4>
-            <div style={{ fontSize: 'clamp(0.7rem, 1.5vw, 0.8rem)', color: '#666' }}>Promedio: <span style={{color: COLORS.naranjo, fontWeight: 600}}>F {stats.edadPromedioF}</span> | <span style={{color: COLORS.celeste, fontWeight: 600}}>M {stats.edadPromedioM}</span></div>
-          </div>
-          <div style={{ width: '100%', height: '260px' }}><Bar data={getRangoEtarioPorSexoData()} options={butterflyOptions} /></div>
+          <h4 style={chartTitleStyle}>Dotación por Gerencia</h4>
+          <div style={{ width: '100%', height: '280px' }}><Bar data={getGerenciaData()} options={commonBarOptions} /></div>
+        </div>
+        <div style={cardStyle}>
+          <h4 style={chartTitleStyle}>Edad Promedio por Gerencia</h4>
+          <div style={{ width: '100%', height: '280px' }}><Bar data={getEdadPromedioPorGerencia()} options={commonBarOptions} /></div>
         </div>
       </div>
 
-      {/* 3. Cuadrícula Final Estricta: 2 por línea en PC y Celular */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 'clamp(10px, 2vw, 20px)' }}>
-        <div style={cardStyle}><h4 style={chartTitleStyle}>Distribución por Grupo</h4><div style={{ width: '100%', height: '220px' }}><Pie data={getPieOrBarData('Grupo')} options={pieOptions} /></div></div>
-        <div style={cardStyle}><h4 style={chartTitleStyle}>Distribución por Turno</h4><div style={{ width: '100%', height: '220px' }}><Pie data={getPieOrBarData('Turno')} options={pieOptions} /></div></div>
-        <div style={cardStyle}><h4 style={chartTitleStyle}>Distribución por Rol</h4><div style={{ width: '100%', height: '220px' }}><Bar data={getRolBarData()} options={commonBarOptions} /></div></div>
-        <div style={cardStyle}><h4 style={chartTitleStyle}>Distribución por Sexo</h4><div style={{ width: '100%', height: '220px' }}><Pie data={getPieOrBarData('Sexo')} options={pieOptions} /></div></div>
+      {/* 3. Gráficos de Rango Etario (Alturas reducidas) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: '15px' }}>
+        <div style={cardStyle}>
+          <h4 style={chartTitleStyle}>Distribución por Rango Etario</h4>
+          <div style={{ width: '100%', height: '240px' }}><Bar data={getRangoEtarioData()} options={commonBarOptions} /></div>
+        </div>
+        <div style={cardStyle}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #eee', paddingBottom: '6px', marginBottom: '10px' }}>
+            <h4 style={{ margin: 0, color: COLORS.gris, fontSize: 'clamp(0.75rem, 1.5vw, 0.9rem)', fontWeight: 600 }}>Rango Etario por Sexo</h4>
+            <div style={{ fontSize: 'clamp(0.65rem, 1vw, 0.75rem)', color: '#666' }}>
+              Promedio: <span style={{color: COLORS.naranjo, fontWeight: 600}}>F {stats.edadPromedioF}</span> | <span style={{color: COLORS.celeste, fontWeight: 600}}>M {stats.edadPromedioM}</span>
+            </div>
+          </div>
+          <div style={{ width: '100%', height: '240px' }}><Bar data={getRangoEtarioPorSexoData()} options={butterflyOptions} /></div>
+        </div>
+      </div>
+
+      {/* 4. Cuadrícula Final Estricta: 2 por línea en PC y Celular (Alturas reducidas a 180px) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
+        <div style={cardStyle}><h4 style={chartTitleStyle}>Distribución por Grupo</h4><div style={{ width: '100%', height: '180px' }}><Pie data={getPieOrBarData('Grupo')} options={pieOptions} /></div></div>
+        <div style={cardStyle}><h4 style={chartTitleStyle}>Distribución por Turno</h4><div style={{ width: '100%', height: '180px' }}><Pie data={getPieOrBarData('Turno')} options={pieOptions} /></div></div>
+        <div style={cardStyle}><h4 style={chartTitleStyle}>Distribución por Rol</h4><div style={{ width: '100%', height: '180px' }}><Bar data={getRolBarData()} options={commonBarOptions} /></div></div>
+        <div style={cardStyle}><h4 style={chartTitleStyle}>Distribución por Sexo</h4><div style={{ width: '100%', height: '180px' }}><Pie data={getPieOrBarData('Sexo')} options={pieOptions} /></div></div>
       </div>
       
     </div>
   );
 }
 
-// Estilos fluidos y elásticos con minWidth: 0
-const cardStyle: React.CSSProperties = { backgroundColor: COLORS.blanco, padding: 'clamp(10px, 2vw, 18px)', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)', minWidth: 0 };
-const summaryCardStyle: React.CSSProperties = { flex: 1, minWidth: 0, backgroundColor: COLORS.blanco, padding: 'clamp(10px, 2vw, 25px) clamp(5px, 1vw, 15px)', borderRadius: '10px', boxShadow: '0 4px 10px rgba(0,0,0,0.04)', textAlign: 'center' };
-const kpiTitleStyle: React.CSSProperties = { margin: 0, color: COLORS.gris, fontSize: 'clamp(0.6rem, 2vw, 1rem)', fontWeight: 600, lineHeight: 1.2 };
-const kpiValueStyle: React.CSSProperties = { fontSize: 'clamp(1.2rem, 5vw, 2.5rem)', fontWeight: 600, color: COLORS.celeste, margin: '8px 0 0 0' };
-const chartTitleStyle: React.CSSProperties = { margin: '0 0 15px 0', color: COLORS.gris, fontSize: 'clamp(0.75rem, 2vw, 1rem)', fontWeight: 600, borderBottom: '1px solid #eee', paddingBottom: '8px', whiteSpace: 'normal', lineHeight: 1.2 };
+// Estilos rediseñados y compactados
+const cardStyle: React.CSSProperties = { backgroundColor: COLORS.blanco, padding: '12px', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)', minWidth: 0, boxSizing: 'border-box' };
+const summaryCardStyle: React.CSSProperties = { flex: '1 1 0px', minWidth: 'clamp(90px, 15vw, 150px)', backgroundColor: COLORS.blanco, padding: '10px 4px', borderRadius: '8px', boxShadow: '0 4px 10px rgba(0,0,0,0.04)', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '80px', borderTop: `4px solid ${COLORS.celeste}`, boxSizing: 'border-box' };
+const kpiTitleStyle: React.CSSProperties = { margin: 0, color: '#666', fontSize: 'clamp(0.55rem, 1.1vw, 0.8rem)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' };
+const kpiValueStyle: React.CSSProperties = { fontSize: 'clamp(1.1rem, 2.5vw, 2rem)', fontWeight: 600, color: COLORS.celeste, margin: '2px 0 0 0' };
+const chartTitleStyle: React.CSSProperties = { margin: '0 0 10px 0', color: COLORS.gris, fontSize: 'clamp(0.75rem, 1.5vw, 0.9rem)', fontWeight: 600, borderBottom: '1px solid #eee', paddingBottom: '6px', whiteSpace: 'normal', lineHeight: 1.2 };
