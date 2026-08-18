@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MapPin, Users, X } from 'lucide-react';
 // @ts-ignore
 import { ComposableMap, Geographies, Geography, ZoomableGroup } from 'react-simple-maps';
@@ -31,9 +31,10 @@ const COMUNAS_V_REGION = [
 
 interface ComunasProps {
   rawData: any[];
+  dotacionData: any[]; // <-- Aquí estaba el error. Faltaba declarar que recibimos esto.
 }
 
-export default function ComunasTab({ rawData }: ComunasProps) {
+export default function ComunasTab({ rawData, dotacionData }: ComunasProps) {
   const [comunasData, setComunasData] = useState<Record<string, number>>({});
   const [ranking, setRanking] = useState<any[]>([]);
   const [maxCount, setMaxCount] = useState(0);
@@ -135,11 +136,11 @@ export default function ComunasTab({ rawData }: ComunasProps) {
     return ''; 
   };
 
-  // Función para procesar y enriquecer los datos de los trabajadores cruzando con la sábana maestra
+  // Función para procesar y enriquecer los datos cruzando con la sábana maestra
   const handleComunaClick = (comunaName: string) => {
-    if (!rawData || rawData.length === 0) return;
+    if (!dotacionData || dotacionData.length === 0) return;
 
-    const workersList = rawData.filter((row: any) => {
+    const workersList = dotacionData.filter((row: any) => {
       const llaveEncontrada = Object.keys(row).find(k => k.toLowerCase().includes('comuna'));
       if (!llaveEncontrada) return false;
       const cleaned = normalizarComuna(String(row[llaveEncontrada]));
@@ -147,8 +148,6 @@ export default function ComunasTab({ rawData }: ComunasProps) {
     }).map(row => {
       const sapVal = row['SAP'] || row['Número de personal'] || '-';
       const nombreVal = row['Nombre'] || row['Nombre trabajador/a'] || '-';
-      
-      // Extracción robusta de Cargo, Turno y Grupo desde la fila maestra
       const cargoVal = row['Posición'] || row['Cargo'] || '-';
       const turnoVal = row['Turno'] || '-';
       const grupoVal = row['Grupo'] || '-';
