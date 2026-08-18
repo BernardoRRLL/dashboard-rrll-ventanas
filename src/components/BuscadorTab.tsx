@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Search, User, Briefcase, MapPin, Building2, ChevronUp } from 'lucide-react';
 
 const COLORS = {
@@ -17,9 +17,37 @@ interface BuscadorTabProps {
 }
 
 export default function BuscadorTab({ dotacionData, jefaturaData }: BuscadorTabProps) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedEmployee, setSelectedEmployee] = useState<any | null>(null);
+  // --- ESTADOS CON MEMORIA DE SESIÓN ---
+  const [searchTerm, setSearchTerm] = useState(() => {
+    return sessionStorage.getItem('buscador_searchTerm') || '';
+  });
+  
+  const [selectedEmployee, setSelectedEmployee] = useState<any | null>(() => {
+    const saved = sessionStorage.getItem('buscador_selectedEmployee');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  });
+  
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  // --- SINCRONIZACIÓN DE MEMORIA ---
+  useEffect(() => {
+    sessionStorage.setItem('buscador_searchTerm', searchTerm);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    if (selectedEmployee) {
+      sessionStorage.setItem('buscador_selectedEmployee', JSON.stringify(selectedEmployee));
+    } else {
+      sessionStorage.removeItem('buscador_selectedEmployee');
+    }
+  }, [selectedEmployee]);
 
   // --- DICCIONARIOS DE BÚSQUEDA RÁPIDA ---
   // 1. Diccionario de Dotación: Llave = SAP, Valor = Datos del Trabajador
