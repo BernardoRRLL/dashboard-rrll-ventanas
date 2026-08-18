@@ -69,7 +69,6 @@ export default function CumplesTab({ rawData }: CumpleanosProps) {
         mes: mesIntReal
       };
 
-      // Al no usar "else if", si alguien cumple hoy se guarda en los TRES arreglos a la vez
       if (mesExcel === currentMonthNameText) {
         monthList.push(empleado);
       }
@@ -96,39 +95,38 @@ export default function CumplesTab({ rawData }: CumpleanosProps) {
 
   const renderList = (titulo: string, lista: any[], icon: React.ReactNode, isDestacado: boolean = false) => (
     <div style={{ ...cardStyle, borderTop: isDestacado ? `4px solid ${COLORS.rosado}` : 'none' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '1px solid #eee', paddingBottom: '15px', marginBottom: '15px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '1px solid #eee', paddingBottom: '10px', marginBottom: '10px' }}>
         <div style={{ color: isDestacado ? COLORS.rosado : COLORS.naranjo }}>{icon}</div>
-        <h4 style={{ margin: 0, color: COLORS.gris, fontSize: '1.1rem', fontWeight: 600 }}>{titulo}</h4>
-        <span style={{ marginLeft: 'auto', backgroundColor: isDestacado ? '#fce4ec' : COLORS.fondo, padding: '2px 10px', borderRadius: '12px', fontSize: '0.85rem', fontWeight: 600, color: isDestacado ? COLORS.rosado : COLORS.celeste }}>
+        <h4 style={{ margin: 0, color: COLORS.gris, fontSize: '0.95rem', fontWeight: 600 }}>{titulo}</h4>
+        <span style={{ marginLeft: 'auto', backgroundColor: isDestacado ? '#fce4ec' : COLORS.fondo, padding: '2px 8px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 600, color: isDestacado ? COLORS.rosado : COLORS.celeste }}>
           {lista.length}
         </span>
       </div>
       
       {lista.length === 0 ? (
-        <p style={{ color: '#888', fontSize: '0.9rem', fontStyle: 'italic', textAlign: 'center', padding: '20px 0' }}>
+        <p style={{ color: '#888', fontSize: '0.85rem', fontStyle: 'italic', textAlign: 'center', padding: '15px 0' }}>
           {isDestacado ? 'No hay cumpleaños registrados para el día de hoy.' : 'No hay registros para este periodo.'}
         </p>
       ) : (
-        // Si es destacado (Hoy), usamos un Grid para que las tarjetas se acomoden horizontalmente
         <div style={{ 
           display: isDestacado ? 'grid' : 'flex', 
-          gridTemplateColumns: isDestacado ? 'repeat(auto-fill, minmax(280px, 1fr))' : 'none',
+          gridTemplateColumns: isDestacado ? 'repeat(auto-fill, minmax(250px, 1fr))' : 'none',
           flexDirection: isDestacado ? 'row' : 'column', 
-          gap: '10px', 
-          maxHeight: '500px', 
+          gap: '8px', 
+          maxHeight: '300px', 
           overflowY: 'auto', 
           paddingRight: '5px' 
         }}>
           {lista.map((emp: any, idx: number) => (
-            <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '15px', padding: '12px', backgroundColor: isDestacado ? '#fdf2f6' : COLORS.fondo, borderRadius: '8px', border: isDestacado ? `1px solid #f8bbd0` : '1px solid transparent' }}>
-              <div style={{ backgroundColor: isDestacado ? COLORS.rosado : COLORS.celeste, color: COLORS.blanco, width: '45px', height: '45px', borderRadius: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <span style={{ fontSize: '1.2rem', fontWeight: 700, lineHeight: '1' }}>{emp.dia}</span>
-                <span style={{ fontSize: '0.65rem', textTransform: 'uppercase' }}>{mesesStr[emp.mes - 1].substring(0,3)}</span>
+            <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px', backgroundColor: isDestacado ? '#fdf2f6' : COLORS.fondo, borderRadius: '8px', border: isDestacado ? `1px solid #f8bbd0` : '1px solid transparent', boxSizing: 'border-box' }}>
+              <div style={{ backgroundColor: isDestacado ? COLORS.rosado : COLORS.celeste, color: COLORS.blanco, width: '40px', height: '40px', borderRadius: '6px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <span style={{ fontSize: '1.1rem', fontWeight: 700, lineHeight: '1' }}>{emp.dia}</span>
+                <span style={{ fontSize: '0.6rem', textTransform: 'uppercase', marginTop: '1px' }}>{mesesStr[emp.mes - 1].substring(0,3)}</span>
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ margin: 0, fontWeight: 600, color: COLORS.gris, fontSize: '0.95rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{emp.nombre}</p>
-                <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: '#666', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{emp.cargo}</p>
-                <p style={{ margin: 0, fontSize: '0.75rem', color: isDestacado ? COLORS.rosado : COLORS.naranjo, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{emp.area}</p>
+                <p style={{ margin: 0, fontWeight: 600, color: COLORS.gris, fontSize: '0.85rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{emp.nombre}</p>
+                <p style={{ margin: '1px 0 0 0', fontSize: '0.7rem', color: '#666', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{emp.cargo}</p>
+                <p style={{ margin: 0, fontSize: '0.7rem', color: isDestacado ? COLORS.rosado : COLORS.naranjo, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{emp.area}</p>
               </div>
             </div>
           ))}
@@ -138,40 +136,41 @@ export default function CumplesTab({ rawData }: CumpleanosProps) {
   );
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '25px', fontFamily: "'Poppins', sans-serif" }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', fontFamily: "'Poppins', sans-serif" }}>
       
       {/* FILA 1: Resumen */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', width: '100%', justifyContent: 'space-between' }}>
-        <div style={{...summaryCardStyle, borderTop: `5px solid ${COLORS.rosado}`}}>
+      <div style={{ display: 'flex', flexWrap: 'nowrap', gap: '15px', width: '100%', justifyContent: 'space-between', boxSizing: 'border-box' }}>
+        <div style={{...summaryCardStyle, borderTop: `4px solid ${COLORS.rosado}`}}>
           <h4 style={kpiTitleStyle}>Hoy Cumplen</h4>
           <p style={{...kpiValueStyle, color: COLORS.rosado}}>{hoy.length}</p>
         </div>
-        <div style={summaryCardStyle}>
+        <div style={{...summaryCardStyle, borderTop: `4px solid ${COLORS.amarillo}`}}>
           <h4 style={kpiTitleStyle}>Próximos 7 Días</h4>
-          <p style={kpiValueStyle}>{proximos7Dias.length}</p>
+          <p style={{...kpiValueStyle, color: COLORS.amarillo}}>{proximos7Dias.length}</p>
         </div>
-        <div style={summaryCardStyle}>
+        <div style={{...summaryCardStyle, borderTop: `4px solid ${COLORS.celeste}`}}>
           <h4 style={kpiTitleStyle}>Total Mes de {currentMonthName}</h4>
-          <p style={kpiValueStyle}>{mesActual.length}</p>
+          <p style={{...kpiValueStyle, color: COLORS.celeste}}>{mesActual.length}</p>
         </div>
       </div>
 
       {/* FILA 2: Cumpleaños de Hoy (Ocupa todo el ancho) */}
-      <div style={{ width: '100%' }}>
-        {renderList('Cumpleaños de Hoy', hoy, <PartyPopper size={24} />, true)}
+      <div style={{ width: '100%', boxSizing: 'border-box' }}>
+        {renderList('Cumpleaños de Hoy', hoy, <PartyPopper size={20} />, true)}
       </div>
 
       {/* FILA 3: Dos columnas (Próximos 7 días y Mes) */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '25px' }}>
-        {renderList('Próximos 7 Días', proximos7Dias, <Gift size={24} />)}
-        {renderList(`Cumpleaños de ${currentMonthName}`, mesActual, <Calendar size={24} />)}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '15px', boxSizing: 'border-box' }}>
+        {renderList('Próximos 7 Días', proximos7Dias, <Gift size={20} />)}
+        {renderList(`Cumpleaños de ${currentMonthName}`, mesActual, <Calendar size={20} />)}
       </div>
       
     </div>
   );
 }
 
-const cardStyle: React.CSSProperties = { backgroundColor: COLORS.blanco, padding: '25px', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)', minWidth: 0 };
-const summaryCardStyle: React.CSSProperties = { flex: '1 1 200px', minWidth: 0, backgroundColor: COLORS.blanco, padding: '20px 10px', borderRadius: '10px', boxShadow: '0 4px 10px rgba(0,0,0,0.04)', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '110px', borderTop: `5px solid ${COLORS.celeste}` };
-const kpiTitleStyle: React.CSSProperties = { margin: 0, color: COLORS.gris, fontSize: '0.9rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' };
-const kpiValueStyle: React.CSSProperties = { fontSize: 'clamp(1.8rem, 3vw, 2.5rem)', fontWeight: 600, margin: '10px 0 0 0' };
+// Estilos rediseñados y compactados
+const cardStyle: React.CSSProperties = { backgroundColor: COLORS.blanco, padding: '15px', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)', minWidth: 0, boxSizing: 'border-box' };
+const summaryCardStyle: React.CSSProperties = { flex: '1 1 0px', minWidth: 'clamp(90px, 15vw, 150px)', backgroundColor: COLORS.blanco, padding: '10px 4px', borderRadius: '8px', boxShadow: '0 4px 10px rgba(0,0,0,0.04)', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '80px', boxSizing: 'border-box' };
+const kpiTitleStyle: React.CSSProperties = { margin: 0, color: '#666', fontSize: 'clamp(0.55rem, 1.1vw, 0.8rem)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' };
+const kpiValueStyle: React.CSSProperties = { fontSize: 'clamp(1.1rem, 2.5vw, 2rem)', fontWeight: 600, margin: '2px 0 0 0' };
