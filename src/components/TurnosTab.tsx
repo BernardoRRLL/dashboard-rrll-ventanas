@@ -21,7 +21,6 @@ const GRUPOS_TURNOS = [
 ];
 
 export default function TurnosTab() {
-  // MEJORA 2: Arrancar por defecto en el día actual
   const [calendarDate, setCalendarDate] = useState(new Date()); 
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
@@ -62,44 +61,42 @@ export default function TurnosTab() {
     const fechaFormateada = selectedDate.toLocaleDateString('es-CL', options);
 
     return (
-      <div style={{ backgroundColor: COLORS.blanco, padding: '20px', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', marginBottom: '20px' }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #eee', paddingBottom: '12px', marginBottom: '15px' }}>
-          <h4 style={{ margin: 0, color: COLORS.naranjo, fontSize: '1rem', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>
+      <div style={{ backgroundColor: COLORS.blanco, padding: '15px', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)', boxSizing: 'border-box' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #eee', paddingBottom: '10px', marginBottom: '10px' }}>
+          <h4 style={{ margin: 0, color: COLORS.naranjo, fontSize: '0.95rem', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 700 }}>
             Foto Operativa
           </h4>
-          <h3 style={{ margin: 0, color: COLORS.gris, fontSize: '1.1rem', fontWeight: 700, textTransform: 'capitalize' }}>
+          <h3 style={{ margin: 0, color: COLORS.gris, fontSize: '1rem', fontWeight: 700, textTransform: 'capitalize' }}>
             {fechaFormateada}
           </h3>
         </div>
 
-        {/* MEJORA 1: Centrado Vertical de los contenidos dentro de las tarjetas */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '15px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px' }}>
           
-          <div style={{ ...statusBadge, borderLeftColor: COLORS.naranjo, backgroundColor: '#FFF3E0', alignItems: 'flex-start' }}>
-            <span style={{ fontSize: '1.2rem', marginTop: '2px' }}>☀️</span>
+          <div style={{ ...statusBadge, borderLeftColor: COLORS.naranjo, backgroundColor: '#FFF3E0' }}>
+            <span style={{ fontSize: '1.2rem', marginTop: '1px' }}>☀️</span>
             <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: '100%' }}>
-              <p style={{ margin: '0 0 5px 0', fontSize: '0.8rem', color: COLORS.naranjo, fontWeight: 700, textTransform: 'uppercase' }}>Turno de Día</p>
-              {/* Contenedor flex para empujar el contenido al centro vertical */}
+              <p style={{ margin: '0 0 5px 0', fontSize: '0.75rem', color: COLORS.naranjo, fontWeight: 700, textTransform: 'uppercase' }}>Turno de Día</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', flex: 1, justifyContent: 'center' }}>
                 {enDia.length > 0 ? enDia.map(g => <span key={g.id} style={listTextItem}>{g.label}</span>) : <span style={listTextItem}>Ninguno</span>}
               </div>
             </div>
           </div>
 
-          <div style={{ ...statusBadge, borderLeftColor: COLORS.celeste, backgroundColor: '#E0F7FA', alignItems: 'flex-start' }}>
-            <span style={{ fontSize: '1.2rem', marginTop: '2px' }}>🌙</span>
+          <div style={{ ...statusBadge, borderLeftColor: COLORS.celeste, backgroundColor: '#E0F7FA' }}>
+            <span style={{ fontSize: '1.2rem', marginTop: '1px' }}>🌙</span>
             <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: '100%' }}>
-              <p style={{ margin: '0 0 5px 0', fontSize: '0.8rem', color: COLORS.celeste, fontWeight: 700, textTransform: 'uppercase' }}>Turno de Noche</p>
+              <p style={{ margin: '0 0 5px 0', fontSize: '0.75rem', color: COLORS.celeste, fontWeight: 700, textTransform: 'uppercase' }}>Turno de Noche</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', flex: 1, justifyContent: 'center' }}>
                 {enNoche.length > 0 ? enNoche.map(g => <span key={g.id} style={listTextItem}>{g.label}</span>) : <span style={listTextItem}>Ninguno</span>}
               </div>
             </div>
           </div>
 
-          <div style={{ ...statusBadge, borderLeftColor: COLORS.gris, backgroundColor: '#F5F5F5', alignItems: 'flex-start' }}>
-            <span style={{ fontSize: '1.2rem', marginTop: '2px' }}>🏡</span>
+          <div style={{ ...statusBadge, borderLeftColor: COLORS.gris, backgroundColor: '#F5F5F5' }}>
+            <span style={{ fontSize: '1.2rem', marginTop: '1px' }}>🏡</span>
             <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: '100%' }}>
-              <p style={{ margin: '0 0 5px 0', fontSize: '0.8rem', color: COLORS.gris, fontWeight: 700, textTransform: 'uppercase' }}>En Descanso</p>
+              <p style={{ margin: '0 0 5px 0', fontSize: '0.75rem', color: COLORS.gris, fontWeight: 700, textTransform: 'uppercase' }}>En Descanso</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', flex: 1, justifyContent: 'center' }}>
                 {enDescanso.length > 0 ? enDescanso.map(g => <span key={g.id} style={{...listTextItem, color: '#666', fontWeight: 500}}>{g.label}</span>) : <span style={listTextItem}>Ninguno</span>}
               </div>
@@ -122,7 +119,7 @@ export default function TurnosTab() {
     const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
     
     const emptyCells = Array.from({ length: emptyDaysCount }).map((_, i) => (
-      <div key={`empty-${i}`} style={{ minHeight: '100px', backgroundColor: 'transparent' }}></div>
+      <div key={`empty-${i}`} style={{ minHeight: '75px', backgroundColor: 'transparent' }}></div>
     ));
     
     const dayCells = Array.from({ length: daysInMonth }).map((_, i) => {
@@ -140,12 +137,12 @@ export default function TurnosTab() {
         const grupoSeleccionado = GRUPOS_TURNOS.find(g => g.id === activeFilter);
         if (grupoSeleccionado) {
           const shift = getShift(currentDay, grupoSeleccionado.tipo, grupoSeleccionado.index);
-          if (shift === 'Día') { bgColor = '#FFF3E0'; textColor = COLORS.naranjo; content = <div style={{textAlign: 'center'}}>☀️ Día</div>; }
-          else if (shift === 'Noche') { bgColor = '#E0F7FA'; textColor = COLORS.celeste; content = <div style={{textAlign: 'center'}}>🌙 Noche</div>; }
-          else { bgColor = '#F5F5F5'; textColor = '#ccc'; content = <div style={{textAlign: 'center'}}>Descanso</div>; }
+          if (shift === 'Día') { bgColor = '#FFF3E0'; textColor = COLORS.naranjo; content = <div style={{textAlign: 'center', fontSize: '0.8rem'}}>☀️ Día</div>; }
+          else if (shift === 'Noche') { bgColor = '#E0F7FA'; textColor = COLORS.celeste; content = <div style={{textAlign: 'center', fontSize: '0.8rem'}}>🌙 Noche</div>; }
+          else { bgColor = '#F5F5F5'; textColor = '#ccc'; content = <div style={{textAlign: 'center', fontSize: '0.8rem'}}>Descanso</div>; }
         }
       } 
-      // MODO VISTA GENERAL (Puntitos + Lista Alineada a la Izquierda)
+      // MODO VISTA GENERAL
       else {
         bgColor = '#ffffff';
         const dayShifts = GRUPOS_TURNOS.map(g => ({ ...g, shift: getShift(currentDay, g.tipo, g.index) }));
@@ -178,20 +175,20 @@ export default function TurnosTab() {
           onClick={() => setSelectedDate(currentDay)}
           title={tooltip}
           style={{ 
-            minHeight: '100px', padding: '8px', 
-            // Destacado para el día seleccionado, y un borde sutil para el día de hoy si no está seleccionado
+            minHeight: '75px', padding: '6px', 
             border: isSelected ? `2px solid ${COLORS.naranjo}` : isToday ? `2px solid #ccc` : '1px solid #eee', 
             borderRadius: '6px', 
             backgroundColor: isSelected && activeFilter === null ? '#fff9f5' : bgColor, 
             display: 'flex', flexDirection: 'column', cursor: 'pointer', transition: 'all 0.2s',
             boxShadow: isSelected ? '0 4px 8px rgba(228, 83, 2, 0.2)' : 'none',
-            transform: isSelected ? 'scale(1.02)' : 'none', zIndex: isSelected ? 2 : 1
+            transform: isSelected ? 'scale(1.02)' : 'none', zIndex: isSelected ? 2 : 1,
+            boxSizing: 'border-box'
           }}
         >
-          <div style={{ fontSize: '1rem', fontWeight: 700, color: isSelected ? COLORS.naranjo : isToday ? COLORS.gris : textColor }}>
+          <div style={{ fontSize: '0.9rem', fontWeight: 700, color: isSelected ? COLORS.naranjo : isToday ? COLORS.gris : textColor }}>
             {i + 1}
           </div>
-          <div style={{ marginTop: 'auto', marginBottom: 'auto', fontSize: '0.75rem', fontWeight: 600, color: textColor, width: '100%' }}>
+          <div style={{ marginTop: 'auto', marginBottom: 'auto', color: textColor, width: '100%' }}>
             {content}
           </div>
         </div>
@@ -199,17 +196,17 @@ export default function TurnosTab() {
     });
 
     return (
-      <div style={{ backgroundColor: COLORS.blanco, padding: 'clamp(15px, 3vw, 30px)', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)' }}>
+      <div style={{ backgroundColor: COLORS.blanco, padding: '15px', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)', boxSizing: 'border-box' }}>
         
-        {/* Filtros de Grupos (Usamos Nomenclatura Larga) */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '25px', justifyContent: 'center' }}>
+        {/* Filtros de Grupos */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '15px', justifyContent: 'center' }}>
           <button 
             onClick={() => setActiveFilter(null)}
             style={{...filterButton, backgroundColor: activeFilter === null ? COLORS.gris : '#f0f0f0', color: activeFilter === null ? COLORS.blanco : '#666'}}
           >
             👁️ Vista General
           </button>
-          <div style={{ width: '2px', backgroundColor: '#ddd', margin: '0 5px' }}></div>
+          <div style={{ width: '2px', backgroundColor: '#ddd', margin: '0 4px' }}></div>
           {GRUPOS_TURNOS.map((g) => (
             <button 
               key={g.id} onClick={() => setActiveFilter(g.id)}
@@ -221,16 +218,16 @@ export default function TurnosTab() {
         </div>
 
         {/* Cabecera del Calendario */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', padding: '0 10px' }}>
-          <button style={navButton} onClick={() => setCalendarDate(new Date(year, month - 1, 1))}>◀ Mes Anterior</button>
-          <h3 style={{ margin: 0, color: COLORS.gris, fontSize: 'clamp(1.2rem, 2.5vw, 1.5rem)', fontWeight: 700 }}>{monthNames[month]} {year}</h3>
-          <button style={navButton} onClick={() => setCalendarDate(new Date(year, month + 1, 1))}>Siguiente Mes ▶</button>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', padding: '0 5px' }}>
+          <button style={navButton} onClick={() => setCalendarDate(new Date(year, month - 1, 1))}>◀ Anterior</button>
+          <h3 style={{ margin: 0, color: COLORS.gris, fontSize: '1.2rem', fontWeight: 700 }}>{monthNames[month]} {year}</h3>
+          <button style={navButton} onClick={() => setCalendarDate(new Date(year, month + 1, 1))}>Siguiente ▶</button>
         </div>
 
         {/* Grilla del Calendario */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 'clamp(4px, 1vw, 10px)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px' }}>
           {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map(d => (
-            <div key={d} style={{ textAlign: 'center', fontWeight: 700, color: COLORS.gris, paddingBottom: '10px', borderBottom: '2px solid #eee', fontSize: 'clamp(0.7rem, 1.2vw, 0.9rem)', textTransform: 'uppercase' }}>
+            <div key={d} style={{ textAlign: 'center', fontWeight: 700, color: COLORS.gris, paddingBottom: '5px', borderBottom: '1px solid #eee', fontSize: '0.75rem', textTransform: 'uppercase' }}>
               <span className="hide-on-mobile">{d}</span>
               <span className="show-on-mobile" style={{ display: 'none' }}>{d.substring(0, 3)}</span>
             </div>
@@ -243,13 +240,13 @@ export default function TurnosTab() {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', fontFamily: "'Poppins', sans-serif" }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', fontFamily: "'Poppins', sans-serif" }}>
       
       <style>{`
         @media (max-width: 600px) { 
           .hide-on-mobile { display: none !important; }
           .show-on-mobile { display: inline !important; }
-          .mobile-list-text { font-size: 0.65rem !important; }
+          .mobile-list-text { font-size: 0.6rem !important; }
         }
       `}</style>
 
@@ -260,12 +257,12 @@ export default function TurnosTab() {
   );
 }
 
-// --- ESTILOS CORREGIDOS ---
-const filterButton: React.CSSProperties = { padding: '8px 16px', border: 'none', borderRadius: '20px', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' };
-const navButton: React.CSSProperties = { padding: '8px 15px', backgroundColor: '#f5f5f5', border: 'none', borderRadius: '6px', cursor: 'pointer', color: COLORS.gris, fontWeight: 700, transition: 'background-color 0.2s', fontSize: '0.85rem' };
-const statusBadge: React.CSSProperties = { padding: '15px', borderRadius: '8px', display: 'flex', gap: '12px', borderLeftWidth: '5px', borderLeftStyle: 'solid', minHeight: '120px' };
-const listTextItem: React.CSSProperties = { fontSize: '1rem', color: COLORS.gris, fontWeight: 700 };
+// --- ESTILOS REDISEÑADOS Y COMPACTADOS ---
+const filterButton: React.CSSProperties = { padding: '6px 12px', border: 'none', borderRadius: '15px', fontWeight: 600, fontSize: '0.75rem', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' };
+const navButton: React.CSSProperties = { padding: '6px 12px', backgroundColor: '#f5f5f5', border: 'none', borderRadius: '4px', cursor: 'pointer', color: COLORS.gris, fontWeight: 700, transition: 'background-color 0.2s', fontSize: '0.75rem' };
+const statusBadge: React.CSSProperties = { padding: '10px 15px', borderRadius: '8px', display: 'flex', gap: '10px', borderLeftWidth: '4px', borderLeftStyle: 'solid', minHeight: '80px', alignItems: 'flex-start', boxSizing: 'border-box' };
+const listTextItem: React.CSSProperties = { fontSize: '0.85rem', color: COLORS.gris, fontWeight: 700 };
 
-const generalViewListContainer: React.CSSProperties = { display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', gap: '4px', width: 'fit-content', margin: '0 auto' };
-const generalViewListItem: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: '6px' };
-const dotStyle: React.CSSProperties = { width: '8px', height: '8px', borderRadius: '50%', flexShrink: 0 };
+const generalViewListContainer: React.CSSProperties = { display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', gap: '2px', width: 'fit-content', margin: '0 auto' };
+const generalViewListItem: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.65rem', fontWeight: 600 };
+const dotStyle: React.CSSProperties = { width: '6px', height: '6px', borderRadius: '50%', flexShrink: 0 };
