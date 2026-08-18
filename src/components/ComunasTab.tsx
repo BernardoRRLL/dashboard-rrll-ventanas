@@ -31,7 +31,7 @@ const COMUNAS_V_REGION = [
 
 interface ComunasProps {
   rawData: any[];
-  dotacionData: any[]; // <-- Aquí estaba el error. Faltaba declarar que recibimos esto.
+  dotacionData: any[]; 
 }
 
 export default function ComunasTab({ rawData, dotacionData }: ComunasProps) {
@@ -136,25 +136,42 @@ export default function ComunasTab({ rawData, dotacionData }: ComunasProps) {
     return ''; 
   };
 
-  // Función para procesar y enriquecer los datos cruzando con la sábana maestra
+  // Función corregida: Cruza rawData (Comunas) con dotacionData (Maestra)
   const handleComunaClick = (comunaName: string) => {
-    if (!dotacionData || dotacionData.length === 0) return;
+    if (!rawData || rawData.length === 0) return;
 
-    const workersList = dotacionData.filter((row: any) => {
+    // 1. Creamos un diccionario rápido con la Dotación Maestra
+    const dotDict: Record<string, any> = {};
+    if (dotacionData) {
+      dotacionData.forEach(row => {
+        const sap = String(row['SAP'] || row['Número de personal'] || '').trim();
+        const nombre = String(row['Nombre'] || row['Nombre trabajador/a'] || '').trim().toLowerCase();
+        if (sap) dotDict[sap] = row;
+        if (nombre) dotDict[nombre] = row;
+      });
+    }
+
+    // 2. Filtramos la hoja de Comunas y cruzamos los datos
+    const workersList = rawData.filter((row: any) => {
       const llaveEncontrada = Object.keys(row).find(k => k.toLowerCase().includes('comuna'));
       if (!llaveEncontrada) return false;
       const cleaned = normalizarComuna(String(row[llaveEncontrada]));
       return cleaned === comunaName;
     }).map(row => {
-      const sapVal = row['SAP'] || row['Número de personal'] || '-';
-      const nombreVal = row['Nombre'] || row['Nombre trabajador/a'] || '-';
-      const cargoVal = row['Posición'] || row['Cargo'] || '-';
-      const turnoVal = row['Turno'] || '-';
-      const grupoVal = row['Grupo'] || '-';
+      const sapVal = String(row['SAP'] || row['Número de personal'] || '').trim();
+      const nombreVal = String(row['Nombre'] || row['Nombre trabajador/a'] || '').trim();
+      
+      // Buscamos a la persona en la Dotación Maestra (por SAP o por Nombre)
+      const dotRow = dotDict[sapVal] || dotDict[nombreVal.toLowerCase()] || {};
+
+      // Si está en la maestra, sacamos su info oficial. Si no, usamos el fallback.
+      const cargoVal = dotRow['Posición'] || dotRow['Cargo'] || row['Posición'] || row['Cargo'] || '-';
+      const turnoVal = dotRow['Turno'] || row['Turno'] || '-';
+      const grupoVal = dotRow['Grupo'] || row['Grupo'] || '-';
 
       return {
-        sap: sapVal,
-        nombre: nombreVal,
+        sap: sapVal || '-',
+        nombre: nombreVal || '-',
         cargo: cargoVal,
         turno: turnoVal,
         grupo: grupoVal
