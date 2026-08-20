@@ -488,7 +488,7 @@ export default function LicenciasTab({ rawData, dotacionData, getShift }: Licenc
               </div>
             </div>
           ) : (
-            // VISTA DE LISTA DE RETORNOS - ESTRUCTURA DINÁMICA ACTUALIZADA
+            // VISTA DE LISTA DE RETORNOS - ESTRUCTURA DINÁMICA ACTUALIZADA AL 100%
             <>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
                 <div style={{ color: COLORS.verdeFin }}>
@@ -541,10 +541,18 @@ export default function LicenciasTab({ rawData, dotacionData, getShift }: Licenc
                           <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 600, marginTop: '4px' }}>{months[ret.fechaRetorno.getMonth()]}</span>
                         </div>
                         
-                        <div style={{ padding: '12px 10px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '4px' }}>
-                          <h5 style={{ margin: 0, fontSize: '0.85rem', color: COLORS.gris, fontWeight: 700, lineHeight: 1.2 }}>{ret.nombre}</h5>
-                          <p style={{ margin: 0, fontSize: '0.75rem', color: '#666', fontWeight: 500, lineHeight: 1.2 }}>{ret.cargo}</p>
-                          <p style={{ margin: 0, fontSize: '0.75rem', color: COLORS.naranjo, fontWeight: 600, lineHeight: 1.2 }}>{ret.area}</p>
+                        <div style={{ 
+                          padding: '12px 10px', 
+                          flex: '1 1 auto', 
+                          minWidth: 0, 
+                          display: 'flex', 
+                          flexDirection: 'column', 
+                          justifyContent: 'flex-start', 
+                          gap: '4px' 
+                        }}>
+                          <h5 style={{ margin: 0, fontSize: '0.85rem', color: COLORS.gris, fontWeight: 700, lineHeight: 1.2, wordBreak: 'break-word' }}>{ret.nombre}</h5>
+                          <p style={{ margin: 0, fontSize: '0.75rem', color: '#666', fontWeight: 500, lineHeight: 1.2, wordBreak: 'break-word' }}>{ret.cargo}</p>
+                          <p style={{ margin: 0, fontSize: '0.75rem', color: COLORS.naranjo, fontWeight: 600, lineHeight: 1.2, wordBreak: 'break-word' }}>{ret.area}</p>
                           
                           <div style={{ marginTop: '2px', display: 'flex' }}>
                             <span style={{ 
