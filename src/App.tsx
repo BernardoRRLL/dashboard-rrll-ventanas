@@ -34,6 +34,30 @@ const COLORS = {
   blanco: '#ffffff'
 };
 
+// --- MOTOR MATEMÁTICO UNIVERSAL DE TURNOS ---
+const fechaSemilla = new Date(2026, 7, 1); // 1 de Agosto de 2026
+
+const getShift = (date: Date, tipo: 'modificado' | 'lineal', groupIndex: number) => {
+  const utcDate = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+  const utcSemilla = Date.UTC(fechaSemilla.getFullYear(), fechaSemilla.getMonth(), fechaSemilla.getDate());
+  const diffDays = Math.floor((utcDate - utcSemilla) / (1000 * 3600 * 24));
+
+  if (tipo === 'modificado') {
+    const offsets = [0, 4, 6, 2];
+    const dayInCycle = ((diffDays + offsets[groupIndex]) % 8 + 8) % 8;
+    
+    if (dayInCycle < 2) return 'Día';
+    if (dayInCycle < 4) return 'Noche';
+    return 'Descanso';
+  } else {
+    const offsets = [0, 4];
+    const dayInCycle = ((diffDays + offsets[groupIndex]) % 8 + 8) % 8;
+    
+    if (dayInCycle < 4) return 'Día';
+    return 'Descanso';
+  }
+};
+
 export default function App() {
   const [session, setSession] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<any>(null); 
@@ -533,7 +557,7 @@ export default function App() {
             ) : activeTab === 'sindicatos' ? (
               <SindicatosTab rawData={rawData} />
             ) : activeTab === 'licencias' ? (
-              <LicenciasTab rawData={licenciasData} dotacionData={rawData} />
+              <LicenciasTab rawData={licenciasData} dotacionData={rawData} getShift={getShift} />
             ) : activeTab === 'ausentismo' ? (
               <AusentismoTab rawData={ausentismoData} /> 
             ) : activeTab === 'discapacidad' ? (
@@ -543,7 +567,7 @@ export default function App() {
             ) : activeTab === 'comunas' ? (
               <ComunasTab rawData={comunasSheetData} dotacionData={rawData} />
             ) : activeTab === 'turnos' ? (
-              <TurnosTab />
+              <TurnosTab getShift={getShift} />
             ) : activeTab === 'buscador' ? (
               <BuscadorTab dotacionData={rawData} jefaturaData={jefaturaData} />
             ) : (
