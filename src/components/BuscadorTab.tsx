@@ -83,7 +83,10 @@ export default function BuscadorTab({ dotacionData, jefaturaData }: BuscadorTabP
     return dotacionData.filter(row => {
       const sap = String(row['SAP'] || row['Número de personal'] || '').trim().toLowerCase();
       const nombre = String(row['Nombre'] || row['Nombre trabajador/a'] || '').trim().toLowerCase();
-      return sap.includes(term) || nombre.includes(term);
+      const cargo = String(row['Posición'] || row['Cargo'] || '').trim().toLowerCase();
+      
+      // Búsqueda ampliada: SAP, Nombre o Cargo
+      return sap.includes(term) || nombre.includes(term) || cargo.includes(term);
     }).slice(0, 8); // Limitamos a los 8 mejores resultados
   }, [searchTerm, dotacionData]);
 
@@ -95,20 +98,14 @@ export default function BuscadorTab({ dotacionData, jefaturaData }: BuscadorTabP
 
     while (currentSap && guard < 15) {
       const bossSap = jefBySap[currentSap];
-      // Si no tiene jefe o es su propio jefe, detenemos el loop
-      if (!bossSap || bossSap === currentSap) break; 
+      
+      // Freno estructural: detiene el loop si el jefe es undefined, vacío, "0" o es su propio jefe
+      if (!bossSap || bossSap === '0' || bossSap === currentSap) break; 
       
       const bossData = empBySap[bossSap];
       if (bossData) {
         chain.push(bossData);
         currentSap = bossSap;
-        
-        // Detener la cadena de mando en el Gerente General
-        const bossName = String(bossData['Nombre'] || bossData['Nombre trabajador/a'] || '').trim().toUpperCase();
-        if (bossName === 'WEISHAUPT HIDALGO RICARDO ARMANDO') {
-            break; // Cima de la pirámide alcanzada
-        }
-
       } else {
         // Si el jefe no está en la base de datos de dotación, guardamos solo su SAP como referencia
         chain.push({ 'SAP': bossSap, 'Nombre': 'Jefatura Externa / No en Dotación', 'Posición': 'Desconocido' });
@@ -158,7 +155,7 @@ export default function BuscadorTab({ dotacionData, jefaturaData }: BuscadorTabP
           </div>
           <input 
             type="text"
-            placeholder="Escribe un Nombre, Apellido o número SAP..."
+            placeholder="Escribe un Nombre, Cargo o número SAP..."
             value={searchTerm}
             onChange={(e) => {
               setSearchTerm(e.target.value);
