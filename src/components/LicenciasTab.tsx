@@ -121,7 +121,6 @@ export default function LicenciasTab({ rawData, dotacionData, getShift }: Licenc
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        // Necesitamos reconstruir los objetos Date que el JSON convierte en strings
         if (parsed.fechaInicio) parsed.fechaInicio = new Date(parsed.fechaInicio);
         if (parsed.fechaTermino) parsed.fechaTermino = new Date(parsed.fechaTermino);
         if (parsed.fechaRetorno) parsed.fechaRetorno = new Date(parsed.fechaRetorno);
@@ -218,28 +217,23 @@ export default function LicenciasTab({ rawData, dotacionData, getShift }: Licenc
     }
     
     if (dTermino) {
-      // --- NUEVO MOTOR DE CÁLCULO DE RETORNOS ---
       let dRetorno = new Date(dTermino);
       
-      // Si el motor inyectado existe, aplicamos reglas complejas
       if (getShift) {
         if (grupo === 'Admin.') {
-          // Lógica T0: Saltar Viernes, Sábado y Domingo
           dRetorno.setDate(dRetorno.getDate() + 1);
           while (dRetorno.getDay() === 5 || dRetorno.getDay() === 6 || dRetorno.getDay() === 0) {
             dRetorno.setDate(dRetorno.getDate() + 1);
           }
         } else {
-          // Lógica Operativa (T4 / T4L)
           let tipoTurno = 'modificado';
           if (empleadoMaestro && empleadoMaestro['Turno']?.trim() === 'T4L') tipoTurno = 'lineal';
           else if (row['Turno']?.trim() === 'T4L') tipoTurno = 'lineal';
 
-          // Buscar el índice del grupo en la constante importada
           const grupoDef = GRUPOS_TURNOS.find(g => g.label.includes(grupo) && g.tipo === tipoTurno);
           
           if (grupoDef) {
-            let limit = 0; // Seguridad anti loop
+            let limit = 0; 
             dRetorno.setDate(dRetorno.getDate() + 1);
             let estado = getShift(dRetorno, grupoDef.tipo, grupoDef.index);
             
@@ -249,17 +243,13 @@ export default function LicenciasTab({ rawData, dotacionData, getShift }: Licenc
               limit++;
             }
           } else {
-            // Fallback si por alguna razón no mapea el grupo
             dRetorno.setDate(dRetorno.getDate() + 1);
           }
         }
       } else {
-        // Fallback básico original (Término + 1)
         dRetorno.setDate(dRetorno.getDate() + 1);
       }
-      // ------------------------------------------
 
-      // Guardamos la fecha de retorno para los puntos verdes del calendario general
       const keyRetorno = `${dRetorno.getFullYear()}-${String(dRetorno.getMonth() + 1).padStart(2, '0')}-${String(dRetorno.getDate()).padStart(2, '0')}`;
       if (!returnsByDate[keyRetorno]) returnsByDate[keyRetorno] = [];
       returnsByDate[keyRetorno].push(nombre);
@@ -361,7 +351,6 @@ export default function LicenciasTab({ rawData, dotacionData, getShift }: Licenc
       let cellBorder = '1px solid #eee';
       let content = null;
 
-      // LÓGICA DE LÍNEA CONTINUA Y RETORNO (VISTA DE DETALLE)
       if (selectedLicense) {
         const startT = selectedLicense.fechaInicio?.getTime();
         const endT = selectedLicense.fechaTermino?.getTime();
@@ -385,9 +374,7 @@ export default function LicenciasTab({ rawData, dotacionData, getShift }: Licenc
             </div>
           );
         }
-      } 
-      // LÓGICA DE PUNTOS ROJOS (INICIO) Y VERDES (RETORNO) (VISTA GENERAL)
-      else {
+      } else {
         const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         const starts = startsByDate[key] || [];
         const returns = returnsByDate[key] || [];
@@ -501,7 +488,7 @@ export default function LicenciasTab({ rawData, dotacionData, getShift }: Licenc
               </div>
             </div>
           ) : (
-            // VISTA DE LISTA DE RETORNOS
+            // VISTA DE LISTA DE RETORNOS - ESTRUCTURA DINÁMICA ACTUALIZADA
             <>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
                 <div style={{ color: COLORS.verdeFin }}>
@@ -527,12 +514,12 @@ export default function LicenciasTab({ rawData, dotacionData, getShift }: Licenc
                         onClick={() => setSelectedLicense(ret)}
                         style={{ 
                           display: 'flex', 
+                          alignItems: 'stretch',
                           backgroundColor: COLORS.blanco, 
                           borderRadius: '8px', 
                           overflow: 'hidden', 
                           border: isToday ? `2px solid ${COLORS.verdeFin}` : '1px solid #eee', 
                           boxShadow: '0 2px 4px rgba(0,0,0,0.03)',
-                          minHeight: '80px',
                           cursor: 'pointer',
                           transition: 'transform 0.2s, box-shadow 0.2s',
                           boxSizing: 'border-box'
@@ -543,26 +530,25 @@ export default function LicenciasTab({ rawData, dotacionData, getShift }: Licenc
                         <div style={{ 
                           backgroundColor: isToday ? COLORS.verdeFin : COLORS.celeste, 
                           color: COLORS.blanco, 
-                          padding: '10px 8px', 
+                          padding: '12px 8px', 
                           display: 'flex', 
                           flexDirection: 'column', 
                           alignItems: 'center', 
                           justifyContent: 'center', 
-                          minWidth: '60px' 
+                          minWidth: '65px' 
                         }}>
                           <span style={{ fontSize: '1.4rem', fontWeight: 700, lineHeight: 1 }}>{ret.fechaRetorno.getDate()}</span>
-                          <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 600, marginTop: '2px' }}>{months[ret.fechaRetorno.getMonth()]}</span>
+                          <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 600, marginTop: '4px' }}>{months[ret.fechaRetorno.getMonth()]}</span>
                         </div>
                         
-                        <div style={{ padding: '10px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-start' }}>
-                          <h5 style={{ margin: '0 0 2px 0', fontSize: '0.85rem', color: COLORS.gris, fontWeight: 700, lineHeight: 1.2 }}>{ret.nombre}</h5>
-                          <p style={{ margin: '0 0 2px 0', fontSize: '0.75rem', color: '#666', fontWeight: 500, lineHeight: 1.2 }}>{ret.cargo}</p>
-                          <p style={{ margin: '0 0 6px 0', fontSize: '0.75rem', color: COLORS.naranjo, fontWeight: 600, lineHeight: 1.2 }}>{ret.area}</p>
+                        <div style={{ padding: '12px 10px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '4px' }}>
+                          <h5 style={{ margin: 0, fontSize: '0.85rem', color: COLORS.gris, fontWeight: 700, lineHeight: 1.2 }}>{ret.nombre}</h5>
+                          <p style={{ margin: 0, fontSize: '0.75rem', color: '#666', fontWeight: 500, lineHeight: 1.2 }}>{ret.cargo}</p>
+                          <p style={{ margin: 0, fontSize: '0.75rem', color: COLORS.naranjo, fontWeight: 600, lineHeight: 1.2 }}>{ret.area}</p>
                           
-                          <div style={{ marginTop: 'auto' }}>
+                          <div style={{ marginTop: '2px', display: 'flex' }}>
                             <span style={{ 
-                              display: 'inline-block', 
-                              padding: '2px 8px', 
+                              padding: '3px 8px', 
                               backgroundColor: isToday ? '#E8F5E9' : '#f0f4f8', 
                               borderRadius: '6px', 
                               fontSize: '0.7rem', 
