@@ -554,11 +554,10 @@ export default function LicenciasTab({ rawData, dotacionData, getShift }: Licenc
                           <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 600, marginTop: '2px' }}>{months[ret.fechaRetorno.getMonth()]}</span>
                         </div>
                         
-                        {/* CORRECCIÓN VISUAL: justifyContent 'flex-start' en lugar de 'center' para evitar cortes de texto con overflow */}
-                        <div style={{ padding: '10px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', overflow: 'hidden' }}>
+                        <div style={{ padding: '10px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-start' }}>
                           <h5 style={{ margin: '0 0 2px 0', fontSize: '0.85rem', color: COLORS.gris, fontWeight: 700, lineHeight: 1.2 }}>{ret.nombre}</h5>
-                          <p style={{ margin: '0 0 2px 0', fontSize: '0.75rem', color: '#666', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ret.cargo}</p>
-                          <p style={{ margin: '0 0 6px 0', fontSize: '0.75rem', color: COLORS.naranjo, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ret.area}</p>
+                          <p style={{ margin: '0 0 2px 0', fontSize: '0.75rem', color: '#666', fontWeight: 500, lineHeight: 1.2 }}>{ret.cargo}</p>
+                          <p style={{ margin: '0 0 6px 0', fontSize: '0.75rem', color: COLORS.naranjo, fontWeight: 600, lineHeight: 1.2 }}>{ret.area}</p>
                           
                           <div style={{ marginTop: 'auto' }}>
                             <span style={{ 
