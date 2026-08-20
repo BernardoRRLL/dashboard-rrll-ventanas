@@ -12,6 +12,9 @@ import {
 } from 'chart.js';
 import ChartJSPluginDataLabels from 'chartjs-plugin-datalabels';
 
+// Importamos la definición de grupos desde TurnosTab
+import { GRUPOS_TURNOS } from './TurnosTab';
+
 ChartJS.register(
   CategoryScale, 
   LinearScale, 
@@ -40,6 +43,7 @@ const COLORS = {
 interface LicenciasProps {
   rawData: any[];
   dotacionData: any[];
+  getShift?: (date: Date, tipo: 'modificado' | 'lineal', groupIndex: number) => string;
 }
 
 // --- TRADUCTOR DE FECHAS TODOTERRENO ---
@@ -104,7 +108,7 @@ const formatDateStr = (d: Date | null) => {
   return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
 };
 
-export default function LicenciasTab({ rawData, dotacionData }: LicenciasProps) {
+export default function LicenciasTab({ rawData, dotacionData, getShift }: LicenciasProps) {
   // --- ESTADOS CON MEMORIA DE SESIÓN ---
   const [view, setView] = useState<'tablero' | 'calendario'>(() => {
     return (sessionStorage.getItem('licencias_view') as 'tablero' | 'calendario') || 'tablero';
@@ -214,9 +218,46 @@ export default function LicenciasTab({ rawData, dotacionData }: LicenciasProps) 
     }
     
     if (dTermino) {
-      // CÁLCULO DE FECHA DE RETORNO (Término + 1)
-      const dRetorno = new Date(dTermino);
-      dRetorno.setDate(dRetorno.getDate() + 1);
+      // --- NUEVO MOTOR DE CÁLCULO DE RETORNOS ---
+      let dRetorno = new Date(dTermino);
+      
+      // Si el motor inyectado existe, aplicamos reglas complejas
+      if (getShift) {
+        if (grupo === 'Admin.') {
+          // Lógica T0: Saltar Viernes, Sábado y Domingo
+          dRetorno.setDate(dRetorno.getDate() + 1);
+          while (dRetorno.getDay() === 5 || dRetorno.getDay() === 6 || dRetorno.getDay() === 0) {
+            dRetorno.setDate(dRetorno.getDate() + 1);
+          }
+        } else {
+          // Lógica Operativa (T4 / T4L)
+          let tipoTurno = 'modificado';
+          if (empleadoMaestro && empleadoMaestro['Turno']?.trim() === 'T4L') tipoTurno = 'lineal';
+          else if (row['Turno']?.trim() === 'T4L') tipoTurno = 'lineal';
+
+          // Buscar el índice del grupo en la constante importada
+          const grupoDef = GRUPOS_TURNOS.find(g => g.label.includes(grupo) && g.tipo === tipoTurno);
+          
+          if (grupoDef) {
+            let limit = 0; // Seguridad anti loop
+            dRetorno.setDate(dRetorno.getDate() + 1);
+            let estado = getShift(dRetorno, grupoDef.tipo, grupoDef.index);
+            
+            while (estado === 'Descanso' && limit < 15) {
+              dRetorno.setDate(dRetorno.getDate() + 1);
+              estado = getShift(dRetorno, grupoDef.tipo, grupoDef.index);
+              limit++;
+            }
+          } else {
+            // Fallback si por alguna razón no mapea el grupo
+            dRetorno.setDate(dRetorno.getDate() + 1);
+          }
+        }
+      } else {
+        // Fallback básico original (Término + 1)
+        dRetorno.setDate(dRetorno.getDate() + 1);
+      }
+      // ------------------------------------------
 
       // Guardamos la fecha de retorno para los puntos verdes del calendario general
       const keyRetorno = `${dRetorno.getFullYear()}-${String(dRetorno.getMonth() + 1).padStart(2, '0')}-${String(dRetorno.getDate()).padStart(2, '0')}`;
@@ -513,10 +554,11 @@ export default function LicenciasTab({ rawData, dotacionData }: LicenciasProps) 
                           <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 600, marginTop: '2px' }}>{months[ret.fechaRetorno.getMonth()]}</span>
                         </div>
                         
-                        <div style={{ padding: '10px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                        {/* CORRECCIÓN VISUAL: justifyContent 'flex-start' en lugar de 'center' para evitar cortes de texto con overflow */}
+                        <div style={{ padding: '10px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', overflow: 'hidden' }}>
                           <h5 style={{ margin: '0 0 2px 0', fontSize: '0.85rem', color: COLORS.gris, fontWeight: 700, lineHeight: 1.2 }}>{ret.nombre}</h5>
-                          <p style={{ margin: '0 0 2px 0', fontSize: '0.75rem', color: '#666', fontWeight: 500 }}>{ret.cargo}</p>
-                          <p style={{ margin: '0 0 6px 0', fontSize: '0.75rem', color: COLORS.naranjo, fontWeight: 600 }}>{ret.area}</p>
+                          <p style={{ margin: '0 0 2px 0', fontSize: '0.75rem', color: '#666', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ret.cargo}</p>
+                          <p style={{ margin: '0 0 6px 0', fontSize: '0.75rem', color: COLORS.naranjo, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ret.area}</p>
                           
                           <div style={{ marginTop: 'auto' }}>
                             <span style={{ 
