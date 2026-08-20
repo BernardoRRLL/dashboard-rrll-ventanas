@@ -11,7 +11,7 @@ const COLORS = {
 };
 
 // Definición maestra: Nombres completos para máxima claridad
-const GRUPOS_TURNOS = [
+export const GRUPOS_TURNOS = [
   { id: 'T4-0', label: 'T4 Grupo 1', short: 'T4 G1', tipo: 'modificado' as const, index: 0 },
   { id: 'T4-1', label: 'T4 Grupo 2', short: 'T4 G2', tipo: 'modificado' as const, index: 1 },
   { id: 'T4-2', label: 'T4 Grupo 3', short: 'T4 G3', tipo: 'modificado' as const, index: 2 },
@@ -20,7 +20,11 @@ const GRUPOS_TURNOS = [
   { id: 'T4L-1', label: 'T4L Grupo 2', short: 'T4L G2', tipo: 'lineal' as const, index: 1 },
 ];
 
-export default function TurnosTab() {
+interface TurnosTabProps {
+  getShift?: (date: Date, tipo: 'modificado' | 'lineal', groupIndex: number) => string;
+}
+
+export default function TurnosTab({ getShift: externalGetShift }: TurnosTabProps) {
   // --- ESTADOS CON MEMORIA DE SESIÓN ---
   const [calendarDate, setCalendarDate] = useState(() => {
     const saved = sessionStorage.getItem('turnos_calendarDate');
@@ -53,10 +57,10 @@ export default function TurnosTab() {
     }
   }, [activeFilter]);
 
-  // --- MOTOR MATEMÁTICO UNIVERSAL (Día Cero: 1 de Agosto de 2026) ---
-  const fechaSemilla = new Date(2026, 7, 1); 
-
-  const getShift = (date: Date, tipo: 'modificado' | 'lineal', groupIndex: number) => {
+  // --- MOTOR MATEMÁTICO (Fallback Temporal) ---
+  // Si App.tsx aún no envía el motor, usamos este para no romper la app
+  const defaultGetShift = (date: Date, tipo: 'modificado' | 'lineal', groupIndex: number) => {
+    const fechaSemilla = new Date(2026, 7, 1); 
     const utcDate = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
     const utcSemilla = Date.UTC(fechaSemilla.getFullYear(), fechaSemilla.getMonth(), fechaSemilla.getDate());
     const diffDays = Math.floor((utcDate - utcSemilla) / (1000 * 3600 * 24));
@@ -76,6 +80,9 @@ export default function TurnosTab() {
       return 'Descanso';
     }
   };
+
+  // Usamos el motor externo si existe, o el por defecto
+  const getShift = externalGetShift || defaultGetShift;
 
   // --- RESUMEN SUPERIOR (FOTO OPERATIVA) EN LISTAS ---
   const renderFotoOperativa = () => {
