@@ -515,6 +515,7 @@ export default function LicenciasTab({ rawData, dotacionData, getShift }: Licenc
                         style={{ 
                           display: 'flex', 
                           alignItems: 'stretch',
+                          flexShrink: 0, // <--- LA CORRECCIÓN CLAVE: Prohíbe al navegador aplastar la tarjeta
                           backgroundColor: COLORS.blanco, 
                           borderRadius: '8px', 
                           overflow: 'hidden', 
