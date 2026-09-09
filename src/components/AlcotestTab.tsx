@@ -36,6 +36,7 @@ export default function AlcotestTab({ dotacionData, licenciasData, getShift }: A
   const [fechaHasta, setFechaHasta] = useState('');
   const [cuotaTurnoA, setCuotaTurnoA] = useState(2);
   const [cuotaTurnoC, setCuotaTurnoC] = useState(2);
+  const [diasExclusion, setDiasExclusion] = useState(21);
   
   const [resultadosSorteo, setResultadosSorteo] = useState<any[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -45,7 +46,6 @@ export default function AlcotestTab({ dotacionData, licenciasData, getShift }: A
   const [histHasta, setHistHasta] = useState('');
   const [isDownloading, setIsDownloading] = useState(false);
 
-  // Diccionario de licencias para cruce rápido
   const licenciasDict = useMemo(() => {
     const dict: any[] = [];
     licenciasData.forEach(row => {
@@ -60,12 +60,20 @@ export default function AlcotestTab({ dotacionData, licenciasData, getShift }: A
   const getEstadoOperativo = (row: any, testDate: Date) => {
     const turno = String(row['Turno'] || '').trim().toUpperCase();
     const grupo = String(row['Grupo'] || '').trim();
-    if (grupo === '-' || grupo === '') return 'Administrativo';
-    const grupoIdx = parseInt(grupo) - 1;
-    if (isNaN(grupoIdx) || grupoIdx < 0) return 'Desconocido';
-    if (turno === 'T4') return getShift(testDate, 'modificado', grupoIdx);
-    if (turno === 'T4L') return getShift(testDate, 'lineal', grupoIdx);
-    return 'Administrativo';
+    
+    if (turno === 'T4' && grupo !== '-' && grupo !== '') {
+      const grupoIdx = parseInt(grupo) - 1;
+      if (!isNaN(grupoIdx) && grupoIdx >= 0) return getShift(testDate, 'modificado', grupoIdx);
+    }
+    
+    if (turno === 'T4L' && grupo !== '-' && grupo !== '') {
+      const grupoIdx = parseInt(grupo) - 1;
+      if (!isNaN(grupoIdx) && grupoIdx >= 0) return getShift(testDate, 'lineal', grupoIdx);
+    }
+
+    // Administrativos (T0 o sin grupo): Trabajan de Día de Lunes (1) a Viernes (5)
+    const day = testDate.getDay();
+    return (day >= 1 && day <= 5) ? 'Día' : 'Descanso';
   };
 
   const ejecutarSorteo = async (isReroll = false) => {
@@ -76,14 +84,13 @@ export default function AlcotestTab({ dotacionData, licenciasData, getShift }: A
 
     setIsGenerating(true);
     try {
-      // 1. Obtener histórico de los últimos 21 días desde la fecha de inicio
-      const fechaMenos21 = new Date(dDesde);
-      fechaMenos21.setDate(fechaMenos21.getDate() - 21);
+      const fechaCorte = new Date(dDesde);
+      fechaCorte.setDate(fechaCorte.getDate() - diasExclusion);
       
       const { data: historico } = await supabase
         .from('historico_alcotest')
         .select('sap, fecha')
-        .gte('fecha', fechaMenos21.toISOString().split('T')[0])
+        .gte('fecha', fechaCorte.toISOString().split('T')[0])
         .lte('fecha', fechaHasta);
 
       const excludeSapDict: Record<string, string[]> = {};
@@ -96,7 +103,6 @@ export default function AlcotestTab({ dotacionData, licenciasData, getShift }: A
 
       let nuevosResultados: any[] = isReroll ? resultadosSorteo.filter(r => r.checked) : [];
 
-      // 2. Iterar por cada día del rango
       for (let d = new Date(dDesde); d <= dHasta; d.setDate(d.getDate() + 1)) {
         const currentDateStr = d.toISOString().split('T')[0];
         
@@ -108,34 +114,24 @@ export default function AlcotestTab({ dotacionData, licenciasData, getShift }: A
           const cuposFaltantes = cuota - yaSeleccionados;
           
           if (cuposFaltantes > 0) {
-            // Filtrar candidatos vivos
             let pool = dotacionData.filter(row => {
               const sap = String(row['SAP'] || '').trim();
               const rut = String(row['Rut'] || '').trim().toLowerCase();
               if (!sap) return false;
-
-              // Ya está en el sorteo actual?
               if (nuevosResultados.some(r => r.sap === sap && r.fecha === currentDateStr)) return false;
-
-              // Regla 21 días (Aproximación por mes activo)
               if (excludeSapDict[sap]) return false; 
-
-              // Filtro Licencias Médicas
               const estaDeLicencia = licenciasDict.some(lic => lic.rut === rut && d >= lic.fIni && d <= lic.fFin);
               if (estaDeLicencia) return false;
-
-              // Filtro Turno Físico
               return getEstadoOperativo(row, d) === targetShift;
             });
 
-            // Muestra aleatoria (Fisher-Yates shuffle)
             for (let i = pool.length - 1; i > 0; i--) {
               const j = Math.floor(Math.random() * (i + 1));
               [pool[i], pool[j]] = [pool[j], pool[i]];
             }
 
             const seleccionados = pool.slice(0, cuposFaltantes).map(row => ({
-              id: `${currentDateStr}-${tipoTurno}-${row['SAP']}`,
+              id: `${currentDateStr}-${tipoTurno}-${row['SAP']}-${Math.random()}`,
               fecha: currentDateStr,
               turno: tipoTurno,
               sap: String(row['SAP'] || '').trim(),
@@ -144,7 +140,7 @@ export default function AlcotestTab({ dotacionData, licenciasData, getShift }: A
               turno_org: String(row['Turno'] || '').trim(),
               grupo: String(row['Grupo'] || '').trim(),
               rol: String(row['Rol'] || row['Posición'] || '').trim(),
-              checked: true
+              checked: false
             }));
 
             nuevosResultados = [...nuevosResultados, ...seleccionados];
@@ -152,7 +148,6 @@ export default function AlcotestTab({ dotacionData, licenciasData, getShift }: A
         });
       }
       
-      // Ordenar por fecha y luego turno
       nuevosResultados.sort((a, b) => a.fecha.localeCompare(b.fecha) || a.turno.localeCompare(b.turno));
       setResultadosSorteo(nuevosResultados);
       
@@ -232,9 +227,10 @@ export default function AlcotestTab({ dotacionData, licenciasData, getShift }: A
             <div><label style={labelStyle}>Hasta</label><input type="date" value={fechaHasta} onChange={e => setFechaHasta(e.target.value)} style={inputStyle} /></div>
             <div><label style={labelStyle}>Turno A</label><input type="number" min="1" max="10" value={cuotaTurnoA} onChange={e => setCuotaTurnoA(Number(e.target.value))} style={inputStyle} /></div>
             <div><label style={labelStyle}>Turno C</label><input type="number" min="1" max="10" value={cuotaTurnoC} onChange={e => setCuotaTurnoC(Number(e.target.value))} style={inputStyle} /></div>
+            <div><label style={labelStyle}>Regla Exclusión (Días)</label><input type="number" min="0" max="180" value={diasExclusion} onChange={e => setDiasExclusion(Number(e.target.value))} style={inputStyle} /></div>
           </div>
           
-          <div style={{ display: 'flex', gap: '10px' }}>
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
             <button onClick={() => ejecutarSorteo(false)} disabled={isGenerating} style={primaryButton}>
               <Dices size={18} /> {isGenerating ? 'Calculando...' : 'Generar Sorteo'}
             </button>
@@ -255,7 +251,7 @@ export default function AlcotestTab({ dotacionData, licenciasData, getShift }: A
                     </div>
                     <div style={{ flex: 1 }}>
                       <p style={{ margin: 0, fontWeight: 700, fontSize: '0.9rem', color: COLORS.gris }}>{item.nombre} <span style={{ color: COLORS.naranjo, fontSize: '0.8rem' }}>(SAP: {item.sap})</span></p>
-                      <p style={{ margin: 0, fontSize: '0.8rem', color: '#666' }}>{item.fecha} | {item.turno} | Grupo {item.grupo}</p>
+                      <p style={{ margin: 0, fontSize: '0.8rem', color: '#666' }}>{item.fecha} | {item.turno} | Grupo {item.grupo || '-'} | {item.rol}</p>
                     </div>
                   </div>
                 ))}
