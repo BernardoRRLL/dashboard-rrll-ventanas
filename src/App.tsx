@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
-import { Users, Venus, Handshake, Stethoscope, Scale, Accessibility, Gift, MapPin, Clock, Search, Lock, Mail, Key, Shield, Clock4, Settings, X } from 'lucide-react';
+import { Users, Venus, Handshake, Stethoscope, Scale, Accessibility, Gift, MapPin, Clock, Search, Lock, Mail, Key, Shield, Clock4, Settings, X, Dices } from 'lucide-react';
 
 // Importamos nuestra conexión segura a Supabase
 import { supabase } from './supabase';
@@ -18,6 +18,7 @@ import ComunasTab from './components/ComunasTab';
 import TurnosTab from './components/TurnosTab';
 import BuscadorTab from './components/BuscadorTab';
 import AdminTab from './components/AdminTab';
+import AlcotestTab from './components/AlcotestTab';
 
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement, LineElement, Filler } from 'chart.js';
 import ChartJSPluginDataLabels from 'chartjs-plugin-datalabels';
@@ -406,6 +407,7 @@ export default function App() {
       { id: 'comunas', label: 'Comunas', icon: <MapPin size={32} /> },
       { id: 'turnos', label: 'Calendario de Turnos', icon: <Clock size={32} /> },
       { id: 'buscador', label: 'Directorio y Jefaturas', icon: <Search size={32} /> },
+      { id: 'alcotest', label: 'Control Alcotest', icon: <Dices size={32} /> },
     ];
 
     const isAdmin = userProfile?.es_admin === true;
@@ -541,15 +543,17 @@ export default function App() {
             <button onClick={() => handleTabChange('home')} style={backButtonStyle}>← Volver al Menú Principal</button>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '25px', flexWrap: 'wrap' }}>
               <div style={{ color: COLORS.naranjo }}>
-                {activeTab === 'participacion' ? <Venus size={32} /> : activeTab === 'sindicatos' ? <Handshake size={32} /> : activeTab === 'licencias' ? <Stethoscope size={32} /> : activeTab === 'ausentismo' ? <Scale size={32} /> : activeTab === 'discapacidad' ? <Accessibility size={32} /> : activeTab === 'cumpleanos' ? <Gift size={32} /> : activeTab === 'comunas' ? <MapPin size={32} /> : activeTab === 'turnos' ? <Clock size={32} /> : activeTab === 'buscador' ? <Search size={32} /> : activeTab === 'admin' ? <Shield size={32} /> : <Users size={32} />}
+                {activeTab === 'participacion' ? <Venus size={32} /> : activeTab === 'sindicatos' ? <Handshake size={32} /> : activeTab === 'licencias' ? <Stethoscope size={32} /> : activeTab === 'ausentismo' ? <Scale size={32} /> : activeTab === 'discapacidad' ? <Accessibility size={32} /> : activeTab === 'cumpleanos' ? <Gift size={32} /> : activeTab === 'comunas' ? <MapPin size={32} /> : activeTab === 'turnos' ? <Clock size={32} /> : activeTab === 'buscador' ? <Search size={32} /> : activeTab === 'alcotest' ? <Dices size={32} /> : activeTab === 'admin' ? <Shield size={32} /> : <Users size={32} />}
               </div>
               <h2 style={{ color: COLORS.gris, margin: 0, fontSize: 'clamp(1.4rem, 3vw, 1.8rem)', fontWeight: 600 }}>
-                {activeTab === 'dotacion' ? 'Análisis Dotacional' : activeTab === 'participacion' ? 'Participación Femenina' : activeTab === 'sindicatos' ? 'Organizaciones Sindicales' : activeTab === 'licencias' ? 'Licencias Médicas' : activeTab === 'ausentismo' ? 'Ausentismo y Sobretiempo' : activeTab === 'discapacidad' ? 'Inclusión y Discapacidad' : activeTab === 'cumpleanos' ? 'Gestión de Cumpleaños' : activeTab === 'comunas' ? 'Distribución Geográfica' : activeTab === 'turnos' ? 'Calendario de Turnos' : activeTab === 'buscador' ? 'Directorio y Jefaturas' : activeTab === 'admin' ? 'Administración del Sistema' : activeTab.toUpperCase()}
+                {activeTab === 'dotacion' ? 'Análisis Dotacional' : activeTab === 'participacion' ? 'Participación Femenina' : activeTab === 'sindicatos' ? 'Organizaciones Sindicales' : activeTab === 'licencias' ? 'Licencias Médicas' : activeTab === 'ausentismo' ? 'Ausentismo y Sobretiempo' : activeTab === 'discapacidad' ? 'Inclusión y Discapacidad' : activeTab === 'cumpleanos' ? 'Gestión de Cumpleaños' : activeTab === 'comunas' ? 'Distribución Geográfica' : activeTab === 'turnos' ? 'Calendario de Turnos' : activeTab === 'buscador' ? 'Directorio y Jefaturas' : activeTab === 'alcotest' ? 'Control de Alcotest' : activeTab === 'admin' ? 'Administración del Sistema' : activeTab.toUpperCase()}
               </h2>
             </div>
             
             {activeTab === 'admin' ? (
               <AdminTab />
+            ) : activeTab === 'alcotest' ? (
+              <AlcotestTab dotacionData={rawData} licenciasData={licenciasData} getShift={getShift} />
             ) : activeTab === 'dotacion' ? (
               <DotacionTab rawData={rawData} stats={dotacionStats} />
             ) : activeTab === 'participacion' ? (
