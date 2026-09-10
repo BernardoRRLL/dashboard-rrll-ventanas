@@ -111,7 +111,6 @@ export default function AlcotestTab({ dotacionData, licenciasData, getShift }: A
         setIsLoadingHist(false);
       }
     };
-    // Cargamos histórico si cambian las fechas
     cargarHistorico();
   }, [activeView, histDesde, histHasta, setHistoricoData]);
 
@@ -140,8 +139,9 @@ export default function AlcotestTab({ dotacionData, licenciasData, getShift }: A
       if (!isNaN(grupoIdx) && grupoIdx >= 0) return getShift(testDate, 'lineal', grupoIdx);
     }
 
+    // Administrativos (T0 o sin grupo): Trabajan de Día de Lunes (1) a Jueves (4)
     const day = testDate.getDay();
-    return (day >= 1 && day <= 5) ? 'Día' : 'Descanso';
+    return (day >= 1 && day <= 4) ? 'Día' : 'Descanso';
   };
 
   const ejecutarSorteo = async (isReroll = false) => {
