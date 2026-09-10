@@ -52,8 +52,9 @@ export default function AlcotestTab({ dotacionData, licenciasData, getShift }: A
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
-  // Inicializar fechas del histórico al montar
   useEffect(() => {
     const hoy = new Date();
     const haceUnMes = new Date();
@@ -63,7 +64,6 @@ export default function AlcotestTab({ dotacionData, licenciasData, getShift }: A
     setHistDesde(haceUnMes.toISOString().split('T')[0]);
   }, []);
 
-  // Cargar datos del histórico automáticamente al cambiar fechas o entrar a la pestaña
   useEffect(() => {
     const cargarHistorico = async () => {
       if (!histDesde || !histHasta || activeView !== 'historico') return;
@@ -132,7 +132,6 @@ export default function AlcotestTab({ dotacionData, licenciasData, getShift }: A
         .gte('fecha', fechaCorte.toISOString().split('T')[0])
         .lte('fecha', fechaHasta);
 
-      // Diccionario que guarda el timestamp del último test por SAP
       const excludeSapDates: Record<string, number> = {};
       if (historico) {
         historico.forEach(row => {
@@ -163,7 +162,6 @@ export default function AlcotestTab({ dotacionData, licenciasData, getShift }: A
               if (!sap) return false;
               if (nuevosResultados.some(r => r.sap === sap && r.fecha === currentDateStr)) return false;
               
-              // Validación dinámica de exclusión (mira la DB y las selecciones de este mismo lote)
               const lastTestTime = excludeSapDates[sap];
               if (lastTestTime) {
                 const daysDiff = (currentDTime - lastTestTime) / (1000 * 60 * 60 * 24);
@@ -193,7 +191,6 @@ export default function AlcotestTab({ dotacionData, licenciasData, getShift }: A
               checked: false
             }));
 
-            // Agregar seleccionados a la lista de exclusión en memoria para los siguientes días del bucle
             seleccionados.forEach(sel => {
               excludeSapDates[sel.sap] = currentDTime;
             });
@@ -258,14 +255,18 @@ export default function AlcotestTab({ dotacionData, licenciasData, getShift }: A
     doc.save(`Historico_Alcotest_${histDesde}_${histHasta}.pdf`);
   };
 
-  const handleSearchSAP = async () => {
-    if (!searchQuery.trim()) return;
+  const handleSearchSAP = async (overrideQuery?: string) => {
+    const query = overrideQuery !== undefined ? overrideQuery : searchQuery;
+    if (!query.trim()) return;
+    
     setIsSearching(true);
+    setShowSuggestions(false);
+    
     try {
       const { data, error } = await supabase
         .from('historico_alcotest')
         .select('*')
-        .or(`sap.ilike.%${searchQuery}%,nombre.ilike.%${searchQuery}%`)
+        .or(`sap.ilike.%${query}%,nombre.ilike.%${query}%`)
         .order('fecha', { ascending: false });
         
       if (error) throw error;
@@ -276,6 +277,31 @@ export default function AlcotestTab({ dotacionData, licenciasData, getShift }: A
     } finally {
       setIsSearching(false);
     }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setSearchQuery(val);
+
+    if (val.trim().length >= 2) {
+      const term = val.toLowerCase();
+      const filtered = dotacionData.filter(row => {
+        const sap = String(row['SAP'] || '').toLowerCase();
+        const nombre = String(row['Nombre trabajador/a'] || row['Nombre'] || '').toLowerCase();
+        return sap.includes(term) || nombre.includes(term);
+      }).slice(0, 10); 
+      
+      setSuggestions(filtered);
+      setShowSuggestions(true);
+    } else {
+      setSuggestions([]);
+      setShowSuggestions(false);
+    }
+  };
+
+  const handleSelectSuggestion = (sap: string, nombre: string) => {
+    setSearchQuery(sap);
+    handleSearchSAP(sap);
   };
 
   return (
@@ -381,26 +407,65 @@ export default function AlcotestTab({ dotacionData, licenciasData, getShift }: A
 
       {activeView === 'buscador' && (
         <div style={{ backgroundColor: COLORS.blanco, padding: '20px', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)' }}>
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end', marginBottom: '20px' }}>
-            <div style={{ flex: 1 }}>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', marginBottom: '20px' }}>
+            <div style={{ flex: 1, position: 'relative' }}>
               <label style={labelStyle}>Buscar por Nombre o SAP</label>
               <input 
                 type="text" 
                 value={searchQuery} 
-                onChange={e => setSearchQuery(e.target.value)}
+                onChange={handleInputChange}
                 onKeyDown={e => e.key === 'Enter' && handleSearchSAP()}
-                placeholder="Ej. 12345678 o Juan Perez" 
+                placeholder="Buscar SAP o Nombre..." 
                 style={{ ...inputStyle, width: '100%' }} 
               />
+              
+              {showSuggestions && suggestions.length > 0 && (
+                <div style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  right: 0,
+                  backgroundColor: COLORS.blanco,
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                  zIndex: 10,
+                  maxHeight: '200px',
+                  overflowY: 'auto',
+                  marginTop: '4px'
+                }}>
+                  {suggestions.map((sugg, idx) => {
+                    const s_sap = String(sugg['SAP'] || '').trim();
+                    const s_nombre = String(sugg['Nombre trabajador/a'] || sugg['Nombre'] || '').trim();
+                    return (
+                      <div 
+                        key={idx}
+                        onClick={() => handleSelectSuggestion(s_sap, s_nombre)}
+                        style={{
+                          padding: '10px 12px',
+                          cursor: 'pointer',
+                          borderBottom: idx === suggestions.length - 1 ? 'none' : '1px solid #eee',
+                          fontSize: '0.85rem',
+                          color: COLORS.gris
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f5f5f5')}
+                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                      >
+                        <strong>{s_sap}</strong> - {s_nombre}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
-            <button onClick={handleSearchSAP} disabled={isSearching || !searchQuery} style={primaryButton}>
+            <button onClick={() => handleSearchSAP()} disabled={isSearching || !searchQuery} style={{...primaryButton, marginTop: '21px'}}>
               <Search size={18} /> {isSearching ? 'Buscando...' : 'Buscar'}
             </button>
           </div>
 
           <div style={{ overflowX: 'auto' }}>
-            {searchResults.length === 0 && !isSearching && searchQuery ? (
-              <p style={{ color: COLORS.gris }}>No se encontraron resultados.</p>
+            {searchResults.length === 0 && !isSearching && searchQuery && !showSuggestions ? (
+              <p style={{ color: COLORS.gris }}>No se encontraron registros históricos.</p>
             ) : searchResults.length > 0 ? (
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                 <thead>
