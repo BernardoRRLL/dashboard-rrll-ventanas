@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Search, History, Dices, FileDown, CheckSquare, Square, RefreshCw, Save } from 'lucide-react';
 import { supabase } from '../supabase'; 
 import jsPDF from 'jspdf';
@@ -32,19 +32,59 @@ const parseCustomDate = (dateVal: any) => {
 export default function AlcotestTab({ dotacionData, licenciasData, getShift }: AlcotestTabProps) {
   const [activeView, setActiveView] = useState<'generador' | 'historico' | 'buscador'>('generador');
   
+  // Estados Generador
   const [fechaDesde, setFechaDesde] = useState('');
   const [fechaHasta, setFechaHasta] = useState('');
   const [cuotaTurnoA, setCuotaTurnoA] = useState(2);
   const [cuotaTurnoC, setCuotaTurnoC] = useState(2);
   const [diasExclusion, setDiasExclusion] = useState(21);
-  
   const [resultadosSorteo, setResultadosSorteo] = useState<any[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
+  // Estados Histórico
   const [histDesde, setHistDesde] = useState('');
   const [histHasta, setHistHasta] = useState('');
-  const [isDownloading, setIsDownloading] = useState(false);
+  const [historicoData, setHistoricoData] = useState<any[]>([]);
+  const [isLoadingHist, setIsLoadingHist] = useState(false);
+
+  // Estados Buscador
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+
+  // Inicializar fechas del histórico al montar
+  useEffect(() => {
+    const hoy = new Date();
+    const haceUnMes = new Date();
+    haceUnMes.setMonth(hoy.getMonth() - 1);
+    
+    setHistHasta(hoy.toISOString().split('T')[0]);
+    setHistDesde(haceUnMes.toISOString().split('T')[0]);
+  }, []);
+
+  // Cargar datos del histórico automáticamente al cambiar fechas o entrar a la pestaña
+  useEffect(() => {
+    const cargarHistorico = async () => {
+      if (!histDesde || !histHasta || activeView !== 'historico') return;
+      setIsLoadingHist(true);
+      try {
+        const { data, error } = await supabase
+          .from('historico_alcotest')
+          .select('*')
+          .gte('fecha', histDesde)
+          .lte('fecha', histHasta)
+          .order('fecha', { ascending: false });
+        if (error) throw error;
+        setHistoricoData(data || []);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setIsLoadingHist(false);
+      }
+    };
+    cargarHistorico();
+  }, [activeView, histDesde, histHasta]);
 
   const licenciasDict = useMemo(() => {
     const dict: any[] = [];
@@ -71,7 +111,6 @@ export default function AlcotestTab({ dotacionData, licenciasData, getShift }: A
       if (!isNaN(grupoIdx) && grupoIdx >= 0) return getShift(testDate, 'lineal', grupoIdx);
     }
 
-    // Administrativos (T0 o sin grupo): Trabajan de Día de Lunes (1) a Viernes (5)
     const day = testDate.getDay();
     return (day >= 1 && day <= 5) ? 'Día' : 'Descanso';
   };
@@ -93,11 +132,14 @@ export default function AlcotestTab({ dotacionData, licenciasData, getShift }: A
         .gte('fecha', fechaCorte.toISOString().split('T')[0])
         .lte('fecha', fechaHasta);
 
-      const excludeSapDict: Record<string, string[]> = {};
+      // Diccionario que guarda el timestamp del último test por SAP
+      const excludeSapDates: Record<string, number> = {};
       if (historico) {
         historico.forEach(row => {
-          if (!excludeSapDict[row.sap]) excludeSapDict[row.sap] = [];
-          excludeSapDict[row.sap].push(row.fecha);
+          const t = new Date(`${row.fecha}T00:00:00`).getTime();
+          if (!excludeSapDates[row.sap] || t > excludeSapDates[row.sap]) {
+            excludeSapDates[row.sap] = t;
+          }
         });
       }
 
@@ -105,13 +147,14 @@ export default function AlcotestTab({ dotacionData, licenciasData, getShift }: A
 
       for (let d = new Date(dDesde); d <= dHasta; d.setDate(d.getDate() + 1)) {
         const currentDateStr = d.toISOString().split('T')[0];
+        const currentDTime = d.getTime();
         
         ['Turno A', 'Turno C'].forEach(tipoTurno => {
           const cuota = tipoTurno === 'Turno A' ? cuotaTurnoA : cuotaTurnoC;
           const targetShift = tipoTurno === 'Turno A' ? 'Día' : 'Noche';
           
           const yaSeleccionados = nuevosResultados.filter(r => r.fecha === currentDateStr && r.turno === tipoTurno).length;
-          const cuposFaltantes = cuota - yaSeleccionados;
+          const cuposFaltantes = Math.max(0, cuota - yaSeleccionados);
           
           if (cuposFaltantes > 0) {
             let pool = dotacionData.filter(row => {
@@ -119,7 +162,14 @@ export default function AlcotestTab({ dotacionData, licenciasData, getShift }: A
               const rut = String(row['Rut'] || '').trim().toLowerCase();
               if (!sap) return false;
               if (nuevosResultados.some(r => r.sap === sap && r.fecha === currentDateStr)) return false;
-              if (excludeSapDict[sap]) return false; 
+              
+              // Validación dinámica de exclusión (mira la DB y las selecciones de este mismo lote)
+              const lastTestTime = excludeSapDates[sap];
+              if (lastTestTime) {
+                const daysDiff = (currentDTime - lastTestTime) / (1000 * 60 * 60 * 24);
+                if (daysDiff <= diasExclusion) return false;
+              }
+              
               const estaDeLicencia = licenciasDict.some(lic => lic.rut === rut && d >= lic.fIni && d <= lic.fFin);
               if (estaDeLicencia) return false;
               return getEstadoOperativo(row, d) === targetShift;
@@ -142,6 +192,11 @@ export default function AlcotestTab({ dotacionData, licenciasData, getShift }: A
               rol: String(row['Rol'] || row['Posición'] || '').trim(),
               checked: false
             }));
+
+            // Agregar seleccionados a la lista de exclusión en memoria para los siguientes días del bucle
+            seleccionados.forEach(sel => {
+              excludeSapDates[sel.sap] = currentDTime;
+            });
 
             nuevosResultados = [...nuevosResultados, ...seleccionados];
           }
@@ -183,26 +238,43 @@ export default function AlcotestTab({ dotacionData, licenciasData, getShift }: A
     }
   };
 
-  const handleDownloadPDF = async () => {
-    if (!histDesde || !histHasta) return alert("Selecciona un rango.");
-    setIsDownloading(true);
-    try {
-      const { data, error } = await supabase.from('historico_alcotest').select('*').gte('fecha', histDesde).lte('fecha', histHasta).order('fecha', { ascending: false });
-      if (error) throw error;
-      if (!data || data.length === 0) return alert("No hay registros.");
+  const handleDownloadPDF = () => {
+    if (historicoData.length === 0) return alert("No hay registros en pantalla para descargar.");
+    
+    const doc = new jsPDF();
+    doc.setFont("'Poppins', sans-serif");
+    doc.setFontSize(14);
+    doc.text(`Histórico Control de Alcotest (${histDesde} al ${histHasta})`, 14, 15);
+    
+    const tableData = historicoData.map((row: any) => [row.fecha, row.turno, row.sap, row.nombre, row.grupo, row.rol]);
+    autoTable(doc, { 
+      startY: 25, 
+      head: [['Fecha', 'Turno', 'SAP', 'Nombre', 'Grupo', 'Rol']], 
+      body: tableData, 
+      theme: 'grid', 
+      headStyles: { fillColor: [0, 152, 170] }, 
+      styles: { fontSize: 8 } 
+    });
+    doc.save(`Historico_Alcotest_${histDesde}_${histHasta}.pdf`);
+  };
 
-      const doc = new jsPDF();
-      doc.setFont("'Poppins', sans-serif");
-      doc.setFontSize(14);
-      doc.text(`Histórico Control de Alcotest (${histDesde} al ${histHasta})`, 14, 15);
-      
-      const tableData = data.map((row: any) => [row.fecha, row.turno, row.sap, row.nombre, row.grupo, row.rol]);
-      autoTable(doc, { startY: 25, head: [['Fecha', 'Turno', 'SAP', 'Nombre', 'Grupo', 'Rol']], body: tableData, theme: 'grid', headStyles: { fillColor: [0, 152, 170] }, styles: { fontSize: 8 } });
-      doc.save(`Historico_Alcotest_${histDesde}_${histHasta}.pdf`);
+  const handleSearchSAP = async () => {
+    if (!searchQuery.trim()) return;
+    setIsSearching(true);
+    try {
+      const { data, error } = await supabase
+        .from('historico_alcotest')
+        .select('*')
+        .or(`sap.ilike.%${searchQuery}%,nombre.ilike.%${searchQuery}%`)
+        .order('fecha', { ascending: false });
+        
+      if (error) throw error;
+      setSearchResults(data || []);
     } catch (error) {
-      alert("Error al descargar.");
+      console.error(error);
+      alert("Error en la búsqueda.");
     } finally {
-      setIsDownloading(false);
+      setIsSearching(false);
     }
   };
 
@@ -266,18 +338,93 @@ export default function AlcotestTab({ dotacionData, licenciasData, getShift }: A
 
       {activeView === 'historico' && (
         <div style={{ backgroundColor: COLORS.blanco, padding: '20px', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)' }}>
-          <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-end', flexWrap: 'wrap', marginBottom: '20px' }}>
             <div><label style={labelStyle}>Desde</label><input type="date" value={histDesde} onChange={e => setHistDesde(e.target.value)} style={inputStyle} /></div>
             <div><label style={labelStyle}>Hasta</label><input type="date" value={histHasta} onChange={e => setHistHasta(e.target.value)} style={inputStyle} /></div>
-            <button onClick={handleDownloadPDF} disabled={isDownloading} style={{...primaryButton, backgroundColor: COLORS.naranjo}}>
+            <button onClick={handleDownloadPDF} style={{...primaryButton, backgroundColor: COLORS.naranjo}}>
               <FileDown size={18} /> Descargar PDF
             </button>
+          </div>
+          
+          <div style={{ overflowX: 'auto' }}>
+            {isLoadingHist ? (
+              <p style={{ color: COLORS.gris }}>Cargando registros...</p>
+            ) : historicoData.length === 0 ? (
+              <p style={{ color: COLORS.gris }}>No hay registros en este rango.</p>
+            ) : (
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                <thead>
+                  <tr style={{ backgroundColor: COLORS.celeste, color: COLORS.blanco, textAlign: 'left' }}>
+                    <th style={{ padding: '10px' }}>Fecha</th>
+                    <th style={{ padding: '10px' }}>Turno</th>
+                    <th style={{ padding: '10px' }}>SAP</th>
+                    <th style={{ padding: '10px' }}>Nombre</th>
+                    <th style={{ padding: '10px' }}>Grupo</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {historicoData.map((row, idx) => (
+                    <tr key={idx} style={{ borderBottom: '1px solid #eee' }}>
+                      <td style={{ padding: '10px' }}>{row.fecha}</td>
+                      <td style={{ padding: '10px' }}>{row.turno}</td>
+                      <td style={{ padding: '10px' }}>{row.sap}</td>
+                      <td style={{ padding: '10px' }}>{row.nombre}</td>
+                      <td style={{ padding: '10px' }}>{row.grupo}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         </div>
       )}
 
       {activeView === 'buscador' && (
-        <div style={{ backgroundColor: COLORS.blanco, padding: '20px', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)' }}><p>Buscador en construcción.</p></div>
+        <div style={{ backgroundColor: COLORS.blanco, padding: '20px', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)' }}>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end', marginBottom: '20px' }}>
+            <div style={{ flex: 1 }}>
+              <label style={labelStyle}>Buscar por Nombre o SAP</label>
+              <input 
+                type="text" 
+                value={searchQuery} 
+                onChange={e => setSearchQuery(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleSearchSAP()}
+                placeholder="Ej. 12345678 o Juan Perez" 
+                style={{ ...inputStyle, width: '100%' }} 
+              />
+            </div>
+            <button onClick={handleSearchSAP} disabled={isSearching || !searchQuery} style={primaryButton}>
+              <Search size={18} /> {isSearching ? 'Buscando...' : 'Buscar'}
+            </button>
+          </div>
+
+          <div style={{ overflowX: 'auto' }}>
+            {searchResults.length === 0 && !isSearching && searchQuery ? (
+              <p style={{ color: COLORS.gris }}>No se encontraron resultados.</p>
+            ) : searchResults.length > 0 ? (
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                <thead>
+                  <tr style={{ backgroundColor: COLORS.gris, color: COLORS.blanco, textAlign: 'left' }}>
+                    <th style={{ padding: '10px' }}>Fecha</th>
+                    <th style={{ padding: '10px' }}>Turno</th>
+                    <th style={{ padding: '10px' }}>SAP</th>
+                    <th style={{ padding: '10px' }}>Nombre</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {searchResults.map((row, idx) => (
+                    <tr key={idx} style={{ borderBottom: '1px solid #eee' }}>
+                      <td style={{ padding: '10px' }}>{row.fecha}</td>
+                      <td style={{ padding: '10px' }}>{row.turno}</td>
+                      <td style={{ padding: '10px' }}>{row.sap}</td>
+                      <td style={{ padding: '10px' }}>{row.nombre}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : null}
+          </div>
+        </div>
       )}
     </div>
   );
