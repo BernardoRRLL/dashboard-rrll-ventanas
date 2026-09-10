@@ -299,7 +299,8 @@ export default function AlcotestTab({ dotacionData, licenciasData, getShift }: A
     }
   };
 
-  const handleSelectSuggestion = (sap: string, nombre: string) => {
+  // FIX: Se removió el parámetro 'nombre' que no se utilizaba.
+  const handleSelectSuggestion = (sap: string) => {
     setSearchQuery(sap);
     handleSearchSAP(sap);
   };
@@ -440,7 +441,8 @@ export default function AlcotestTab({ dotacionData, licenciasData, getShift }: A
                     return (
                       <div 
                         key={idx}
-                        onClick={() => handleSelectSuggestion(s_sap, s_nombre)}
+                        // FIX: Solo enviamos el SAP al hacer click
+                        onClick={() => handleSelectSuggestion(s_sap)}
                         style={{
                           padding: '10px 12px',
                           cursor: 'pointer',
