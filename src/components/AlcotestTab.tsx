@@ -12,6 +12,31 @@ const COLORS = {
   blanco: '#ffffff'
 };
 
+// Hook personalizado para mantener el estado en Session Storage
+function useSessionStorage<T>(key: string, initialValue: T): [T, (value: T | ((val: T) => T)) => void] {
+  const [storedValue, setStoredValue] = useState<T>(() => {
+    try {
+      const item = window.sessionStorage.getItem(key);
+      return item ? JSON.parse(item) : initialValue;
+    } catch (error) {
+      console.error(error);
+      return initialValue;
+    }
+  });
+
+  const setValue = (value: T | ((val: T) => T)) => {
+    try {
+      const valueToStore = value instanceof Function ? value(storedValue) : value;
+      setStoredValue(valueToStore);
+      window.sessionStorage.setItem(key, JSON.stringify(valueToStore));
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  return [storedValue, setValue];
+}
+
 interface AlcotestTabProps {
   dotacionData: any[];
   licenciasData: any[];
@@ -30,39 +55,42 @@ const parseCustomDate = (dateVal: any) => {
 };
 
 export default function AlcotestTab({ dotacionData, licenciasData, getShift }: AlcotestTabProps) {
-  const [activeView, setActiveView] = useState<'generador' | 'historico' | 'buscador'>('generador');
+  // Estados persistentes
+  const [activeView, setActiveView] = useSessionStorage<'generador' | 'historico' | 'buscador'>('alcotest_activeView', 'generador');
   
-  // Estados Generador
-  const [fechaDesde, setFechaDesde] = useState('');
-  const [fechaHasta, setFechaHasta] = useState('');
-  const [cuotaTurnoA, setCuotaTurnoA] = useState(2);
-  const [cuotaTurnoC, setCuotaTurnoC] = useState(2);
-  const [diasExclusion, setDiasExclusion] = useState(21);
-  const [resultadosSorteo, setResultadosSorteo] = useState<any[]>([]);
+  const [fechaDesde, setFechaDesde] = useSessionStorage('alcotest_fechaDesde', '');
+  const [fechaHasta, setFechaHasta] = useSessionStorage('alcotest_fechaHasta', '');
+  const [cuotaTurnoA, setCuotaTurnoA] = useSessionStorage('alcotest_cuotaTurnoA', 2);
+  const [cuotaTurnoC, setCuotaTurnoC] = useSessionStorage('alcotest_cuotaTurnoC', 2);
+  const [diasExclusion, setDiasExclusion] = useSessionStorage('alcotest_diasExclusion', 21);
+  const [resultadosSorteo, setResultadosSorteo] = useSessionStorage<any[]>('alcotest_resultadosSorteo', []);
+  
+  const [histDesde, setHistDesde] = useSessionStorage('alcotest_histDesde', '');
+  const [histHasta, setHistHasta] = useSessionStorage('alcotest_histHasta', '');
+  const [historicoData, setHistoricoData] = useSessionStorage<any[]>('alcotest_historicoData', []);
+  
+  const [searchQuery, setSearchQuery] = useSessionStorage('alcotest_searchQuery', '');
+  const [searchResults, setSearchResults] = useSessionStorage<any[]>('alcotest_searchResults', []);
+
+  // Estados transitorios (loading, menús desplegables) - no necesitan persistencia
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-
-  // Estados Histórico
-  const [histDesde, setHistDesde] = useState('');
-  const [histHasta, setHistHasta] = useState('');
-  const [historicoData, setHistoricoData] = useState<any[]>([]);
   const [isLoadingHist, setIsLoadingHist] = useState(false);
-
-  // Estados Buscador
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
+  // Inicializar fechas del histórico solo si no vienen ya del sessionStorage
   useEffect(() => {
-    const hoy = new Date();
-    const haceUnMes = new Date();
-    haceUnMes.setMonth(hoy.getMonth() - 1);
-    
-    setHistHasta(hoy.toISOString().split('T')[0]);
-    setHistDesde(haceUnMes.toISOString().split('T')[0]);
-  }, []);
+    if (!histDesde || !histHasta) {
+      const hoy = new Date();
+      const haceUnMes = new Date();
+      haceUnMes.setMonth(hoy.getMonth() - 1);
+      
+      setHistHasta(hoy.toISOString().split('T')[0]);
+      setHistDesde(haceUnMes.toISOString().split('T')[0]);
+    }
+  }, [histDesde, histHasta, setHistDesde, setHistHasta]);
 
   useEffect(() => {
     const cargarHistorico = async () => {
@@ -83,8 +111,9 @@ export default function AlcotestTab({ dotacionData, licenciasData, getShift }: A
         setIsLoadingHist(false);
       }
     };
+    // Cargamos histórico si cambian las fechas
     cargarHistorico();
-  }, [activeView, histDesde, histHasta]);
+  }, [activeView, histDesde, histHasta, setHistoricoData]);
 
   const licenciasDict = useMemo(() => {
     const dict: any[] = [];
@@ -299,7 +328,6 @@ export default function AlcotestTab({ dotacionData, licenciasData, getShift }: A
     }
   };
 
-  // FIX: Se removió el parámetro 'nombre' que no se utilizaba.
   const handleSelectSuggestion = (sap: string) => {
     setSearchQuery(sap);
     handleSearchSAP(sap);
@@ -441,7 +469,6 @@ export default function AlcotestTab({ dotacionData, licenciasData, getShift }: A
                     return (
                       <div 
                         key={idx}
-                        // FIX: Solo enviamos el SAP al hacer click
                         onClick={() => handleSelectSuggestion(s_sap)}
                         style={{
                           padding: '10px 12px',
