@@ -12,6 +12,9 @@ const COLORS = {
   blanco: '#ffffff'
 };
 
+// Reemplaza este string por el Base64 real de tu logo_alcotest.png
+const LOGO_BASE64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
+
 function useSessionStorage<T>(key: string, initialValue: T): [T, (value: T | ((val: T) => T)) => void] {
   const [storedValue, setStoredValue] = useState<T>(() => {
     try {
@@ -78,7 +81,6 @@ export default function AlcotestTab({ dotacionData, licenciasData, getShift }: A
   const [isSearching, setIsSearching] = useState(false);
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [isPrinting, setIsPrinting] = useState(false);
 
   useEffect(() => {
     if (!histDesde || !histHasta) {
@@ -262,28 +264,10 @@ export default function AlcotestTab({ dotacionData, licenciasData, getShift }: A
     }
   };
 
-  const imprimirActas = async () => {
+  const imprimirActas = () => {
     if (resultadosSorteo.length === 0) return alert("No hay registros generados para imprimir.");
-    setIsPrinting(true);
 
     try {
-      // Función para precargar la imagen de forma asíncrona
-      const loadImage = (url: string): Promise<HTMLImageElement> => {
-        return new Promise((resolve, reject) => {
-          const img = new Image();
-          img.onload = () => resolve(img);
-          img.onerror = reject;
-          img.src = url;
-        });
-      };
-
-      let logo: HTMLImageElement | null = null;
-      try {
-        logo = await loadImage('/logo_alcotest.png');
-      } catch (e) {
-        console.warn("No se pudo cargar el logo desde /logo_alcotest.png", e);
-      }
-
       const doc = new jsPDF();
       
       const grupos: Record<string, any> = {};
@@ -301,9 +285,11 @@ export default function AlcotestTab({ dotacionData, licenciasData, getShift }: A
         if (index > 0) doc.addPage();
         const grupo = grupos[key];
 
-        // 1. Logo (si se cargó correctamente)
-        if (logo) {
-          doc.addImage(logo, 'PNG', 15, 15, 30, 30);
+        // 1. Logo incrustado desde Base64
+        try {
+          doc.addImage(LOGO_BASE64, 'PNG', 15, 15, 30, 30);
+        } catch (e) {
+          console.warn("No se pudo cargar el logo Base64", e);
         }
 
         // 2. Encabezado Corporativo
@@ -344,7 +330,7 @@ export default function AlcotestTab({ dotacionData, licenciasData, getShift }: A
         
         doc.setLineWidth(0.5);
         
-        // Firma Izquierda corregida
+        // Firma Izquierda
         doc.line(30, finalY, 90, finalY);
         doc.setFontSize(9);
         doc.setFont("helvetica", "normal");
@@ -376,8 +362,6 @@ export default function AlcotestTab({ dotacionData, licenciasData, getShift }: A
     } catch (error) {
       console.error("Error al generar PDF", error);
       alert("Hubo un problema al generar el PDF.");
-    } finally {
-      setIsPrinting(false);
     }
   };
 
@@ -501,11 +485,11 @@ export default function AlcotestTab({ dotacionData, licenciasData, getShift }: A
                 ))}
               </div>
               <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-                <button onClick={guardarEnHistorico} disabled={isSaving || isPrinting} style={{...primaryButton, backgroundColor: COLORS.verde, flex: 1, justifyContent: 'center'}}>
+                <button onClick={guardarEnHistorico} disabled={isSaving} style={{...primaryButton, backgroundColor: COLORS.verde, flex: 1, justifyContent: 'center'}}>
                   <Save size={18} /> {isSaving ? 'Guardando...' : 'Guardar Validados en Histórico Oficial'}
                 </button>
-                <button onClick={imprimirActas} disabled={isGenerating || isPrinting} style={{...primaryButton, backgroundColor: COLORS.naranjo, flex: 1, justifyContent: 'center'}}>
-                  <FileDown size={18} /> {isPrinting ? 'Generando...' : 'Imprimir PDF Actas'}
+                <button onClick={imprimirActas} disabled={isGenerating} style={{...primaryButton, backgroundColor: COLORS.naranjo, flex: 1, justifyContent: 'center'}}>
+                  <FileDown size={18} /> Imprimir PDF Actas
                 </button>
               </div>
             </div>
