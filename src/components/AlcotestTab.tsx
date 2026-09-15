@@ -78,6 +78,7 @@ export default function AlcotestTab({ dotacionData, licenciasData, getShift }: A
   const [isSearching, setIsSearching] = useState(false);
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isPrinting, setIsPrinting] = useState(false);
 
   useEffect(() => {
     if (!histDesde || !histHasta) {
@@ -261,103 +262,123 @@ export default function AlcotestTab({ dotacionData, licenciasData, getShift }: A
     }
   };
 
-  const imprimirActas = () => {
+  const imprimirActas = async () => {
     if (resultadosSorteo.length === 0) return alert("No hay registros generados para imprimir.");
+    setIsPrinting(true);
 
-    const doc = new jsPDF();
-    
-    // Agrupar los resultados por fecha y turno
-    const grupos: Record<string, any> = {};
-    resultadosSorteo.forEach(item => {
-      const key = `${item.fecha}_${item.turno}`;
-      if (!grupos[key]) {
-        grupos[key] = { fecha: item.fecha, turno: item.turno, saps: [] };
-      }
-      grupos[key].saps.push(item.sap);
-    });
+    try {
+      // Función para precargar la imagen de forma asíncrona
+      const loadImage = (url: string): Promise<HTMLImageElement> => {
+        return new Promise((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = reject;
+          img.src = url;
+        });
+      };
 
-    const groupKeys = Object.keys(grupos).sort();
-
-    groupKeys.forEach((key, index) => {
-      if (index > 0) doc.addPage();
-      const grupo = grupos[key];
-
-      // 1. Logo
+      let logo: HTMLImageElement | null = null;
       try {
-        doc.addImage('/logo_alcotest.png', 'PNG', 15, 15, 30, 30);
+        logo = await loadImage('/logo_alcotest.png');
       } catch (e) {
-        console.warn("No se pudo cargar el logo", e);
+        console.warn("No se pudo cargar el logo desde /logo_alcotest.png", e);
       }
 
-      // 2. Encabezado Corporativo
-      doc.setFontSize(9);
-      doc.setFont("helvetica", "normal");
-      const rightX = 135;
-      doc.text("Corporación Nacional del", rightX, 20);
-      doc.text("Cobre de Chile División", rightX, 24);
-      doc.text("Ventanas", rightX, 28);
-      doc.text("Carretera F30E N° 58270", rightX, 32);
-      doc.text("Ventanas Puchuncavi", rightX, 36);
-      doc.text("V Región, Chile", rightX, 40);
-
-      // 3. Título Central
-      doc.setFontSize(12);
-      doc.setFont("helvetica", "bold");
-      doc.text("ACTA SELECCION ALEATORIA", 105, 75, { align: 'center' });
-      doc.text('"PROGRAMA ALCOHOL Y DROGAS"', 105, 82, { align: 'center' });
-
-      // 4. Tabla Fija 8 Celdas
-      const saps = [...grupo.saps];
-      while (saps.length < 8) saps.push("");
-      const tableSaps = saps.slice(0, 8); // Corte estricto en 8 por si acaso
-
-      autoTable(doc, {
-        startY: 95,
-        head: [['N°SAP', 'N°SAP', 'N°SAP', 'N°SAP', 'N°SAP', 'N°SAP', 'N°SAP', 'N°SAP']],
-        body: [tableSaps],
-        theme: 'grid',
-        headStyles: { fillColor: [150, 150, 150], textColor: 255, halign: 'center', fontSize: 9, fontStyle: 'bold' },
-        bodyStyles: { halign: 'center', fontSize: 10, minCellHeight: 8 },
-        styles: { lineColor: 0, lineWidth: 0.5 },
-        margin: { left: 15, right: 15 }
+      const doc = new jsPDF();
+      
+      const grupos: Record<string, any> = {};
+      resultadosSorteo.forEach(item => {
+        const key = `${item.fecha}_${item.turno}`;
+        if (!grupos[key]) {
+          grupos[key] = { fecha: item.fecha, turno: item.turno, saps: [] };
+        }
+        grupos[key].saps.push(item.sap);
       });
 
-      // 5. Firmas
-      const finalY = (doc as any).lastAutoTable.finalY + 45;
-      
-      doc.setLineWidth(0.5);
-      
-      // Firma Izquierda
-      doc.line(30, finalY, 90, finalY);
-      doc.setFontSize(9);
-      doc.setFont("helvetica", "normal");
-      doc.text("Firma Representante", 60, finalY + 5, { align: 'center' });
-      doc.text("Dirección de Relaciones", 60, finalY + 9, { align: 'center' });
-      doc.text("Laborales y Adm. de", 60, finalY + 13, { align: 'center' });
-      doc.text("Personal", 60, finalY + 17, { align: 'center' });
+      const groupKeys = Object.keys(grupos).sort();
 
-      // Firma Derecha
-      doc.line(120, finalY, 180, finalY);
-      doc.text("Firma Representante", 150, finalY + 5, { align: 'center' });
-      doc.text("Salud Ocupacional", 150, finalY + 9, { align: 'center' });
+      groupKeys.forEach((key, index) => {
+        if (index > 0) doc.addPage();
+        const grupo = grupos[key];
 
-      // 6. Fecha y Turno (esquina inferior izquierda)
-      const metaY = finalY + 45;
-      const dateParts = grupo.fecha.split('-');
-      const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-      const formatFecha = `${parseInt(dateParts[2])}-${meses[parseInt(dateParts[1])-1]}-${dateParts[0].substring(2)}`;
+        // 1. Logo (si se cargó correctamente)
+        if (logo) {
+          doc.addImage(logo, 'PNG', 15, 15, 30, 30);
+        }
 
-      doc.text(`Fecha:       ${formatFecha}`, 20, metaY);
-      doc.text(`Turno:       ${grupo.turno}`, 20, metaY + 5);
+        // 2. Encabezado Corporativo
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "normal");
+        const rightX = 135;
+        doc.text("Corporación Nacional del", rightX, 20);
+        doc.text("Cobre de Chile División", rightX, 24);
+        doc.text("Ventanas", rightX, 28);
+        doc.text("Carretera F30E N° 58270", rightX, 32);
+        doc.text("Ventanas Puchuncavi", rightX, 36);
+        doc.text("V Región, Chile", rightX, 40);
 
-      // 7. Pie de página
-      doc.setFontSize(7);
-      doc.setFont("helvetica", "bold");
-      const pageHeight = doc.internal.pageSize.height;
-      doc.text("Casa Matriz | Chuquicamata | Radomiro Tomic | Ministro Hales | Salvador | Ventanas | Andina | El Teniente | VP", 105, pageHeight - 15, { align: 'center' });
-    });
+        // 3. Título Central
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "bold");
+        doc.text("ACTA SELECCION ALEATORIA", 105, 75, { align: 'center' });
+        doc.text('"PROGRAMA ALCOHOL Y DROGAS"', 105, 82, { align: 'center' });
 
-    doc.save('Actas_Sorteo_Alcotest.pdf');
+        // 4. Tabla Fija 8 Celdas
+        const saps = [...grupo.saps];
+        while (saps.length < 8) saps.push("");
+        const tableSaps = saps.slice(0, 8); 
+
+        autoTable(doc, {
+          startY: 95,
+          head: [['N°SAP', 'N°SAP', 'N°SAP', 'N°SAP', 'N°SAP', 'N°SAP', 'N°SAP', 'N°SAP']],
+          body: [tableSaps],
+          theme: 'grid',
+          headStyles: { fillColor: [150, 150, 150], textColor: 255, halign: 'center', fontSize: 9, fontStyle: 'bold' },
+          bodyStyles: { halign: 'center', fontSize: 10, minCellHeight: 8 },
+          styles: { lineColor: 0, lineWidth: 0.5 },
+          margin: { left: 15, right: 15 }
+        });
+
+        // 5. Firmas
+        const finalY = (doc as any).lastAutoTable.finalY + 45;
+        
+        doc.setLineWidth(0.5);
+        
+        // Firma Izquierda corregida
+        doc.line(30, finalY, 90, finalY);
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "normal");
+        doc.text("Firma Representante", 60, finalY + 5, { align: 'center' });
+        doc.text("Relaciones Laborales", 60, finalY + 9, { align: 'center' });
+
+        // Firma Derecha
+        doc.line(120, finalY, 180, finalY);
+        doc.text("Firma Representante", 150, finalY + 5, { align: 'center' });
+        doc.text("Salud Ocupacional", 150, finalY + 9, { align: 'center' });
+
+        // 6. Fecha y Turno 
+        const metaY = finalY + 45;
+        const dateParts = grupo.fecha.split('-');
+        const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+        const formatFecha = `${parseInt(dateParts[2])}-${meses[parseInt(dateParts[1])-1]}-${dateParts[0].substring(2)}`;
+
+        doc.text(`Fecha:       ${formatFecha}`, 20, metaY);
+        doc.text(`Turno:       ${grupo.turno}`, 20, metaY + 5);
+
+        // 7. Pie de página
+        doc.setFontSize(7);
+        doc.setFont("helvetica", "bold");
+        const pageHeight = doc.internal.pageSize.height;
+        doc.text("Casa Matriz | Chuquicamata | Radomiro Tomic | Ministro Hales | Salvador | Ventanas | Andina | El Teniente | VP", 105, pageHeight - 15, { align: 'center' });
+      });
+
+      doc.save('Actas_Sorteo_Alcotest.pdf');
+    } catch (error) {
+      console.error("Error al generar PDF", error);
+      alert("Hubo un problema al generar el PDF.");
+    } finally {
+      setIsPrinting(false);
+    }
   };
 
   const handleDownloadPDF = () => {
@@ -480,11 +501,11 @@ export default function AlcotestTab({ dotacionData, licenciasData, getShift }: A
                 ))}
               </div>
               <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-                <button onClick={guardarEnHistorico} disabled={isSaving} style={{...primaryButton, backgroundColor: COLORS.verde, flex: 1, justifyContent: 'center'}}>
+                <button onClick={guardarEnHistorico} disabled={isSaving || isPrinting} style={{...primaryButton, backgroundColor: COLORS.verde, flex: 1, justifyContent: 'center'}}>
                   <Save size={18} /> {isSaving ? 'Guardando...' : 'Guardar Validados en Histórico Oficial'}
                 </button>
-                <button onClick={imprimirActas} disabled={isGenerating} style={{...primaryButton, backgroundColor: COLORS.naranjo, flex: 1, justifyContent: 'center'}}>
-                  <FileDown size={18} /> Imprimir PDF Actas
+                <button onClick={imprimirActas} disabled={isGenerating || isPrinting} style={{...primaryButton, backgroundColor: COLORS.naranjo, flex: 1, justifyContent: 'center'}}>
+                  <FileDown size={18} /> {isPrinting ? 'Generando...' : 'Imprimir PDF Actas'}
                 </button>
               </div>
             </div>
