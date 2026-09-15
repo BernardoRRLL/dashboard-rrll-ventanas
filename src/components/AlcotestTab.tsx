@@ -287,7 +287,7 @@ export default function AlcotestTab({ dotacionData, licenciasData, getShift }: A
 
         // 1. Logo incrustado desde Base64
         try {
-          doc.addImage(LOGO_BASE64, 'PNG', 15, 15, 35, 30);
+          doc.addImage(LOGO_BASE64, 'PNG', 15, 15, 40, 30);
         } catch (e) {
           console.warn("No se pudo cargar el logo Base64", e);
         }
