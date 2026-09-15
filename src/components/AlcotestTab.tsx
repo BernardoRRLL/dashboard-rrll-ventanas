@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { Search, History, Dices, FileDown, CheckSquare, Square, RefreshCw, Save } from 'lucide-react';
 import { supabase } from '../supabase'; 
 import jsPDF from 'jspdf';
@@ -12,7 +12,7 @@ const COLORS = {
   blanco: '#ffffff'
 };
 
-// Hook personalizado para mantener el estado en Session Storage
+// Hook personalizado modificado para evitar ciclos infinitos
 function useSessionStorage<T>(key: string, initialValue: T): [T, (value: T | ((val: T) => T)) => void] {
   const [storedValue, setStoredValue] = useState<T>(() => {
     try {
@@ -24,15 +24,17 @@ function useSessionStorage<T>(key: string, initialValue: T): [T, (value: T | ((v
     }
   });
 
-  const setValue = (value: T | ((val: T) => T)) => {
+  const setValue = useCallback((value: T | ((val: T) => T)) => {
     try {
-      const valueToStore = value instanceof Function ? value(storedValue) : value;
-      setStoredValue(valueToStore);
-      window.sessionStorage.setItem(key, JSON.stringify(valueToStore));
+      setStoredValue((prevValue) => {
+        const valueToStore = value instanceof Function ? value(prevValue) : value;
+        window.sessionStorage.setItem(key, JSON.stringify(valueToStore));
+        return valueToStore;
+      });
     } catch (error) {
       console.error(error);
     }
-  };
+  }, [key]);
 
   return [storedValue, setValue];
 }
